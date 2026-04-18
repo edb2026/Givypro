@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#059669">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GivyRewards">
+<link rel="manifest" id="pwa-manifest">
+<title>Givy Rewards</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@900&display=swap" rel="stylesheet">
+<style>
+:root{--dark:#0f1117;--dark2:#181c27;--card:#ffffff;--green:#059669;--green2:#047857;--gold:#f59e0b;--purple:#7c3aed;--red:#ef4444;--text:#111827;--sub:#6b7280;--border:#e5e7eb;--radius:20px;--font-h:'Inter',sans-serif;--font-b:'Inter',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-b);background:var(--dark);color:var(--text);min-height:100vh;overflow-x:hidden;}
+.screen{display:none;}.screen.active{display:block;}
+.app-header{background:linear-gradient(135deg,#059669 0%,#047857 100%);padding:env(safe-area-inset-top, 14px) 16px 14px;padding-top:max(env(safe-area-inset-top), 14px);text-align:center;position:relative;}
+.header-logo{font-family:'Playfair Display',serif;font-size:40px;font-weight:900;color:#fff;letter-spacing:6px;line-height:1;font-style:italic;margin-bottom:2px;margin-top:-4px;}
+.header-rewards{font-family:var(--font-h);font-size:26px;font-weight:800;color:#FFD700;letter-spacing:2px;text-shadow:0 2px 8px rgba(0,0,0,0.3);line-height:1.1;}
+.header-admin-btn{position:absolute;top:16px;right:14px;background:rgba(0,0,0,0.25);border:none;color:white;border-radius:10px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-b);}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--dark2);border-top:1px solid rgba(255,255,255,0.07);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom);}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0 8px;background:none;border:none;color:var(--sub);font-size:10px;font-weight:700;font-family:var(--font-b);cursor:pointer;transition:color 0.2s;}
+.nav-btn .nav-icon{font-size:22px;}.nav-btn.active{color:var(--green);}
+.page{padding:16px;padding-bottom:80px;max-width:600px;margin:0 auto;}
+.card{background:var(--card);border-radius:var(--radius);padding:18px;margin-bottom:14px;box-shadow:0 8px 40px rgba(0,0,0,0.45);}
+.card-dark{background:var(--dark2);border-radius:var(--radius);padding:18px;margin-bottom:14px;border:1px solid rgba(255,255,255,0.07);}
+.page-title{font-family:var(--font-h);font-size:20px;font-weight:800;color:#fff;margin-bottom:4px;}
+.page-sub{font-size:13px;color:#94a3b8;font-weight:400;margin-bottom:16px;line-height:1.5;}
+.section-label{font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1.5px;margin:16px 0 8px;}
+.btn{background:var(--green);color:white;padding:16px;width:100%;border-radius:16px;font-weight:700;font-size:16px;font-family:var(--font-b);border:none;cursor:pointer;box-shadow:0 6px 24px rgba(5,150,105,0.4);margin-bottom:14px;display:block;transition:transform 0.15s;}
+.btn:active{transform:scale(0.98);}
+.btn-outline{background:transparent;border:2px solid var(--green);color:var(--green);padding:12px;border-radius:14px;font-weight:700;font-size:14px;font-family:var(--font-b);cursor:pointer;width:100%;margin-bottom:10px;}
+.btn-sm{padding:9px 16px;border-radius:12px;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:var(--font-b);}
+.btn-back{background:rgba(255,255,255,0.1);border:none;color:white;border-radius:12px;padding:8px 14px;font-weight:700;font-size:14px;cursor:pointer;font-family:var(--font-b);}
+.inp{background:#f8fafc;border:2px solid var(--border);border-radius:12px;padding:13px 15px;font-size:15px;font-family:var(--font-b);font-weight:500;width:100%;color:var(--text);margin-bottom:10px;display:block;transition:border-color 0.2s;}
+.inp:focus{outline:none;border-color:var(--green);background:#fff;}.inp::placeholder{color:#9ca3af;}.inp.error{border-color:var(--red);}
+.condition-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.condition-btn{border:2px solid var(--border);border-radius:12px;padding:10px 8px;background:#f8fafc;cursor:pointer;text-align:center;transition:all 0.2s;font-family:var(--font-b);}
+.condition-btn .c-icon{font-size:20px;display:block;margin-bottom:4px;}.condition-btn .c-name{font-size:12px;font-weight:700;color:var(--text);display:block;}.condition-btn .c-desc{font-size:10px;color:var(--sub);display:block;margin-top:2px;}
+.condition-btn.selected{border-color:var(--green);background:#ecfdf5;}.condition-btn.selected .c-name{color:var(--green);}
+.photo-upload-area{border:2px dashed var(--border);border-radius:16px;padding:20px;text-align:center;cursor:pointer;background:#f8fafc;margin-bottom:10px;transition:border-color 0.2s;}
+.photo-upload-area:hover{border-color:var(--green);background:#f0fdf4;}
+.photo-upload-area .upload-icon{font-size:32px;margin-bottom:6px;}.photo-upload-area .upload-text{font-size:14px;font-weight:700;color:var(--sub);}.photo-upload-area .upload-limit{font-size:11px;color:#9ca3af;margin-top:3px;}
+.photo-preview-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;}
+.photo-thumb{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;}
+.photo-thumb .remove-photo{position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.6);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.photo-count-badge{font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px;}
+.scale-bar-wrap{height:18px;border-radius:99px;overflow:hidden;background:#e5e7eb;margin-bottom:12px;}
+.scale-bar{height:100%;border-radius:99px;background:linear-gradient(90deg,#fbbf24 0%,#f59e0b 30%,#8b5cf6 65%,#10b981 100%);}
+.scale-labels{display:grid;grid-template-columns:1fr 1fr 1fr;text-align:center;gap:4px;}
+.scale-label{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.scale-label .sl-icon{font-size:20px;}.scale-label .sl-name{font-size:12px;font-weight:700;font-family:var(--font-h);}.scale-label .sl-pct{font-size:13px;font-weight:700;padding:2px 10px;border-radius:99px;color:white;}.scale-label .sl-items{font-size:10px;color:var(--sub);font-weight:500;}
+.gold-pct{background:#d97706;}.diamond-pct{background:var(--purple);}.champ-pct{background:var(--green);}
+.chat-list-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;}
+.chat-list-item:hover{background:#f8fafc;}.chat-list-item:last-child{border-bottom:none;}
+.chat-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--purple));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.chat-meta{flex:1;min-width:0;}.chat-meta .cm-name{font-size:15px;font-weight:700;color:var(--text);}.chat-meta .cm-preview{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}.chat-meta .cm-time{font-size:11px;color:#9ca3af;}
+.chat-unread{background:var(--green);color:white;border-radius:99px;padding:2px 8px;font-size:11px;font-weight:700;}
+.chat-messages{overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;}
+.msg-bubble{max-width:78%;padding:10px 14px;border-radius:18px;font-size:14px;font-weight:500;line-height:1.5;}
+.msg-in{background:#f1f5f9;color:var(--text);align-self:flex-start;border-bottom-left-radius:4px;}
+.msg-out{background:var(--green);color:white;align-self:flex-end;border-bottom-right-radius:4px;}
+.msg-time{font-size:10px;opacity:0.6;margin-top:3px;}
+.chat-input-bar{display:flex;gap:8px;padding:10px 12px;background:white;border-top:1px solid var(--border);}
+.chat-input-bar input{flex:1;border:2px solid var(--border);border-radius:99px;padding:10px 16px;font-size:14px;font-family:var(--font-b);outline:none;}
+.chat-input-bar input:focus{border-color:var(--green);}
+.chat-send-btn{background:var(--green);border:none;border-radius:50%;width:42px;height:42px;color:white;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.admin-header{background:linear-gradient(135deg,#1e1b4b,#312e81);padding:16px;display:flex;align-items:center;gap:12px;}
+.admin-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.stat-card{background:var(--dark2);border-radius:16px;padding:14px;border:1px solid rgba(255,255,255,0.07);text-align:center;}
+.stat-card .sv{font-size:28px;font-weight:900;font-family:var(--font-h);color:white;}.stat-card .sl{font-size:11px;color:#94a3b8;font-weight:700;margin-top:2px;text-transform:uppercase;letter-spacing:1px;}
+.admin-order-card{background:var(--dark2);border-radius:16px;padding:14px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.07);}
+.order-title{font-size:16px;font-weight:700;color:white;margin-bottom:6px;}.order-meta{font-size:12px;color:#94a3b8;font-weight:500;margin-bottom:3px;}
+.condition-badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;margin-right:6px;}
+.cond-new{background:#dcfce7;color:#166534;}.cond-likenew{background:#dbeafe;color:#1e40af;}.cond-verygood{background:#fef9c3;color:#854d0e;}.cond-restorable{background:#fee2e2;color:#991b1b;}
+.pwa-banner{background:linear-gradient(135deg,#064e3b,#065f46);margin:14px 0;border-radius:var(--radius);padding:16px 18px;display:flex;align-items:center;gap:14px;box-shadow:0 6px 24px rgba(0,0,0,0.4);}
+.pwa-banner .pwa-icon{font-size:36px;flex-shrink:0;}.pwa-banner .pwa-text{flex:1;}.pwa-banner .pwa-title{font-size:15px;font-weight:900;color:white;font-family:var(--font-h);}.pwa-banner .pwa-sub{font-size:12px;color:#6ee7b7;font-weight:500;margin-top:2px;}
+.pwa-banner .pwa-install-btn{background:white;color:var(--green2);border:none;border-radius:12px;padding:9px 14px;font-size:13px;font-weight:900;cursor:pointer;font-family:var(--font-b);flex-shrink:0;}
+.info-card-icon{font-size:26px;margin-bottom:6px;}.info-card h3{font-size:14px;font-weight:700;font-family:var(--font-h);color:var(--text);margin-bottom:3px;}.info-card p{font-size:12px;color:var(--sub);line-height:1.4;font-weight:400;}
+.level-display{display:flex;align-items:center;gap:14px;}
+.level-emoji{font-size:42px;}.level-info .li-label{font-size:10px;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:1px;}.level-info .li-name{font-size:22px;font-weight:900;font-family:var(--font-h);}.level-info .li-disc{font-size:13px;font-weight:700;color:var(--sub);}.level-info .li-disc span{font-size:17px;font-weight:900;}
+.footer-note{text-align:center;font-size:11px;color:#475569;font-weight:500;padding:12px 20px 4px;line-height:1.6;}
+.admin-login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--dark);padding:24px;}
+.admin-login-box{background:var(--dark2);border-radius:24px;padding:32px 24px;width:100%;max-width:340px;border:1px solid rgba(255,255,255,0.08);box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+.admin-login-title{font-family:var(--font-h);font-size:24px;font-weight:900;color:white;text-align:center;margin-bottom:6px;}
+.admin-login-sub{text-align:center;font-size:13px;color:#64748b;margin-bottom:24px;}
+.inp-dark{background:rgba(255,255,255,0.06);border:2px solid rgba(255,255,255,0.1);border-radius:12px;padding:13px 15px;font-size:15px;font-family:var(--font-b);width:100%;color:white;margin-bottom:12px;display:block;transition:border-color 0.2s;}
+.inp-dark:focus{outline:none;border-color:var(--green);}.inp-dark::placeholder{color:#475569;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:99px;}
+</style>
+</head>
+<body>
+
+<div id="main-header" class="app-header">
+  <div class="header-logo">Givy</div>
+  <div class="header-rewards">REWARDS</div>
+</div>
+
+<!-- HOME -->
+
+<div id="screen-home" class="screen active">
+<div class="page">
+  <div class="page-title">Give away your stuff</div>
+  <p class="page-sub">Furniture, household items &amp; office equipment — and <strong style="color:#fff;">get rewarded for giving.</strong> We pick up for free.</p>
+
+  <div class="pwa-banner" id="pwa-banner" style="display:none;">
+    <div class="pwa-icon">&#128242;</div>
+    <div class="pwa-text">
+      <div class="pwa-title">Install App</div>
+      <div class="pwa-sub" id="pwa-sub-text">Add to home screen — works offline</div>
+    </div>
+    <button class="pwa-install-btn" id="pwa-install-btn" onclick="PWA.install()">Install</button>
+  </div>
+
+  <div class="card">
+    <div style="font-size:17px;font-weight:900;font-family:var(--font-h);color:var(--text);margin-bottom:4px;">&#128293; Rewards System</div>
+    <div style="font-size:13px;color:var(--sub);margin-bottom:14px;">The more you give — the more you save</div>
+    <div class="scale-bar-wrap"><div class="scale-bar" style="width:100%"></div></div>
+    <div class="scale-labels">
+      <div class="scale-label">
+        <span class="sl-icon">&#129351;</span>
+        <span class="sl-name" style="color:#d97706;">Gold</span>
+        <span class="sl-pct gold-pct">20%</span>
+        <span class="sl-items">1–3 items</span>
+      </div>
+      <div class="scale-label">
+        <span class="sl-icon">&#128142;</span>
+        <span class="sl-name" style="color:var(--purple);">Diamond</span>
+        <span class="sl-pct diamond-pct">30%</span>
+        <span class="sl-items">4–7 items</span>
+      </div>
+      <div class="scale-label">
+        <span class="sl-icon">&#127942;</span>
+        <span class="sl-name" style="color:var(--green);">Champion</span>
+        <span class="sl-pct champ-pct">50%</span>
+        <span class="sl-items">7+ items</span>
+      </div>
+    </div>
+  </div>
+
+<button class="btn" onclick="Nav.go('post')">📦 Post an Item</button>
+
+  <div class="card info-card">
+    <div class="info-card-icon">&#128666;</div>
+    <h3>Free Pickup</h3>
+    <p>We collect your items at no cost, at a time that works for you.</p>
+  </div>
+  <div class="card info-card">
+    <div class="info-card-icon">&#128247;</div>
+    <h3>Up to 10 Photos</h3>
+    <p>Show your item in the best light — upload up to 10 photos per listing.</p>
+  </div>
+  <div class="card info-card">
+    <div class="info-card-icon">&#128172;</div>
+    <h3>Live Chat</h3>
+    <p>Chat directly with the person posting the item before pickup.</p>
+  </div>
+
+  <div class="footer-note">By joining us, you contribute to the fight against addiction.</div>
+</div>
+</div>
+
+<!-- POST -->
+
+<div id="screen-post" class="screen">
+<div class="page">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+    <button class="btn-back" onclick="Nav.go('home')">&#8592; Back</button>
+    <span style="color:white;font-size:20px;font-weight:900;font-family:var(--font-h);">Post an Item</span>
+  </div>
+  <div class="card">
+    <div class="section-label">Item Details</div>
+    <input id="f-title" placeholder="Item title" class="inp">
+    <textarea id="f-desc" placeholder="Description" class="inp" rows="3" style="resize:none;"></textarea>
+
+```
+<div class="section-label">Item Condition</div>
+<div class="condition-grid">
+  <div class="condition-btn" data-val="new" onclick="PostModule.selectCondition(this)">
+    <span class="c-icon">&#10024;</span><span class="c-name">New</span><span class="c-desc">Never used</span>
+  </div>
+  <div class="condition-btn" data-val="like_new" onclick="PostModule.selectCondition(this)">
+    <span class="c-icon">&#11088;</span><span class="c-name">Like New</span><span class="c-desc">Used once or twice</span>
+  </div>
+  <div class="condition-btn" data-val="very_good" onclick="PostModule.selectCondition(this)">
+    <span class="c-icon">&#128077;</span><span class="c-name">Very Good</span><span class="c-desc">Minor wear only</span>
+  </div>
+  <div class="condition-btn" data-val="restorable" onclick="PostModule.selectCondition(this)">
+    <span class="c-icon">&#128296;</span><span class="c-name">Restorable</span><span class="c-desc">Needs some work</span>
+  </div>
+</div>
+
+<div class="section-label">Photos (up to 10)</div>
+<div class="photo-count-badge" id="photo-count">0 / 10 photos added</div>
+<div id="photo-preview-grid" class="photo-preview-grid"></div>
+<div class="photo-upload-area" onclick="document.getElementById('f-photo').click()">
+  <div class="upload-icon">&#128247;</div>
+  <div class="upload-text">Tap to add photos</div>
+  <div class="upload-limit">Up to 10 photos</div>
+</div>
+<input type="file" id="f-photo" multiple accept="image/*" style="display:none;" onchange="PhotoModule.handleFiles(this)">
+
+<div class="section-label">Pickup Address</div>
+<input id="f-address" placeholder="Street address" class="inp">
+
+<div class="section-label">Pickup Date &amp; Time</div>
+<input type="date" id="f-date" class="inp">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+  <input type="time" id="f-t1" class="inp" style="margin-bottom:0;">
+  <input type="time" id="f-t2" class="inp" style="margin-bottom:0;">
+</div>
+
+<div class="section-label" style="margin-top:14px;">Contact</div>
+<input id="f-email" placeholder="Email" class="inp">
+<input id="f-phone" placeholder="Phone" class="inp">
+
+<div style="height:14px;"></div>
+<button class="btn" onclick="PostModule.submit()" style="margin-bottom:0;">&#9989; Submit Request</button>
+```
+
+  </div>
+</div>
+</div>
+
+<!-- LIST -->
+
+<div id="screen-list" class="screen">
+<div class="page">
+  <div style="margin-bottom:16px;">
+    <span style="color:white;font-size:22px;font-weight:900;font-family:var(--font-h);">My Requests</span>
+  </div>
+  <div id="list-level-card" class="card"></div>
+  <div id="list-items"></div>
+</div>
+</div>
+
+<!-- CHAT LIST -->
+
+<div id="screen-chat" class="screen">
+<div class="page" style="padding-left:0;padding-right:0;">
+  <div style="padding:0 16px 12px;">
+    <span style="color:white;font-size:22px;font-weight:900;font-family:var(--font-h);">Messages</span>
+  </div>
+  <div class="card" style="border-radius:20px;padding:0;overflow:hidden;margin:0 16px 14px;">
+    <div id="chat-list-container"></div>
+  </div>
+</div>
+</div>
+
+<!-- CHAT WINDOW -->
+
+<div id="screen-chatwindow" class="screen">
+<div style="background:white;min-height:calc(100vh - 56px);display:flex;flex-direction:column;">
+  <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:white;position:sticky;top:56px;z-index:10;">
+    <button style="background:none;border:none;font-size:22px;cursor:pointer;" onclick="Nav.go('chat')">&#8592;</button>
+    <div id="chat-window-avatar" class="chat-avatar" style="width:36px;height:36px;font-size:16px;"></div>
+    <div>
+      <div id="chat-window-name" style="font-size:15px;font-weight:700;color:var(--text);"></div>
+      <div style="font-size:11px;color:var(--sub);">Online</div>
+    </div>
+  </div>
+  <div id="chat-messages" class="chat-messages" style="flex:1;min-height:300px;padding:14px;"></div>
+  <div class="chat-input-bar">
+    <input id="chat-msg-input" type="text" placeholder="Type a message…" onkeydown="if(event.key==='Enter')ChatModule.send()">
+    <button class="chat-send-btn" onclick="ChatModule.send()">&#10148;</button>
+  </div>
+</div>
+</div>
+
+<!-- ADMIN LOGIN -->
+
+<div id="screen-admin-login" class="screen">
+<div class="admin-login-wrap">
+  <div class="admin-login-box">
+    <div style="text-align:center;font-size:40px;margin-bottom:12px;">&#128737;&#65039;</div>
+    <div class="admin-login-title">Admin Panel</div>
+    <div class="admin-login-sub">Enter credentials to continue</div>
+    <input id="admin-user" class="inp-dark" placeholder="Username">
+    <input id="admin-pass" class="inp-dark" type="password" placeholder="Password">
+    <button class="btn" onclick="AdminModule.login()" style="margin-top:8px;">Sign In</button>
+    <button class="btn-outline" onclick="Nav.go('home')" style="margin-top:0;">Cancel</button>
+  </div>
+</div>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+
+<div id="screen-admin" class="screen">
+<div style="background:var(--dark);min-height:100vh;">
+  <div class="admin-header">
+    <button class="btn-back" onclick="AdminModule.logout()">&#8592; Exit</button>
+    <span style="color:white;font-size:18px;font-weight:900;font-family:var(--font-h);">Admin Dashboard</span>
+    <span style="margin-left:auto;background:rgba(255,255,255,0.1);padding:4px 10px;border-radius:8px;font-size:11px;color:#a5f3fc;font-weight:700;">LIVE</span>
+  </div>
+  <div class="page" style="padding-top:16px;">
+    <div class="admin-stats" id="admin-stats"></div>
+    <div style="color:#94a3b8;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">All Orders</div>
+    <div id="admin-orders"></div>
+  </div>
+</div>
+</div>
+
+<!-- BOTTOM NAV -->
+
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="nav-btn active" id="nav-home" onclick="Nav.go('home')">
+    <span class="nav-icon">&#127968;</span>Home
+  </button>
+  <button class="nav-btn" id="nav-post" onclick="Nav.go('post')">
+    <span class="nav-icon">&#10133;</span>Post
+  </button>
+  <button class="nav-btn" id="nav-list" onclick="Nav.go('list')">
+    <span class="nav-icon">&#128203;</span>My Items
+  </button>
+  <button class="nav-btn" id="nav-chat" onclick="Nav.go('chat')">
+    <span class="nav-icon">&#128172;</span>Messages
+  </button>
+</nav>
+
+<script>
+const Storage={get(k,f=null){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch{return f;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}};
+
+const Nav={current:'home',mainScreens:['home','post','list','chat'],go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');const hide=['admin-login','admin','chatwindow'].includes(id);document.getElementById('main-header').style.display=hide?'none':'block';document.getElementById('bottom-nav').style.display=this.mainScreens.includes(id)?'flex':'none';document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));const nb=document.getElementById('nav-'+id);if(nb)nb.classList.add('active');this.current=id;if(id==='list')ListModule.render();if(id==='chat')ChatModule.renderList();if(id==='admin')AdminModule.render();}};
+
+const Levels={get(c){if(c>=7)return{name:'Champion',discount:'50%',emoji:'🏆',color:'#059669'};if(c>=4)return{name:'Diamond',discount:'30%',emoji:'💎',color:'#7c3aed'};if(c>=1)return{name:'Gold',discount:'20%',emoji:'🥇',color:'#d97706'};return{name:'New',discount:'0%',emoji:'⭐',color:'#6b7280'};}};
+
+const PhotoModule={photos:[],MAX:10,handleFiles(input){const files=Array.from(input.files);const rem=this.MAX-this.photos.length;files.slice(0,rem).forEach(f=>{const r=new FileReader();r.onload=e=>{this.photos.push({dataUrl:e.target.result});this.render();};r.readAsDataURL(f);});if(files.length>rem)alert('Max 10 photos. Only first '+rem+' added.');input.value='';},remove(i){this.photos.splice(i,1);this.render();},render(){const g=document.getElementById('photo-preview-grid');const c=document.getElementById('photo-count');if(!g||!c)return;c.textContent=this.photos.length+' / '+this.MAX+' photos added';g.innerHTML=this.photos.map((p,i)=>'<div class="photo-thumb"><img src="'+p.dataUrl+'"><button class="remove-photo" onclick="PhotoModule.remove('+i+')">x</button></div>').join('');const a=document.querySelector('.photo-upload-area');if(a)a.style.display=this.photos.length>=this.MAX?'none':'block';},reset(){this.photos=[];this.render();}};
+
+const PostModule={sel:null,selectCondition(el){document.querySelectorAll('.condition-btn').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');this.sel=el.dataset.val;},err(id){const el=document.getElementById(id);if(el)el.classList.add('error');},clearErrors(){document.querySelectorAll('.inp').forEach(i=>i.classList.remove('error'));},isEmail(e){return/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);},submit(){this.clearErrors();let ok=true;const v=id=>(document.getElementById(id)||{value:''}).value.trim();if(!v('f-title')){this.err('f-title');ok=false;}if(!v('f-desc')){this.err('f-desc');ok=false;}if(!this.sel){alert('Please select item condition');return;}if(!v('f-address')){this.err('f-address');ok=false;}if(!v('f-date')){this.err('f-date');ok=false;}if(!v('f-t1')||!v('f-t2')){this.err('f-t1');this.err('f-t2');ok=false;}const email=v('f-email'),phone=v('f-phone');if(!email&&!phone){this.err('f-email');this.err('f-phone');alert('Email or Phone required');return;}if(email&&!this.isEmail(email)){this.err('f-email');alert('Invalid email');return;}if(!ok){alert('Please fill all required fields');return;}const labels={new:'New',like_new:'Like New',very_good:'Very Good',restorable:'Restorable'};const items=Storage.get('items',[]);const item={id:Date.now(),title:v('f-title'),desc:v('f-desc'),condition:this.sel,conditionLabel:labels[this.sel],address:v('f-address'),date:v('f-date'),time:v('f-t1')+' - '+v('f-t2'),email,phone,photos:PhotoModule.photos.map(p=>p.dataUrl),createdAt:new Date().toISOString()};items.unshift(item);Storage.set('items',items);const submitBtn=document.querySelector('#screen-post .btn:last-child');if(submitBtn){submitBtn.textContent='⏳ Uploading photos...';submitBtn.disabled=true;}sendToFormspree(item).then(()=>{if(submitBtn){submitBtn.textContent='✅ Submit Request';submitBtn.disabled=false;}});['f-title','f-desc','f-address','f-date','f-t1','f-t2','f-email','f-phone'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.querySelectorAll('.condition-btn').forEach(b=>b.classList.remove('selected'));this.sel=null;PhotoModule.reset();ChatModule.addThread(item);alert('Item posted successfully!');Nav.go('list');}};
+
+const ListModule={cond:{new:'cond-new',like_new:'cond-likenew',very_good:'cond-verygood',restorable:'cond-restorable'},render(){const items=Storage.get('items',[]);const level=Levels.get(items.length);document.getElementById('list-level-card').innerHTML='<div class="level-display"><div class="level-emoji">'+level.emoji+'</div><div class="level-info"><div class="li-label">Your Level</div><div class="li-name" style="color:'+level.color+';">'+level.name+'</div><div class="li-disc">Discount: <span style="color:'+level.color+';">'+level.discount+'</span></div></div></div>';const box=document.getElementById('list-items');if(items.length===0){box.innerHTML='<div class="card" style="text-align:center;padding:32px 18px;"><div style="font-size:44px;margin-bottom:10px;">📭</div><div style="font-size:17px;font-weight:900;font-family:var(--font-h);">No items yet</div><div style="font-size:13px;color:var(--sub);margin-top:6px;">Post your first item to start earning rewards</div></div>';return;}box.innerHTML=items.map(i=>'<div class="card"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;"><div style="font-size:16px;font-weight:900;font-family:var(--font-h);">'+i.title+'</div><span class="condition-badge '+(this.cond[i.condition]||'')+'">'+i.conditionLabel+'</span></div><div style="font-size:13px;color:var(--sub);margin-bottom:8px;">'+i.desc+'</div><div style="font-size:12px;color:var(--sub);">📍 '+i.address+'</div><div style="font-size:12px;color:var(--sub);">📅 '+i.date+' ⏰ '+i.time+'</div>'+(i.email?'<div style="font-size:12px;color:var(--sub);">📧 '+i.email+'</div>':'')+(i.phone?'<div style="font-size:12px;color:var(--sub);">📱 '+i.phone+'</div>':'')+(i.photos&&i.photos.length?'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:10px;">'+i.photos.slice(0,8).map(p=>'<img src="'+p+'" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;">').join('')+(i.photos.length>8?'<div style="aspect-ratio:1;background:#f1f5f9;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--sub);">+'+(i.photos.length-8)+'</div>':'')+'</div>':'')+'<div style="margin-top:10px;"><button class="btn-sm" style="background:var(--green);color:white;" onclick="ChatModule.openThread(\''+i.id+'\')">💬 Chat</button></div></div>').join('');}};
+
+const ChatModule={active:null,getThreads(){return Storage.get('chat_threads',[]);},saveThreads(t){Storage.set('chat_threads',t);},addThread(item){const t=this.getThreads();if(t.find(x=>x.itemId==item.id))return;t.unshift({itemId:item.id,itemTitle:item.title,messages:[{from:'system',text:'Chat opened for: '+item.title,time:Date.now()}],unread:0});this.saveThreads(t);},openThread(itemId){const t=this.getThreads();const th=t.find(x=>x.itemId==itemId);if(!th)return;th.unread=0;this.saveThreads(t);this.active=itemId;document.getElementById('chat-window-name').textContent=th.itemTitle;document.getElementById('chat-window-avatar').textContent='📦';this.renderMessages(th);Nav.go('chatwindow');},renderMessages(th){const box=document.getElementById('chat-messages');box.innerHTML=th.messages.map(m=>{if(m.from==='system')return'<div style="text-align:center;font-size:11px;color:#9ca3af;padding:8px;">'+m.text+'</div>';const cls=m.from==='me'?'msg-out':'msg-in';const t=new Date(m.time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});return'<div class="msg-bubble '+cls+'">'+m.text+'<div class="msg-time">'+t+'</div></div>';}).join('');box.scrollTop=box.scrollHeight;},send(){const input=document.getElementById('chat-msg-input');const text=input.value.trim();if(!text||!this.active)return;const t=this.getThreads();const th=t.find(x=>x.itemId==this.active);if(!th)return;th.messages.push({from:'me',text,time:Date.now()});input.value='';this.saveThreads(t);this.renderMessages(th);setTimeout(()=>{const replies=['Thanks for reaching out! 😊','When would be a good time for pickup?','Is the item still available?','Can you share more details?','Great, I will be there! 👍'];const t2=this.getThreads();const th2=t2.find(x=>x.itemId==this.active);if(th2){th2.messages.push({from:'other',text:replies[Math.floor(Math.random()*replies.length)],time:Date.now()});this.saveThreads(t2);this.renderMessages(th2);}},1500);},renderList(){const t=this.getThreads();const box=document.getElementById('chat-list-container');if(t.length===0){box.innerHTML='<div style="padding:32px;text-align:center;"><div style="font-size:40px;margin-bottom:10px;">💬</div><div style="font-size:15px;font-weight:700;color:var(--text);">No messages yet</div><div style="font-size:13px;color:var(--sub);margin-top:4px;">Chat opens when you post an item</div></div>';return;}box.innerHTML=t.map(th=>{const last=th.messages[th.messages.length-1];const preview=last?last.text:'';const time=last?new Date(last.time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';return'<div class="chat-list-item" onclick="ChatModule.openThread(\''+th.itemId+'\')"><div class="chat-avatar">📦</div><div class="chat-meta"><div class="cm-name">'+th.itemTitle+'</div><div class="cm-preview">'+preview+'</div></div><div style="text-align:right;flex-shrink:0;"><div class="cm-time">'+time+'</div>'+(th.unread>0?'<div class="chat-unread" style="margin-top:4px;">'+th.unread+'</div>':'')+'</div></div>';}).join('');}};
+
+const AdminModule={CREDS:{user:'admin',pass:'givy2024'},cond:{new:'cond-new',like_new:'cond-likenew',very_good:'cond-verygood',restorable:'cond-restorable'},login(){const u=document.getElementById('admin-user').value;const p=document.getElementById('admin-pass').value;if(u===this.CREDS.user&&p===this.CREDS.pass){document.getElementById('admin-user').value='';document.getElementById('admin-pass').value='';Nav.go('admin');}else{alert('Invalid credentials');}},logout(){Nav.go('home');},render(){const items=Storage.get('items',[]);const level=Levels.get(items.length);document.getElementById('admin-stats').innerHTML='<div class="stat-card"><div class="sv">'+items.length+'</div><div class="sl">Total Orders</div></div><div class="stat-card"><div class="sv" style="color:#fbbf24;">'+level.name+'</div><div class="sl">Current Level</div></div><div class="stat-card"><div class="sv" style="color:#34d399;">'+level.discount+'</div><div class="sl">Discount Earned</div></div><div class="stat-card"><div class="sv">'+items.filter(i=>i.condition==='new'||i.condition==='like_new').length+'</div><div class="sl">New / Like New</div></div>';const box=document.getElementById('admin-orders');if(items.length===0){box.innerHTML='<div class="card-dark" style="text-align:center;padding:28px;color:#64748b;">No orders yet</div>';return;}box.innerHTML=items.map((i,idx)=>'<div class="admin-order-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;"><div class="order-title">#'+(items.length-idx)+' — '+i.title+'</div><span class="condition-badge '+(this.cond[i.condition]||'')+'">'+i.conditionLabel+'</span></div><div class="order-meta">📍 '+i.address+'</div><div class="order-meta">📅 '+i.date+' ⏰ '+i.time+'</div>'+(i.email?'<div class="order-meta">📧 '+i.email+'</div>':'')+(i.phone?'<div class="order-meta">📱 '+i.phone+'</div>':'')+'<div class="order-meta" style="margin-top:4px;color:#475569;font-size:11px;">'+(i.photos?i.photos.length:0)+' photo(s) · '+new Date(i.createdAt).toLocaleString()+'</div>'+(i.photos&&i.photos.length?'<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:8px;">'+i.photos.slice(0,5).map(p=>'<img src="'+p+'" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;">').join('')+'</div>':'')+'</div>').join('');}};
+
+const PWA={dp:null,init(){const svgIcon='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="40" fill="#059669"/><text y="125" x="96" text-anchor="middle" font-size="88" font-weight="900" font-family="Arial,sans-serif" fill="white">GR</text></svg>');const m={name:'Givy Rewards',short_name:'GivyRewards',description:'Give away your stuff and get rewarded',start_url:'/',display:'standalone',background_color:'#0f1117',theme_color:'#059669',icons:[{src:svgIcon,sizes:'192x192',type:'image/svg+xml'},{src:svgIcon,sizes:'512x512',type:'image/svg+xml'}]};const blob=new Blob([JSON.stringify(m)],{type:'application/json'});document.getElementById('pwa-manifest').href=URL.createObjectURL(blob);window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();this.dp=e;document.getElementById('pwa-banner').style.display='flex';});window.addEventListener('appinstalled',()=>{document.getElementById('pwa-banner').style.display='none';this.dp=null;});const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);if(isIOS&&!window.navigator.standalone){document.getElementById('pwa-banner').style.display='flex';document.getElementById('pwa-sub-text').textContent='Tap Share then "Add to Home Screen"';document.getElementById('pwa-install-btn').textContent='How?';document.getElementById('pwa-install-btn').onclick=()=>alert('To install on iPhone:\n1. Tap the Share button in Safari\n2. Tap "Add to Home Screen"\n3. Tap "Add"');}},install(){if(this.dp){this.dp.prompt();this.dp.userChoice.then(()=>{this.dp=null;document.getElementById('pwa-banner').style.display='none';});}}};
+
+async function uploadToCloudinary(dataUrl){try{const blob=await(await fetch(dataUrl)).blob();const fd=new FormData();fd.append('file',blob);fd.append('upload_preset','givy_upload');fd.append('cloud_name','dyxlwkgo7');const res=await fetch('https://api.cloudinary.com/v1_1/dyxlwkgo7/image/upload',{method:'POST',body:fd});const data=await res.json();return data.secure_url||null;}catch(e){console.log('Cloudinary error',e);return null;}}
+
+async function sendToFormspree(item){try{let photoUrls=[];if(item.photos&&item.photos.length>0){const uploads=item.photos.map(p=>uploadToCloudinary(p));photoUrls=await Promise.all(uploads);photoUrls=photoUrls.filter(Boolean);}const body={_subject:'New Item Posted: '+item.title,item_title:item.title,description:item.desc,condition:item.conditionLabel,address:item.address,date:item.date,time:item.time,contact_email:item.email||'—',contact_phone:item.phone||'—'};photoUrls.forEach((url,i)=>{body['photo_'+(i+1)]=url;});const res=await fetch('https://formspree.io/f/xaqaolor',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(body)});const data=await res.json();console.log('Formspree response:',data);}catch(e){console.log('Formspree error',e);}}
+PWA.init();
+Nav.go('home');
+</script>
+
+</body>
+</html>
