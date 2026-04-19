@@ -387,57 +387,52 @@ Nav.go('home');
 (function(){
   var el = document.getElementById('floating-sticker');
   if(!el) return;
-  var dragging = false;
+  var active = false;
   var ox = 0, oy = 0;
 
-function onStart(cx, cy) {
-dragging = true;
-var rect = el.getBoundingClientRect();
-el.style.position = ‘fixed’;
-el.style.left = rect.left + ‘px’;
-el.style.top  = rect.top  + ‘px’;
+function move(x, y) {
+if(!active) return;
+var nx = Math.max(0, Math.min(window.innerWidth - el.offsetWidth, x - ox));
+var ny = Math.max(0, Math.min(window.innerHeight - el.offsetHeight, y - oy));
+el.style.left = nx + ‘px’;
+el.style.top  = ny + ‘px’;
+}
+
+function start(x, y) {
+active = true;
+var r = el.getBoundingClientRect();
+el.style.left = r.left + ‘px’;
+el.style.top  = r.top  + ‘px’;
 el.style.right  = ‘auto’;
 el.style.bottom = ‘auto’;
-ox = cx - rect.left;
-oy = cy - rect.top;
-el.setPointerCapture && el.setPointerCapture(el._pid);
+ox = x - r.left;
+oy = y - r.top;
 }
 
-function onMove(cx, cy) {
-if (!dragging) return;
-var x = Math.max(0, Math.min(window.innerWidth  - el.offsetWidth,  cx - ox));
-var y = Math.max(0, Math.min(window.innerHeight - el.offsetHeight, cy - oy));
-el.style.left = x + ‘px’;
-el.style.top  = y + ‘px’;
+function end() {
+if(!active) return;
+active = false;
+try{ localStorage.setItem(‘sx’, el.style.left); localStorage.setItem(‘sy’, el.style.top); }catch(e){}
 }
 
-function onEnd() {
-if (!dragging) return;
-dragging = false;
-try { localStorage.setItem(‘sx’, el.style.left); localStorage.setItem(‘sy’, el.style.top); } catch(e){}
-}
-
-// Pointer Events (works on file://, https://, everywhere)
-el.addEventListener(‘pointerdown’, function(e){
-el._pid = e.pointerId;
-el.setPointerCapture(e.pointerId);
-onStart(e.clientX, e.clientY);
+el.addEventListener(‘touchstart’, function(e){
+start(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
 e.preventDefault();
-}, {passive:false});
+}, false);
 
-el.addEventListener(‘pointermove’, function(e){
-onMove(e.clientX, e.clientY);
+document.addEventListener(‘touchmove’, function(e){
+if(!active) return;
+move(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
 e.preventDefault();
-}, {passive:false});
+}, false);
 
-el.addEventListener(‘pointerup’,     onEnd, {passive:true});
-el.addEventListener(‘pointercancel’, onEnd, {passive:true});
+document.addEventListener(‘touchend’, end, false);
+document.addEventListener(‘touchcancel’, end, false);
 
-// Restore saved position
-try {
-var sx = localStorage.getItem(‘sx’), sy = localStorage.getItem(‘sy’);
-if(sx && sy){ el.style.left=sx; el.style.top=sy; el.style.right=‘auto’; el.style.bottom=‘auto’; }
-} catch(e){}
+try{
+var sx=localStorage.getItem(‘sx’), sy=localStorage.getItem(‘sy’);
+if(sx&&sy){el.style.left=sx;el.style.top=sy;el.style.right=‘auto’;el.style.bottom=‘auto’;}
+}catch(e){}
 })();
 </script>
 
