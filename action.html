@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Givy Admin Action</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;margin:0;padding:20px;background:#0f1117;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+.box{background:#1a1f2e;border-radius:20px;padding:30px 24px;max-width:420px;width:100%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+h1{margin:0 0 8px;font-size:24px;}
+.sub{color:#94a3b8;font-size:14px;margin-bottom:20px;}
+.status{padding:14px 16px;border-radius:12px;font-size:15px;font-weight:700;margin:16px 0;}
+.status.reject{background:#fef3c7;color:#dc2626;border:2px solid #dc2626;}
+.status.intent{background:#d1fae5;color:#065f46;border:2px solid #059669;}
+.status.pickup{background:#dbeafe;color:#1e40af;border:2px solid #2563eb;}
+.status.error{background:#fee2e2;color:#991b1b;border:2px solid #991b1b;}
+.status.loading{background:#f3f4f6;color:#374151;}
+.order-info{background:#0f1117;border-radius:12px;padding:16px;margin:16px 0;text-align:left;font-size:13px;line-height:1.7;}
+.order-info strong{color:#94a3b8;display:inline-block;min-width:90px;}
+.btn{display:block;width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:800;cursor:pointer;margin:8px 0;text-decoration:none;text-align:center;}
+.btn-home{background:#059669;color:white;}
+.btn-disabled{background:#374151;color:#9ca3af;cursor:not-allowed;}
+</style>
+</head>
+<body>
+<div class="box">
+<h1>🦝 Givy Admin</h1>
+<div class="sub">Order action handler</div>
+<div id="status" class="status loading">⏳ Loading order...</div>
+<div id="order-info"></div>
+<a href="index.html" class="btn btn-home">← Back to Givy</a>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAzSh_wSb6hdZtq3HULcNnyZmT8HbA1CRU",
+  authDomain: "givy-rewards-7e086.firebaseapp.com",
+  projectId: "givy-rewards-7e086",
+  storageBucket: "givy-rewards-7e086.firebasestorage.app",
+  messagingSenderId: "279968070839",
+  appId: "1:279968070839:web:8761241835b0ee273da132"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const params = new URLSearchParams(window.location.search);
+const orderId = params.get('id');
+const action = params.get('action');
+
+const statusEl = document.getElementById('status');
+const infoEl = document.getElementById('order-info');
+
+async function run(){
+  if(!orderId || !action){
+    statusEl.className = 'status error';
+    statusEl.innerHTML = '❌ Invalid link — missing order ID or action';
+    return;
+  }
+
+  try {
+    const ref = doc(db, 'orders', orderId);
+    const snap = await getDoc(ref);
+    
+    if(!snap.exists()){
+      statusEl.className = 'status error';
+      statusEl.innerHTML = '❌ Order not found';
+      return;
+    }
+    
+    const data = snap.data();
+    
+    // Show order info
+    infoEl.innerHTML = '<div class="order-info">' +
+      '<div><strong>Customer:</strong> ' + (data.nickname || '—') + '</div>' +
+      '<div><strong>Item:</strong> ' + (data.title || '—') + '</div>' +
+      '<div><strong>Condition:</strong> ' + (data.condition || '—') + '</div>' +
+      '<div><strong>Address:</strong> ' + (data.address || '—') + '</div>' +
+      '<div><strong>Date/Time:</strong> ' + (data.date || '—') + ' ' + (data.time || '') + '</div>' +
+      '<div><strong>Email:</strong> ' + (data.email || '—') + '</div>' +
+      '<div><strong>Phone:</strong> ' + (data.phone || '—') + '</div>' +
+      '<div><strong>Current status:</strong> ' + (data.status || 'pending') + '</div>' +
+      '</div>';
+    
+    // Check if already processed same action
+    const currentStatus = data.status || 'pending';
+    const actionMap = {
+      'reject': 'rejected',
+      'intent': 'confirmed_intent',
+      'pickup': 'picked_up'
+    };
+    const newStatus = actionMap[action];
+    
+    if(!newStatus){
+      statusEl.className = 'status error';
+      statusEl.innerHTML = '❌ Unknown action: ' + action;
+      return;
+    }
+    
+    if(currentStatus === newStatus){
+      statusEl.className = 'status ' + action;
+      statusEl.innerHTML = '⚠️ This action was already applied. Status is already: <strong>' + newStatus + '</strong>';
+      return;
+    }
+    
+    // Update status
+    await updateDoc(ref, { status: newStatus, updatedAt: new Date().toISOString() });
+    
+    if(action === 'reject'){
+      statusEl.className = 'status reject';
+      statusEl.innerHTML = '🔴 Order REJECTED<br><br>Customer will see: "Sorry, we can\'t accept your donation"';
+    } else if(action === 'intent'){
+      statusEl.className = 'status intent';
+      statusEl.innerHTML = '🟢 Intent CONFIRMED<br><br>Customer will see: "We are ready to pickup — please send your exact address and parking info"';
+    } else if(action === 'pickup'){
+      statusEl.className = 'status pickup';
+      statusEl.innerHTML = '🔵 Pickup CONFIRMED<br><br>Customer will see: "Item picked up! Points added to your account."<br><br>Their level will update automatically.';
+    }
+    
+  } catch(e) {
+    console.error(e);
+    statusEl.className = 'status error';
+    statusEl.innerHTML = '❌ Error: ' + e.message;
+  }
+}
+
+run();
+</script>
+
+</body>
+</html>
