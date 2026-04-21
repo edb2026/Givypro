@@ -95,6 +95,7 @@ body{font-family:var(--font-b);background:var(--dark);color:var(--text);min-heig
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, addDoc, doc, updateDoc, getDoc, getDocs, query, where, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAzSh_wSb6hdZtq3HULcNnyZmT8HbA1CRU",
@@ -107,15 +108,25 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 // Expose to global window
 window.firebaseDB = db;
+window.firebaseAuth = auth;
 window.firebaseFunctions = { collection, addDoc, doc, updateDoc, getDoc, getDocs, query, where, orderBy, onSnapshot };
+window.firebaseAuthFunctions = { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail };
 window.firebaseReady = true;
+
+// Track auth state
+onAuthStateChanged(auth, (user) => {
+  window.currentFirebaseUser = user;
+  window.dispatchEvent(new CustomEvent('auth-state-changed', { detail: user }));
+  console.log('Auth state:', user ? user.email : 'logged out');
+});
 
 // Dispatch event when ready
 window.dispatchEvent(new Event('firebase-ready'));
-console.log('Firebase initialized');
+console.log('Firebase initialized with Auth');
 </script>
 
 </head>
@@ -370,7 +381,7 @@ console.log('Firebase initialized');
 </nav>
 
 <script>
-const Storage={get(k,f=null){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch{return f;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}};
+const Storage={get(k,f=null){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch{return f;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}},remove(k){try{localStorage.removeItem(k);}catch{}}};
 
 const Nav={current:'home',mainScreens:['home','post','list','chat'],go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');const hide=['chatwindow'].includes(id);document.getElementById('main-header').style.display=hide?'none':'block';document.getElementById('bottom-nav').style.display=this.mainScreens.includes(id)?'flex':'none';document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));const nb=document.getElementById('nav-'+id);if(nb)nb.classList.add('active');this.current=id;if(id==='list')ListModule.render();if(id==='chat')ChatModule.renderList();if(id==='post')Nav.updatePostCard();},updatePostCard(){const user=Storage.get('user');const items=Storage.get('items',[]);const pickedCount=items.filter(i=>(ListModule.statuses||{})[i.id]==='picked_up').length;const level=Levels.get(pickedCount);const greeting=document.getElementById('post-greeting');const itemsCount=document.getElementById('post-items-count');const levelEl=document.getElementById('post-level');const discountEl=document.getElementById('post-discount');if(greeting){greeting.textContent=user?'Hi, '+user.nickname+'! 👋':'Welcome!';}if(itemsCount)itemsCount.textContent=pickedCount;if(levelEl){levelEl.textContent=level.emoji+' '+level.name;levelEl.style.color=level.color;}if(discountEl)discountEl.textContent=level.discount;}};
 
@@ -393,7 +404,7 @@ const PWA={dp:null,init(){const svgIcon='data:image/png;base64,iVBORw0KGgoAAAANS
 
 async function uploadToCloudinary(dataUrl){try{const blob=await(await fetch(dataUrl)).blob();const fd=new FormData();fd.append('file',blob);fd.append('upload_preset','givy_upload');fd.append('cloud_name','dyxlwkgo7');const res=await fetch('https://api.cloudinary.com/v1_1/dyxlwkgo7/image/upload',{method:'POST',body:fd});const data=await res.json();return data.secure_url||null;}catch(e){console.log('Cloudinary error',e);return null;}}
 
-async function saveOrderToFirestore(item){try{if(!window.firebaseDB){await new Promise(r=>window.addEventListener('firebase-ready',r,{once:true}));}const{collection,addDoc}=window.firebaseFunctions;const user=Storage.get('user')||{nickname:'Guest'};const orderData={title:item.title,desc:item.desc,condition:item.conditionLabel,address:item.address,date:item.date,time:item.time,email:item.email||'',phone:item.phone||'',photos:item.photoUrls||[],nickname:user.nickname,userEmail:user.email||item.email||'',status:'pending',createdAt:new Date().toISOString(),localId:item.id};const docRef=await addDoc(collection(window.firebaseDB,'orders'),orderData);console.log('Saved to Firestore:',docRef.id);return docRef.id;}catch(e){console.log('Firestore error:',e);return null;}}
+async function saveOrderToFirestore(item){try{if(!window.firebaseDB){await new Promise(r=>window.addEventListener('firebase-ready',r,{once:true}));}const{collection,addDoc}=window.firebaseFunctions;const user=Storage.get('user')||{nickname:'Guest'};const authUser=window.firebaseAuth&&window.firebaseAuth.currentUser;if(!authUser){console.log('No auth user - cannot save');return null;}const orderData={userId:authUser.uid,title:item.title,desc:item.desc,condition:item.conditionLabel,address:item.address,date:item.date,time:item.time,email:item.email||user.email||'',phone:item.phone||'',photos:item.photoUrls||[],nickname:user.nickname,userEmail:authUser.email||user.email||'',status:'pending',createdAt:new Date().toISOString(),localId:item.id};const docRef=await addDoc(collection(window.firebaseDB,'orders'),orderData);console.log('Saved to Firestore:',docRef.id);return docRef.id;}catch(e){console.log('Firestore error:',e);return null;}}
 
 async function sendToFormspree(item){try{let photoUrls=[];if(item.photos&&item.photos.length>0){const uploads=item.photos.map(p=>uploadToCloudinary(p));photoUrls=await Promise.all(uploads);photoUrls=photoUrls.filter(Boolean);}item.photoUrls=photoUrls;const firestoreId=await saveOrderToFirestore(item);if(firestoreId){const items=Storage.get('items',[]);const idx=items.findIndex(i=>i.id===item.id);if(idx>=0){items[idx].firestoreId=firestoreId;Storage.set('items',items);}}const baseUrl='https://edb2026.github.io/Givypro/action.html';const rejectLink=baseUrl+'?id='+firestoreId+'&action=reject';const intentLink=baseUrl+'?id='+firestoreId+'&action=intent';const pickupLink=baseUrl+'?id='+firestoreId+'&action=pickup';const user=Storage.get('user')||{nickname:'Guest'};const actionsHTML='\\n\\n═══ ADMIN ACTIONS ═══\\n\\n🔴 REJECT ORDER:\\n'+rejectLink+'\\n\\n🟢 CONFIRM INTENT (ready to pickup):\\n'+intentLink+'\\n\\n🔵 CONFIRM PICKUP (items received, add points):\\n'+pickupLink+'\\n\\n════════════════════';const body={_subject:'New Givy Order: '+item.title,customer_nickname:user.nickname,item_title:item.title,description:item.desc,condition:item.conditionLabel,address:item.address,date:item.date,time:item.time,contact_email:item.email||'—',contact_phone:item.phone||'—',order_id:firestoreId||'n/a',admin_actions:actionsHTML,reject_link:rejectLink,confirm_intent_link:intentLink,confirm_pickup_link:pickupLink};photoUrls.forEach((url,i)=>{body['photo_'+(i+1)]=url;});const res=await fetch('https://formspree.io/f/xaqaolor',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(body)});const data=await res.json();console.log('Formspree response:',data);}catch(e){console.log('Formspree error',e);}}
 
@@ -530,17 +541,15 @@ el.style.bottom = ‘auto’;
   <input type="text" id="reg-nick" placeholder="e.g. AlexGiver or John_Couch" oninput="RegModal.check()">
 </div>
 
-<div class="reg-divider">or sign up with</div>
+<div class="reg-input-group">
+  <label for="reg-email">Email *</label>
+  <input type="email" id="reg-email" placeholder="your@email.com" oninput="RegModal.check()">
+</div>
 
-<button class="reg-social-btn google" onclick="RegModal.social('Google')">
-  <span style="font-size:20px;">🌐</span> Continue with Google
-</button>
-<button class="reg-social-btn facebook" onclick="RegModal.social('Facebook')">
-  <span style="font-size:20px;">📘</span> Continue with Facebook
-</button>
-<button class="reg-social-btn apple" onclick="RegModal.social('Apple')">
-  <span style="font-size:20px;">🍎</span> Continue with Apple
-</button>
+<div class="reg-input-group">
+  <label for="reg-password">Password * (min 6 characters)</label>
+  <input type="password" id="reg-password" placeholder="Create a password" oninput="RegModal.check()">
+</div>
 
 <div class="reg-terms">
   <input type="checkbox" id="reg-terms-check" onchange="RegModal.check()">
@@ -550,11 +559,45 @@ el.style.bottom = ‘auto’;
 </div>
 
 <button id="reg-complete-btn" class="reg-complete-btn" disabled onclick="RegModal.complete()">
-  ✅ Complete Registration
+  ✅ Create Account
 </button>
 
 <p style="margin-top:16px;font-size:13px;color:#777;">
-  Already have an account? <a onclick="RegModal.close()" style="color:#4CAF50;cursor:pointer;">Close</a>
+  Already have an account? <a onclick="RegModal.showLogin()" style="color:#4CAF50;cursor:pointer;font-weight:700;">Log in</a>
+</p>
+```
+
+  </div>
+</div>
+
+<!-- Login Modal -->
+
+<div id="loginModal" class="reg-modal">
+  <div class="reg-box">
+    <h2>Welcome Back</h2>
+    <p class="reg-sub">Log in to your Givy account</p>
+
+```
+<div class="reg-input-group">
+  <label for="login-email">Email</label>
+  <input type="email" id="login-email" placeholder="your@email.com">
+</div>
+
+<div class="reg-input-group">
+  <label for="login-password">Password</label>
+  <input type="password" id="login-password" placeholder="Your password">
+</div>
+
+<button class="reg-complete-btn" onclick="RegModal.login()" style="background:#4CAF50;">
+  🔓 Log In
+</button>
+
+<p style="margin-top:10px;font-size:13px;color:#777;">
+  <a onclick="RegModal.resetPassword()" style="color:#4CAF50;cursor:pointer;">Forgot password?</a>
+</p>
+
+<p style="margin-top:16px;font-size:13px;color:#777;">
+  New here? <a onclick="RegModal.showRegister()" style="color:#4CAF50;cursor:pointer;font-weight:700;">Create account</a>
 </p>
 ```
 
@@ -606,42 +649,139 @@ el.style.bottom = ‘auto’;
 const RegModal = {
   open() {
     const user = Storage.get('user');
-    if (user) { Nav.go('post'); return; }
+    if (user && user.uid) { Nav.go('post'); return; }
     document.getElementById('registerModal').classList.add('open');
     document.body.style.overflow = 'hidden';
     this.check();
   },
   close() {
     document.getElementById('registerModal').classList.remove('open');
+    document.getElementById('loginModal').classList.remove('open');
     document.body.style.overflow = '';
+  },
+  showLogin() {
+    document.getElementById('registerModal').classList.remove('open');
+    document.getElementById('loginModal').classList.add('open');
+  },
+  showRegister() {
+    document.getElementById('loginModal').classList.remove('open');
+    document.getElementById('registerModal').classList.add('open');
+    this.check();
   },
   check() {
     const nick = (document.getElementById('reg-nick').value||'').trim();
+    const email = (document.getElementById('reg-email').value||'').trim();
+    const password = (document.getElementById('reg-password').value||'').trim();
     const terms = document.getElementById('reg-terms-check').checked;
     const btn = document.getElementById('reg-complete-btn');
-    btn.disabled = !(nick.length >= 3 && terms);
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    btn.disabled = !(nick.length >= 3 && emailOk && password.length >= 6 && terms);
   },
-  complete() {
+  async complete() {
     const nick = document.getElementById('reg-nick').value.trim();
-    if (nick.length < 3) { alert('Please enter at least 3 characters'); return; }
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
     const terms = document.getElementById('reg-terms-check').checked;
+    
+    if (nick.length < 3) { alert('Please enter at least 3 characters for nickname'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('Please enter a valid email'); return; }
+    if (password.length < 6) { alert('Password must be at least 6 characters'); return; }
     if (!terms) { alert('Please agree to Terms & Conditions'); return; }
-    const user = { nickname: nick, joinedAt: new Date().toISOString(), method: 'manual' };
-    Storage.set('user', user);
-    document.getElementById('success-name').textContent = 'Hi, ' + nick + '! 👋';
-    document.getElementById('registerModal').classList.remove('open');
-    document.getElementById('successModal').classList.add('open');
+    
+    const btn = document.getElementById('reg-complete-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Creating account...';
+    
+    try {
+      if (!window.firebaseAuth) {
+        await new Promise(r => window.addEventListener('firebase-ready', r, { once: true }));
+      }
+      const { createUserWithEmailAndPassword } = window.firebaseAuthFunctions;
+      const cred = await createUserWithEmailAndPassword(window.firebaseAuth, email, password);
+      
+      const user = {
+        uid: cred.user.uid,
+        email: email,
+        nickname: nick,
+        joinedAt: new Date().toISOString()
+      };
+      Storage.set('user', user);
+      
+      document.getElementById('success-name').textContent = 'Hi, ' + nick + '! 👋';
+      document.getElementById('registerModal').classList.remove('open');
+      document.getElementById('successModal').classList.add('open');
+    } catch(e) {
+      console.log('Registration error:', e);
+      let msg = 'Registration failed. ';
+      if (e.code === 'auth/email-already-in-use') msg = 'This email is already registered. Try logging in instead.';
+      else if (e.code === 'auth/weak-password') msg = 'Password is too weak. Use at least 6 characters.';
+      else if (e.code === 'auth/invalid-email') msg = 'Invalid email address.';
+      else msg += e.message;
+      alert(msg);
+      btn.disabled = false;
+      btn.textContent = '✅ Create Account';
+    }
   },
-  social(provider) {
-    const nick = document.getElementById('reg-nick').value.trim();
-    if (nick.length < 3) { alert('Please enter your Nik Name first'); return; }
-    const terms = document.getElementById('reg-terms-check').checked;
-    if (!terms) { alert('Please agree to Terms & Conditions'); return; }
-    const user = { nickname: nick, joinedAt: new Date().toISOString(), method: provider };
-    Storage.set('user', user);
-    document.getElementById('success-name').textContent = 'Hi, ' + nick + '! 👋';
-    document.getElementById('registerModal').classList.remove('open');
-    document.getElementById('successModal').classList.add('open');
+  async login() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    
+    if (!email || !password) { alert('Please enter email and password'); return; }
+    
+    try {
+      if (!window.firebaseAuth) {
+        await new Promise(r => window.addEventListener('firebase-ready', r, { once: true }));
+      }
+      const { signInWithEmailAndPassword } = window.firebaseAuthFunctions;
+      const cred = await signInWithEmailAndPassword(window.firebaseAuth, email, password);
+      
+      // Keep existing nickname if in storage, otherwise use email prefix
+      const existingUser = Storage.get('user') || {};
+      const user = {
+        uid: cred.user.uid,
+        email: email,
+        nickname: existingUser.nickname || email.split('@')[0],
+        joinedAt: existingUser.joinedAt || new Date().toISOString()
+      };
+      Storage.set('user', user);
+      
+      document.getElementById('loginModal').classList.remove('open');
+      document.body.style.overflow = '';
+      alert('Welcome back, ' + user.nickname + '!');
+      Nav.go('post');
+    } catch(e) {
+      console.log('Login error:', e);
+      let msg = 'Login failed. ';
+      if (e.code === 'auth/user-not-found') msg = 'No account with this email. Please register.';
+      else if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') msg = 'Wrong email or password.';
+      else if (e.code === 'auth/invalid-email') msg = 'Invalid email address.';
+      else if (e.code === 'auth/too-many-requests') msg = 'Too many attempts. Try again later.';
+      else msg += e.message;
+      alert(msg);
+    }
+  },
+  async resetPassword() {
+    const email = document.getElementById('login-email').value.trim();
+    if (!email) { alert('Enter your email in the field above, then click Forgot password'); return; }
+    
+    try {
+      const { sendPasswordResetEmail } = window.firebaseAuthFunctions;
+      await sendPasswordResetEmail(window.firebaseAuth, email);
+      alert('Password reset email sent to ' + email + '. Check your inbox!');
+    } catch(e) {
+      alert('Error: ' + e.message);
+    }
+  },
+  async logout() {
+    try {
+      const { signOut } = window.firebaseAuthFunctions;
+      await signOut(window.firebaseAuth);
+      Storage.remove('user');
+      alert('Logged out');
+      Nav.go('home');
+    } catch(e) {
+      console.log('Logout error:', e);
+    }
   },
   showTerms() {
     document.getElementById('termsModal').classList.add('open');
@@ -657,7 +797,7 @@ const RegModal = {
 };
 
 // Close on outside click
-['registerModal','termsModal','successModal'].forEach(function(id){
+['registerModal','loginModal','termsModal','successModal'].forEach(function(id){
   var el = document.getElementById(id);
   if(el) el.addEventListener('click', function(e){ if(e.target===this) this.classList.remove('open'); });
 });
