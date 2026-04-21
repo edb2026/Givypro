@@ -114,13 +114,24 @@ window.adminLogin = async function() {
   const errEl = document.getElementById('login-error');
   errEl.textContent = '';
   
+  // DEBUG: Show what we're checking
+  console.log('Input email:', email);
+  console.log('Input email lowercase:', email.toLowerCase());
+  console.log('Expected admin email:', ADMIN_EMAIL);
+  console.log('Match?', email.toLowerCase() === ADMIN_EMAIL);
+  
+  errEl.innerHTML = `DEBUG:<br>Input: ${email.toLowerCase()}<br>Expected: ${ADMIN_EMAIL}<br>Match: ${email.toLowerCase() === ADMIN_EMAIL}`;
+  
   if (email.toLowerCase() !== ADMIN_EMAIL) {
     errEl.textContent = 'Access denied: only admin can access this page';
     return;
   }
   
+  errEl.textContent = 'Trying to login...';
+  
   try {
     await signInWithEmailAndPassword(auth, email, password);
+    errEl.textContent = 'Login successful!';
   } catch(e) {
     console.log('Login error:', e);
     if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
