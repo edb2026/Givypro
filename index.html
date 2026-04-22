@@ -550,9 +550,45 @@ const PWA={dp:null,init(){const svgIcon='data:image/png;base64,iVBORw0KGgoAAAANS
 
 async function uploadToCloudinary(dataUrl){try{const blob=await(await fetch(dataUrl)).blob();const fd=new FormData();fd.append('file',blob);fd.append('upload_preset','givy_upload');fd.append('cloud_name','dyxlwkgo7');const res=await fetch('https://api.cloudinary.com/v1_1/dyxlwkgo7/image/upload',{method:'POST',body:fd});const data=await res.json();return data.secure_url||null;}catch(e){console.log('Cloudinary error',e);return null;}}
 
-async function saveOrderToFirestore(item){try{if(!window.firebaseDB){await new Promise(r=>window.addEventListener('firebase-ready',r,{once:true}));}const{collection,addDoc}=window.firebaseFunctions;const user=Storage.get('user')||{nickname:'Guest'};const authUser=window.firebaseAuth&&window.firebaseAuth.currentUser;if(!authUser){console.log('No auth user - cannot save');return null;}const orderData={userId:authUser.uid,title:item.title,desc:item.desc,condition:item.conditionLabel,address:item.address,date:item.date,time:item.time,email:item.email||user.email||'',phone:item.phone||'',photos:item.photoUrls||[],nickname:user.nickname,userEmail:authUser.email||user.email||'',status:'pending',createdAt:new Date().toISOString(),localId:item.id};const docRef=await addDoc(collection(window.firebaseDB,'orders'),orderData);console.log('Saved to Firestore:',docRef.id);return docRef.id;}catch(e){console.log('Firestore error:',e);return null;}}
+async function saveOrderToFirestore(item){try{if(!window.firebaseDB){await new Promise(r=>window.addEventListener('firebase-ready',r,{once:true}));}const{collection,addDoc}=window.firebaseFunctions;const user=Storage.get('user')||{nickname:'Guest'};const authUser=window.firebaseAuth&&window.firebaseAuth.currentUser;const orderData={userId:authUser?authUser.uid:'guest_'+item.id,title:item.title,desc:item.desc,condition:item.conditionLabel,zip:item.zip||'',location:item.location||null,date:item.date,time:item.time,email:item.email||user.email||'',phone:item.phone||'',photos:item.photoUrls||[],nickname:user.nickname,userEmail:authUser?authUser.email:(user.email||''),status:'pending',createdAt:new Date().toISOString(),localId:item.id};const docRef=await addDoc(collection(window.firebaseDB,'orders'),orderData);console.log('Saved to Firestore:',docRef.id);return docRef.id;}catch(e){console.log('Firestore error:',e);return null;}}
 
-async function sendToFormspree(item){try{let photoUrls=[];if(item.photos&&item.photos.length>0){const uploads=item.photos.map(p=>uploadToCloudinary(p));photoUrls=await Promise.all(uploads);photoUrls=photoUrls.filter(Boolean);}item.photoUrls=photoUrls;const firestoreId=await saveOrderToFirestore(item);if(firestoreId){const items=Storage.get('items',[]);const idx=items.findIndex(i=>i.id===item.id);if(idx>=0){items[idx].firestoreId=firestoreId;Storage.set('items',items);}}const baseUrl='https://edb2026.github.io/Givypro/action.html';const rejectLink=baseUrl+'?id='+firestoreId+'&action=reject';const intentLink=baseUrl+'?id='+firestoreId+'&action=intent';const pickupLink=baseUrl+'?id='+firestoreId+'&action=pickup';const user=Storage.get('user')||{nickname:'Guest'};const actionsHTML='\\n\\n═══ ADMIN ACTIONS ═══\\n\\n🔴 REJECT ORDER:\\n'+rejectLink+'\\n\\n🟢 CONFIRM INTENT (ready to pickup):\\n'+intentLink+'\\n\\n🔵 CONFIRM PICKUP (items received, add points):\\n'+pickupLink+'\\n\\n════════════════════';const body={_subject:'New Givy Order: '+item.title,customer_nickname:user.nickname,item_title:item.title,description:item.desc,condition:item.conditionLabel,address:item.address,date:item.date,time:item.time,contact_email:item.email||'—',contact_phone:item.phone||'—',order_id:firestoreId||'n/a',admin_actions:actionsHTML,reject_link:rejectLink,confirm_intent_link:intentLink,confirm_pickup_link:pickupLink};photoUrls.forEach((url,i)=>{body['photo_'+(i+1)]=url;});const res=await fetch('https://formspree.io/f/xaqaolor',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(body)});const data=await res.json();console.log('Formspree response:',data);}catch(e){console.log('Formspree error',e);}}
+async function sendToFormspree(item){try{let photoUrls=[];if(item.photos&&item.photos.length>0){const uploads=item.photos.map(p=>uploadToCloudinary(p));photoUrls=await Promise.all(uploads);photoUrls=photoUrls.filter(Boolean);}item.photoUrls=photoUrls;const firestoreId=await saveOrderToFirestore(item);if(firestoreId){const items=Storage.get('items',[]);const idx=items.findIndex(i=>i.id===item.id);if(idx>=0){items[idx].firestoreId=firestoreId;Storage.set('items',items);}}const baseUrl='https://edb2026.github.io/Givypro/action.html';const rejectLink=baseUrl+'?id='+firestoreId+'&action=reject';const intentLink=baseUrl+'?id='+firestoreId+'&action=intent';const pickupLink=baseUrl+'?id='+firestoreId+'&action=pickup';const user=Storage.get('user')||{nickname:'Guest'};
+    
+    // Location info
+    const loc=item.location||{};
+    const locationText=loc.lat?`${loc.city||''}, ${loc.state||''} ${loc.zip||''} (${loc.method==='gps'?'GPS':'ZIP'})`:'Not provided';
+    const mapImageUrl=loc.lat?`https://staticmap.openstreetmap.de/staticmap.php?center=${loc.lat},${loc.lng}&zoom=12&size=600x350&markers=${loc.lat},${loc.lng},lightgreen1`:'';
+    const googleMapsLink=loc.lat?`https://www.google.com/maps?q=${loc.lat},${loc.lng}`:'';
+    const openStreetMapLink=loc.lat?`https://www.openstreetmap.org/?mlat=${loc.lat}&mlon=${loc.lng}&zoom=13`:'';
+    
+    const actionsHTML='\n\n═══ ADMIN ACTIONS ═══\n\n🔴 REJECT ORDER:\n'+rejectLink+'\n\n🟢 CONFIRM INTENT (ready to pickup):\n'+intentLink+'\n\n🔵 CONFIRM PICKUP (items received, add points):\n'+pickupLink+'\n\n════════════════════';
+    
+    const body={
+      _subject:'New Givy Order: '+item.title,
+      customer_nickname:user.nickname,
+      item_title:item.title,
+      description:item.desc,
+      condition:item.conditionLabel,
+      pickup_location:locationText,
+      zip_code:loc.zip||'—',
+      city:loc.city||'—',
+      state:loc.state||'—',
+      coordinates:loc.lat?`${loc.lat}, ${loc.lng}`:'—',
+      map_image:mapImageUrl,
+      google_maps_link:googleMapsLink,
+      openstreet_maps_link:openStreetMapLink,
+      date:item.date,
+      time:item.time,
+      contact_email:item.email||'—',
+      contact_phone:item.phone||'—',
+      order_id:firestoreId||'n/a',
+      admin_actions:actionsHTML,
+      reject_link:rejectLink,
+      confirm_intent_link:intentLink,
+      confirm_pickup_link:pickupLink
+    };
+    photoUrls.forEach((url,i)=>{body['photo_'+(i+1)]=url;});
+    const res=await fetch('https://formspree.io/f/xaqaolor',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(body)});const data=await res.json();console.log('Formspree response:',data);}catch(e){console.log('Formspree error',e);}}
 
 PWA.init();
 Nav.go('home');
