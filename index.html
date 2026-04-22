@@ -176,11 +176,22 @@ onAuthStateChanged(auth, async (user) => {
       let localItems = [];
       try { localItems = JSON.parse(localStorage.getItem('items') || '[]'); } catch(e) {}
       const firestoreIds = new Set(firestoreItems.map(i => i.id));
-      const localOnly = localItems.filter(i => !firestoreIds.has(i.id));
+      // Keep local items that are either: not in Firestore yet, OR created in last 5 minutes
+      const fiveMinAgo = Date.now() - 5*60*1000;
+      const localOnly = localItems.filter(i => {
+        if (firestoreIds.has(i.id)) return false; // already have Firestore version
+        return true; // keep ALL local-only items
+      });
       const mergedItems = [...localOnly, ...firestoreItems];
       mergedItems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       
-      try { localStorage.setItem('items', JSON.stringify(mergedItems)); } catch(e) {}
+      // SAFETY: Only overwrite if we actually got something from Firestore OR if local is empty
+      // This prevents wiping local items when Firestore rules block reads
+      if (firestoreItems.length > 0 || localItems.length === 0) {
+        try { localStorage.setItem('items', JSON.stringify(mergedItems)); } catch(e) {}
+      } else {
+        console.log('Firestore returned empty but local has', localItems.length, 'items - keeping local');
+      }
       window.initialStatuses = statuses;
       
       // Refresh UI if Nav is ready
@@ -644,7 +655,7 @@ const LocationModule = {
   }
 };
 
-const Nav={current:'home',mainScreens:['home','post','list','chat'],async go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');const hide=['chatwindow'].includes(id);document.getElementById('main-header').style.display=hide?'none':'block';document.getElementById('bottom-nav').style.display=this.mainScreens.includes(id)?'flex':'none';document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));const nb=document.getElementById('nav-'+id);if(nb)nb.classList.add('active');this.current=id;const items=Storage.get('items',[]);if(items.length>0){await ListModule.fetchStatuses(items);}if(id==='list')ListModule.render();if(id==='chat')ChatModule.renderList();if(id==='post'||id==='home'||id==='list')Nav.updatePostCard();if(id==='list'||id==='post')BannerModule.render();},updatePostCard(){const user=Storage.get('user');const items=Storage.get('items',[]);const pickedCount=items.filter(i=>(ListModule.statuses||{})[i.id]==='picked_up').length;const level=Levels.get(pickedCount);const greeting=document.getElementById('post-greeting');const itemsCount=document.getElementById('post-items-count');const levelEl=document.getElementById('post-level');const discountEl=document.getElementById('post-discount');if(greeting){greeting.textContent=user?'Hi, '+user.nickname+'! 👋':'Welcome!';}if(itemsCount)itemsCount.textContent=pickedCount;if(levelEl){levelEl.textContent=level.emoji+' '+level.name;levelEl.style.color=level.color;}if(discountEl)discountEl.textContent=level.discount;}};
+const Nav={current:'home',mainScreens:['home','post','list','chat'],go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');const hide=['chatwindow'].includes(id);document.getElementById('main-header').style.display=hide?'none':'block';document.getElementById('bottom-nav').style.display=this.mainScreens.includes(id)?'flex':'none';document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));const nb=document.getElementById('nav-'+id);if(nb)nb.classList.add('active');this.current=id;if(id==='list')ListModule.render();if(id==='chat')ChatModule.renderList();if(id==='post'||id==='home'||id==='list')Nav.updatePostCard();if(id==='list'||id==='post')BannerModule.render();},updatePostCard(){const user=Storage.get('user');const items=Storage.get('items',[]);const pickedCount=items.filter(i=>(ListModule.statuses||{})[i.id]==='picked_up').length;const level=Levels.get(pickedCount);const greeting=document.getElementById('post-greeting');const itemsCount=document.getElementById('post-items-count');const levelEl=document.getElementById('post-level');const discountEl=document.getElementById('post-discount');if(greeting){greeting.textContent=user?'Hi, '+user.nickname+'! 👋':'Welcome!';}if(itemsCount)itemsCount.textContent=pickedCount;if(levelEl){levelEl.textContent=level.emoji+' '+level.name;levelEl.style.color=level.color;}if(discountEl)discountEl.textContent=level.discount;}};
 
 const Levels={get(c){if(c>=7)return{name:'Champion',discount:'50%',emoji:'🏆',color:'#059669'};if(c>=4)return{name:'Diamond',discount:'30%',emoji:'💎',color:'#7c3aed'};if(c>=1)return{name:'Gold',discount:'20%',emoji:'🥇',color:'#d97706'};return{name:'New',discount:'0%',emoji:'⭐',color:'#6b7280'};}};
 
@@ -716,10 +727,9 @@ submit(){
   LocationModule.reset();
   
   // Navigate to My Items and render
-  Nav.go('list').then(()=>{
-    ListModule.render();
-    BannerModule.render();
-  });
+  Nav.go('list');
+  ListModule.render();
+  BannerModule.render();
 }};
 
 const ListModule={cond:{new:'cond-new',like_new:'cond-likenew',very_good:'cond-verygood',restorable:'cond-restorable'},statuses:window.initialStatuses||{},
