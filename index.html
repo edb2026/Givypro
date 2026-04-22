@@ -11,6 +11,8 @@
 <link rel="manifest" id="pwa-manifest">
 <title>Givy Rewards</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{--dark:#1a1f2e;--dark2:#252a3a;--card:#ffffff;--green:#059669;--green2:#047857;--gold:#f59e0b;--purple:#7c3aed;--red:#ef4444;--text:#111827;--sub:#6b7280;--border:#e5e7eb;--radius:20px;--font-h:'Inter',sans-serif;--font-b:'Inter',sans-serif;}
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -41,7 +43,7 @@ body{font-family:var(--font-b);background:#0f1117;color:#111827;min-height:100vh
 .condition-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
 .condition-btn{border:2px solid var(–border);border-radius:12px;padding:10px 8px;background:#f8fafc;cursor:pointer;text-align:center;transition:all 0.2s;font-family:var(–font-b);}
 .condition-btn .c-icon{font-size:20px;display:block;margin-bottom:4px;}.condition-btn .c-name{font-size:12px;font-weight:700;color:var(–text);display:block;}.condition-btn .c-desc{font-size:10px;color:var(–sub);display:block;margin-top:2px;}
-.condition-btn.selected{border-color:var(–green);background:#ecfdf5;}.condition-btn.selected .c-name{color:var(–green);}
+.condition-btn.selected{border-color:#059669 !important;background:#059669 !important;box-shadow:0 4px 12px rgba(5,150,105,0.4);}.condition-btn.selected .c-name{color:white !important;}.condition-btn.selected .c-desc{color:rgba(255,255,255,0.9) !important;}
 .photo-upload-area{border:2px dashed var(–border);border-radius:16px;padding:20px;text-align:center;cursor:pointer;background:#f8fafc;margin-bottom:4px;transition:border-color 0.2s;}
 .photo-upload-area:hover{border-color:var(–green);background:#f0fdf4;}
 .photo-upload-area .upload-icon{font-size:32px;margin-bottom:4px;}.photo-upload-area .upload-text{font-size:14px;font-weight:700;color:var(–sub);}.photo-upload-area .upload-limit{font-size:11px;color:#9ca3af;margin-top:3px;}
@@ -293,8 +295,19 @@ console.log('Firebase initialized with Auth');
 </div>
 <input type="file" id="f-photo" multiple accept="image/*" style="display:none;" onchange="PhotoModule.handleFiles(this)">
 
-<div class="section-label">Pickup Address</div>
-<input id="f-address" placeholder="Street address" class="inp">
+<div class="section-label">Pickup Location</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+  <input id="f-zip" placeholder="ZIP Code (98101)" class="inp" style="margin-bottom:0;" maxlength="5" oninput="LocationModule.onZipChange(this.value)">
+  <button type="button" onclick="LocationModule.useMyLocation()" style="background:#059669;color:white;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-b);">📍 Use GPS</button>
+</div>
+
+<div id="f-map-container" style="display:none;margin-bottom:8px;border-radius:12px;overflow:hidden;border:2px solid #e5e7eb;">
+  <div id="f-map" style="width:100%;height:200px;"></div>
+  <div id="f-location-info" style="padding:10px 12px;background:#f0fdf4;font-size:13px;color:#065f46;font-weight:700;"></div>
+</div>
+
+<input id="f-address" placeholder="Street address (will be sent after admin confirms)" class="inp">
 
 <div class="section-label">Pickup Date &amp; Time</div>
 <input type="date" id="f-date" class="inp">
@@ -384,13 +397,152 @@ console.log('Firebase initialized with Auth');
 const Storage={get(k,f=null){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch{return f;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}},remove(k){try{localStorage.removeItem(k);}catch{}}};
 function handleGiveClick(){const user=Storage.get('user');if(user&&user.email){Nav.go('post');}else{RegModal.open();}}
 
+const LocationModule = {
+  map: null,
+  circle: null,
+  marker: null,
+  data: null,
+  
+  initMap(lat, lng, zoom=11) {
+    const container = document.getElementById('f-map-container');
+    container.style.display = 'block';
+    
+    if (!this.map) {
+      this.map = L.map('f-map').setView([lat, lng], zoom);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap',
+        maxZoom: 19
+      }).addTo(this.map);
+    } else {
+      this.map.setView([lat, lng], zoom);
+    }
+    
+    // Remove old markers/circles
+    if (this.circle) this.map.removeLayer(this.circle);
+    if (this.marker) this.map.removeLayer(this.marker);
+    
+    // Add 5 mile circle (1 mile = 1609 meters)
+    this.circle = L.circle([lat, lng], {
+      color: '#059669',
+      fillColor: '#059669',
+      fillOpacity: 0.15,
+      radius: 8046 // 5 miles in meters
+    }).addTo(this.map);
+    
+    // Add center marker
+    this.marker = L.marker([lat, lng]).addTo(this.map);
+    
+    // Force map to re-render
+    setTimeout(() => this.map.invalidateSize(), 100);
+  },
+  
+  async onZipChange(zip) {
+    if (zip.length !== 5) return;
+    const info = document.getElementById('f-location-info');
+    info.textContent = '⏳ Looking up ZIP...';
+    document.getElementById('f-map-container').style.display = 'block';
+    
+    try {
+      const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
+      if (!res.ok) throw new Error('ZIP not found');
+      const data = await res.json();
+      const place = data.places[0];
+      const lat = parseFloat(place.latitude);
+      const lng = parseFloat(place.longitude);
+      
+      this.data = {
+        zip: zip,
+        city: place['place name'],
+        state: place['state abbreviation'],
+        lat: lat,
+        lng: lng,
+        method: 'zip'
+      };
+      
+      info.innerHTML = `📍 ${place['place name']}, ${place['state abbreviation']} ${zip} <span style="color:#6b7280;font-weight:500;">(5 mile radius)</span>`;
+      this.initMap(lat, lng);
+    } catch(e) {
+      info.textContent = '❌ ZIP code not found';
+      info.style.color = '#dc2626';
+    }
+  },
+  
+  useMyLocation() {
+    const info = document.getElementById('f-location-info');
+    const container = document.getElementById('f-map-container');
+    container.style.display = 'block';
+    info.textContent = '⏳ Getting your location...';
+    
+    if (!navigator.geolocation) {
+      info.textContent = '❌ GPS not supported by browser';
+      return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        
+        // Reverse geocode to get ZIP
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`);
+          const data = await res.json();
+          const zip = data.address?.postcode || '';
+          const city = data.address?.city || data.address?.town || data.address?.village || '';
+          const state = data.address?.state || '';
+          
+          this.data = {
+            zip: zip,
+            city: city,
+            state: state,
+            lat: lat,
+            lng: lng,
+            method: 'gps'
+          };
+          
+          if (zip) {
+            document.getElementById('f-zip').value = zip;
+          }
+          
+          info.innerHTML = `📍 ${city}, ${state} ${zip} <span style="color:#6b7280;font-weight:500;">(5 mile radius - GPS)</span>`;
+          this.initMap(lat, lng);
+        } catch(e) {
+          info.textContent = '📍 Your location (5 mile radius)';
+          this.data = { lat, lng, method: 'gps' };
+          this.initMap(lat, lng);
+        }
+      },
+      (err) => {
+        info.textContent = '❌ Location denied or unavailable';
+        info.style.color = '#dc2626';
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  },
+  
+  getMapImageUrl() {
+    if (!this.data) return null;
+    const { lat, lng } = this.data;
+    // Static map image (5 mile ~ 0.072 degrees) for email
+    return `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lng}&zoom=11&size=500x300&markers=${lat},${lng},red-pushpin`;
+  },
+  
+  reset() {
+    this.data = null;
+    document.getElementById('f-map-container').style.display = 'none';
+    document.getElementById('f-zip').value = '';
+    document.getElementById('f-location-info').textContent = '';
+    document.getElementById('f-location-info').style.color = '#065f46';
+  }
+};
+
 const Nav={current:'home',mainScreens:['home','post','list','chat'],async go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');const hide=['chatwindow'].includes(id);document.getElementById('main-header').style.display=hide?'none':'block';document.getElementById('bottom-nav').style.display=this.mainScreens.includes(id)?'flex':'none';document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));const nb=document.getElementById('nav-'+id);if(nb)nb.classList.add('active');this.current=id;const items=Storage.get('items',[]);if(items.length>0){await ListModule.fetchStatuses(items);}if(id==='list')ListModule.render();if(id==='chat')ChatModule.renderList();if(id==='post'||id==='home'||id==='list')Nav.updatePostCard();},updatePostCard(){const user=Storage.get('user');const items=Storage.get('items',[]);const pickedCount=items.filter(i=>(ListModule.statuses||{})[i.id]==='picked_up').length;const level=Levels.get(pickedCount);const greeting=document.getElementById('post-greeting');const itemsCount=document.getElementById('post-items-count');const levelEl=document.getElementById('post-level');const discountEl=document.getElementById('post-discount');if(greeting){greeting.textContent=user?'Hi, '+user.nickname+'! 👋':'Welcome!';}if(itemsCount)itemsCount.textContent=pickedCount;if(levelEl){levelEl.textContent=level.emoji+' '+level.name;levelEl.style.color=level.color;}if(discountEl)discountEl.textContent=level.discount;}};
 
 const Levels={get(c){if(c>=7)return{name:'Champion',discount:'50%',emoji:'🏆',color:'#059669'};if(c>=4)return{name:'Diamond',discount:'30%',emoji:'💎',color:'#7c3aed'};if(c>=1)return{name:'Gold',discount:'20%',emoji:'🥇',color:'#d97706'};return{name:'New',discount:'0%',emoji:'⭐',color:'#6b7280'};}};
 
 const PhotoModule={photos:[],MAX:10,handleFiles(input){const files=Array.from(input.files);const rem=this.MAX-this.photos.length;files.slice(0,rem).forEach(f=>{const r=new FileReader();r.onload=e=>{this.photos.push({dataUrl:e.target.result});this.render();};r.readAsDataURL(f);});if(files.length>rem)alert('Max 10 photos. Only first '+rem+' added.');input.value='';},remove(i){this.photos.splice(i,1);this.render();},render(){const g=document.getElementById('photo-preview-grid');const c=document.getElementById('photo-count');if(!g||!c)return;c.textContent=this.photos.length+' / '+this.MAX+' photos added';g.innerHTML=this.photos.map((p,i)=>'<div class="photo-thumb"><img src="'+p.dataUrl+'"><button class="remove-photo" onclick="PhotoModule.remove('+i+')">x</button></div>').join('');const a=document.querySelector('.photo-upload-area');if(a)a.style.display=this.photos.length>=this.MAX?'none':'block';},reset(){this.photos=[];this.render();}};
 
-const PostModule={sel:null,selectCondition(el){document.querySelectorAll('.condition-btn').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');this.sel=el.dataset.val;},err(id){const el=document.getElementById(id);if(el)el.classList.add('error');},clearErrors(){document.querySelectorAll('.inp').forEach(i=>i.classList.remove('error'));},isEmail(e){return/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);},submit(){this.clearErrors();let ok=true;const v=id=>(document.getElementById(id)||{value:''}).value.trim();if(!v('f-title')){this.err('f-title');ok=false;}if(!v('f-desc')){this.err('f-desc');ok=false;}if(!this.sel){alert('Please select item condition');return;}if(!v('f-address')){this.err('f-address');ok=false;}if(!v('f-date')){this.err('f-date');ok=false;}if(!v('f-t1')||!v('f-t2')){this.err('f-t1');this.err('f-t2');ok=false;}const email=v('f-email'),phone=v('f-phone');if(!email&&!phone){this.err('f-email');this.err('f-phone');alert('Email or Phone required');return;}if(email&&!this.isEmail(email)){this.err('f-email');alert('Invalid email');return;}if(!ok){alert('Please fill all required fields');return;}const labels={new:'New',like_new:'Like New',very_good:'Very Good',restorable:'Restorable'};const items=Storage.get('items',[]);const item={id:Date.now(),title:v('f-title'),desc:v('f-desc'),condition:this.sel,conditionLabel:labels[this.sel],address:v('f-address'),date:v('f-date'),time:v('f-t1')+' - '+v('f-t2'),email,phone,photos:PhotoModule.photos.map(p=>p.dataUrl),createdAt:new Date().toISOString()};items.unshift(item);Storage.set('items',items);const submitBtn=document.querySelector('#screen-post .btn:last-child');if(submitBtn){submitBtn.textContent='⏳ Uploading photos...';submitBtn.disabled=true;}sendToFormspree(item).then(()=>{if(submitBtn){submitBtn.textContent='✅ Submit Request';submitBtn.disabled=false;}});['f-title','f-desc','f-address','f-date','f-t1','f-t2','f-email','f-phone'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.querySelectorAll('.condition-btn').forEach(b=>b.classList.remove('selected'));this.sel=null;PhotoModule.reset();ChatModule.addThread(item);alert('Item posted successfully!');Nav.go('list');}};
+const PostModule={sel:null,selectCondition(el){document.querySelectorAll('.condition-btn').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');this.sel=el.dataset.val;},err(id){const el=document.getElementById(id);if(el)el.classList.add('error');},clearErrors(){document.querySelectorAll('.inp').forEach(i=>i.classList.remove('error'));},isEmail(e){return/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);},submit(){this.clearErrors();let ok=true;const v=id=>(document.getElementById(id)||{value:''}).value.trim();if(!v('f-title')){this.err('f-title');ok=false;}if(!v('f-desc')){this.err('f-desc');ok=false;}if(!this.sel){alert('Please select item condition');return;}if(!v('f-address')){this.err('f-address');ok=false;}if(!v('f-date')){this.err('f-date');ok=false;}if(!v('f-t1')||!v('f-t2')){this.err('f-t1');this.err('f-t2');ok=false;}const email=v('f-email'),phone=v('f-phone');if(!email&&!phone){this.err('f-email');this.err('f-phone');alert('Email or Phone required');return;}if(email&&!this.isEmail(email)){this.err('f-email');alert('Invalid email');return;}if(!ok){alert('Please fill all required fields');return;}const labels={new:'New',like_new:'Like New',very_good:'Very Good',restorable:'Restorable'};const items=Storage.get('items',[]);const item={id:Date.now(),title:v('f-title'),desc:v('f-desc'),condition:this.sel,conditionLabel:labels[this.sel],address:v('f-address'),zip:v('f-zip'),location:LocationModule.data,date:v('f-date'),time:v('f-t1')+' - '+v('f-t2'),email,phone,photos:PhotoModule.photos.map(p=>p.dataUrl),createdAt:new Date().toISOString()};items.unshift(item);Storage.set('items',items);const submitBtn=document.querySelector('#screen-post .btn:last-child');if(submitBtn){submitBtn.textContent='⏳ Uploading photos...';submitBtn.disabled=true;}sendToFormspree(item).then(()=>{if(submitBtn){submitBtn.textContent='✅ Submit Request';submitBtn.disabled=false;}});['f-title','f-desc','f-address','f-zip','f-date','f-t1','f-t2','f-email','f-phone'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.querySelectorAll('.condition-btn').forEach(b=>b.classList.remove('selected'));this.sel=null;PhotoModule.reset();LocationModule.reset();ChatModule.addThread(item);alert('Item posted successfully!');Nav.go('list');}};
 
 const ListModule={cond:{new:'cond-new',like_new:'cond-likenew',very_good:'cond-verygood',restorable:'cond-restorable'},statuses:{},
 async fetchStatuses(items){try{if(!window.firebaseDB)return;const{doc,getDoc}=window.firebaseFunctions;for(const i of items){if(!i.firestoreId)continue;try{const snap=await getDoc(doc(window.firebaseDB,'orders',i.firestoreId));if(snap.exists()){this.statuses[i.id]=snap.data().status||'pending';}}catch(e){}}}catch(e){console.log('fetchStatuses error',e);}},
