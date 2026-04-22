@@ -14,21 +14,21 @@
 <style>
 :root{--dark:#1a1f2e;--dark2:#252a3a;--card:#ffffff;--green:#059669;--green2:#047857;--gold:#f59e0b;--purple:#7c3aed;--red:#ef4444;--text:#111827;--sub:#6b7280;--border:#e5e7eb;--radius:20px;--font-h:'Inter',sans-serif;--font-b:'Inter',sans-serif;}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--font-b);background:#f0fdf4;color:#111827;min-height:100vh;overflow-x:hidden;}
+body{font-family:var(--font-b);background:#0f1117;color:#111827;min-height:100vh;overflow-x:hidden;}
 .screen{display:none;}.screen.active{display:block;}
 .app-header{background:linear-gradient(135deg,#059669 0%,#047857 100%);padding:env(safe-area-inset-top, 14px) 16px 14px;padding-top:max(env(safe-area-inset-top), 14px);text-align:center;position:relative;}
 .header-logo{font-family:'Playfair Display',serif;font-size:40px;font-weight:900;color:#fff;letter-spacing:6px;line-height:1;font-style:italic;margin-bottom:4px;margin-top:-4px;}
 .header-rewards{font-family:var(--font-h);font-size:26px;font-weight:800;color:#FFD700;letter-spacing:2px;text-shadow:0 2px 8px rgba(0,0,0,0.3);line-height:1.1;}
 
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#ffffff;border-top:2px solid #e5e7eb;display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 20px rgba(0,0,0,0.1);}
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 0 8px;background:none;border:none;color:#111827;font-size:10px;font-weight:800;font-family:var(–font-b);cursor:pointer;transition:color 0.2s;}
-.nav-btn .nav-icon{font-size:24px;color:#111827;}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#0f1117;border-top:2px solid rgba(255,255,255,0.12);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 20px rgba(0,0,0,0.5);}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 0 8px;background:none;border:none;color:#ffffff;font-size:10px;font-weight:800;font-family:var(–font-b);cursor:pointer;transition:color 0.2s;}
+.nav-btn .nav-icon{font-size:24px;color:#ffffff;}
 .nav-btn.active{color:#00e676;}.nav-btn.active .nav-icon{filter:drop-shadow(0 0 4px rgba(0,230,118,0.6));}
 #nav-post .nav-icon{color:#059669 !important;}
-.page{padding:8px;padding-bottom:80px;max-width:600px;margin:0 auto;background:#f0fdf4;min-height:100vh;}
+.page{padding:8px;padding-bottom:80px;max-width:600px;margin:0 auto;background:#0f1117;min-height:100vh;}
 .card{background:var(–card);border-radius:var(–radius);padding:18px;margin-bottom:8px;box-shadow:none;}
 .card-dark{background:#ffffff;border-radius:var(–radius);padding:18px;margin-bottom:4px;border:1px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,0.04);}
-.page-title{font-family:var(–font-h);font-size:20px;font-weight:800;color:#111827;margin-bottom:4px;}
+.page-title{font-family:var(–font-h);font-size:20px;font-weight:800;color:#ffffff;margin-bottom:4px;}
 .page-sub{font-size:13px;color:#94a3b8;font-weight:400;margin-bottom:4px;line-height:1.5;}
 .section-label{font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1.5px;margin:16px 0 8px;}
 .btn{background:var(–green);color:white;padding:16px;width:100%;border-radius:16px;font-weight:700;font-size:16px;font-family:var(–font-b);border:none;cursor:pointer;box-shadow:0 6px 24px rgba(5,150,105,0.4);margin-bottom:4px;display:block;transition:transform 0.15s;}
@@ -239,7 +239,7 @@ console.log('Firebase initialized with Auth');
 <div class="page">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
     <button class="btn-back" onclick="Nav.go('home')">&#8592; Back</button>
-    <span style="color:#111827;font-size:20px;font-weight:900;font-family:var(--font-h);">Give an Item</span>
+    <span style="color:white;font-size:20px;font-weight:900;font-family:var(--font-h);">Give an Item</span>
   </div>
 
   <!-- User greeting card -->
@@ -320,7 +320,7 @@ console.log('Firebase initialized with Auth');
 <div id="screen-list" class="screen">
 <div class="page">
   <div style="margin-bottom:4px;">
-    <span style="color:#111827;font-size:22px;font-weight:900;font-family:var(--font-h);">My Requests</span>
+    <span style="color:white;font-size:22px;font-weight:900;font-family:var(--font-h);">My Requests</span>
   </div>
   <div id="list-level-card" class="card"></div>
   <div id="list-items"></div>
@@ -332,7 +332,7 @@ console.log('Firebase initialized with Auth');
 <div id="screen-chat" class="screen">
 <div class="page" style="padding-left:0;padding-right:0;">
   <div style="padding:0 16px 12px;">
-    <span style="color:#111827;font-size:22px;font-weight:900;font-family:var(--font-h);">Messages</span>
+    <span style="color:white;font-size:22px;font-weight:900;font-family:var(--font-h);">Messages</span>
   </div>
   <div class="card" style="border-radius:20px;padding:0;overflow:hidden;margin:0 16px 14px;">
     <div id="chat-list-container"></div>
