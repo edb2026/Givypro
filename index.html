@@ -40,6 +40,10 @@ body{font-family:var(--font-b);background:#0f1117;color:#111827;min-height:100vh
 .btn-back{background:rgba(255,255,255,0.1);border:none;color:white;border-radius:12px;padding:8px 14px;font-weight:700;font-size:14px;cursor:pointer;font-family:var(–font-b);}
 .inp{background:#ffffff;border:3px solid #d1d5db;border-radius:14px;padding:16px 16px;font-size:16px;font-family:var(–font-b);font-weight:700;width:100%;color:#111827;margin-bottom:6px;display:block;transition:border-color 0.2s;box-shadow:0 2px 6px rgba(0,0,0,0.08);}
 .inp:focus{outline:none;border-color:var(–green);background:#fff;}.inp::placeholder{color:#6b7280;font-weight:600;}.inp.error{border-color:var(–red);}
+input[type=“date”].date-empty,input[type=“time”].time-empty{color:transparent;position:relative;}
+input[type=“date”].date-empty::before{content:“Select a date”;color:#6b7280;font-weight:600;position:absolute;left:18px;top:50%;transform:translateY(-50%);pointer-events:none;}
+input[type=“time”].time-empty::before{content:“Select a time”;color:#6b7280;font-weight:600;position:absolute;left:18px;top:50%;transform:translateY(-50%);pointer-events:none;}
+input[type=“date”]:not(.date-empty),input[type=“time”]:not(.time-empty){color:#111827;}
 .condition-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
 .condition-btn{border:3px solid #d1d5db;border-radius:14px;padding:14px 8px;background:#ffffff;cursor:pointer;text-align:center;transition:all 0.2s;font-family:var(–font-b);box-shadow:0 2px 6px rgba(0,0,0,0.08);}
 .condition-btn .c-icon{font-size:28px;display:block;margin-bottom:6px;}.condition-btn .c-name{font-size:15px;font-weight:900;color:#111827;display:block;}.condition-btn .c-desc{font-size:12px;color:#4b5563;display:block;margin-top:4px;font-weight:600;}
@@ -364,10 +368,10 @@ console.log('Firebase initialized with Auth');
 </div>
 
 <div class="section-label">Pickup Date &amp; Time</div>
-<input type="date" id="f-date" class="inp">
+<input type="date" id="f-date" class="inp date-empty" onchange="this.classList.toggle('date-empty', !this.value)">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-  <input type="time" id="f-t1" class="inp" style="margin-bottom:0;">
-  <input type="time" id="f-t2" class="inp" style="margin-bottom:0;">
+  <input type="time" id="f-t1" class="inp time-empty" style="margin-bottom:0;" onchange="this.classList.toggle('time-empty', !this.value)">
+  <input type="time" id="f-t2" class="inp time-empty" style="margin-bottom:0;" onchange="this.classList.toggle('time-empty', !this.value)">
 </div>
 
 <div style="height:14px;"></div>
@@ -617,35 +621,52 @@ async function sendToFormspree(item){try{let photoUrls=[];if(item.photos&&item.p
     const locationText=loc.lat?`${loc.city||''}, ${loc.state||''} ${loc.zip||''} (${loc.method==='gps'?'GPS':'ZIP'})`:'Not provided';
     const mapImageUrl=loc.lat?`https://staticmap.openstreetmap.de/staticmap.php?center=${loc.lat},${loc.lng}&zoom=12&size=600x350&markers=${loc.lat},${loc.lng},lightgreen1`:'';
     const googleMapsLink=loc.lat?`https://www.google.com/maps?q=${loc.lat},${loc.lng}`:'';
-    const openStreetMapLink=loc.lat?`https://www.openstreetmap.org/?mlat=${loc.lat}&mlon=${loc.lng}&zoom=13`:'';
     
-    const actionsHTML='\n\n═══ ADMIN ACTIONS ═══\n\n🔴 REJECT ORDER:\n'+rejectLink+'\n\n🟢 CONFIRM INTENT (ready to pickup):\n'+intentLink+'\n\n🔵 CONFIRM PICKUP (items received, add points):\n'+pickupLink+'\n\n════════════════════';
+    // Build photos section
+    let photosText = '';
+    if (photoUrls.length > 0) {
+      photosText = '\n\n📷 PHOTOS (' + photoUrls.length + '):\n';
+      photoUrls.forEach((url, i) => {
+        photosText += '\nPhoto ' + (i+1) + ': ' + url;
+      });
+    } else {
+      photosText = '\n\n📷 PHOTOS: None uploaded';
+    }
     
-    const body={
-      _subject:'New Givy Order: '+item.title,
-      customer_nickname:user.nickname,
-      item_title:item.title,
-      description:item.desc,
-      condition:item.conditionLabel,
-      pickup_location:locationText,
-      zip_code:loc.zip||'—',
-      city:loc.city||'—',
-      state:loc.state||'—',
-      coordinates:loc.lat?`${loc.lat}, ${loc.lng}`:'—',
-      map_image:mapImageUrl,
-      google_maps_link:googleMapsLink,
-      openstreet_maps_link:openStreetMapLink,
-      date:item.date,
-      time:item.time,
-      contact_email:item.email||'—',
-      contact_phone:item.phone||'—',
-      order_id:firestoreId||'n/a',
-      admin_actions:actionsHTML,
-      reject_link:rejectLink,
-      confirm_intent_link:intentLink,
-      confirm_pickup_link:pickupLink
+    // Build one comprehensive message
+    const fullMessage = 
+      '🎁 NEW GIVY ORDER\n' +
+      '════════════════════\n\n' +
+      '👤 Customer: ' + user.nickname + '\n' +
+      '📧 Email: ' + (item.email || '—') + '\n\n' +
+      '📦 ITEM DETAILS:\n' +
+      'Title: ' + item.title + '\n' +
+      'Description: ' + item.desc + '\n' +
+      'Condition: ' + item.conditionLabel + '\n\n' +
+      '📍 PICKUP LOCATION:\n' +
+      locationText + '\n' +
+      (loc.lat ? 'Coordinates: ' + loc.lat + ', ' + loc.lng + '\n' : '') +
+      (googleMapsLink ? 'View on map: ' + googleMapsLink + '\n' : '') +
+      (mapImageUrl ? 'Map image: ' + mapImageUrl + '\n' : '') +
+      '\n📅 Pickup Date: ' + item.date + '\n' +
+      '⏰ Time Window: ' + item.time + '\n' +
+      photosText +
+      '\n\n════════════════════\n' +
+      '⚡ ADMIN ACTIONS:\n\n' +
+      '🔴 REJECT ORDER:\n' + rejectLink + '\n\n' +
+      '🟢 CONFIRM INTENT (ready to pickup):\n' + intentLink + '\n\n' +
+      '🔵 CONFIRM PICKUP (items received):\n' + pickupLink + '\n\n' +
+      '════════════════════\n' +
+      'Order ID: ' + (firestoreId || 'n/a');
+    
+    const body = {
+      _subject: '🎁 New Givy Order: ' + item.title + ' from ' + user.nickname,
+      _replyto: item.email || 'noreply@givyrewards.com',
+      name: user.nickname,
+      email: item.email || 'noreply@givyrewards.com',
+      message: fullMessage
     };
-    photoUrls.forEach((url,i)=>{body['photo_'+(i+1)]=url;});
+    
     const res=await fetch('https://formspree.io/f/xaqaolor',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(body)});const data=await res.json();console.log('Formspree response:',data);}catch(e){console.log('Formspree error',e);}}
 
 window.Nav = Nav;
