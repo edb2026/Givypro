@@ -120,10 +120,66 @@ window.firebaseAuthFunctions = { createUserWithEmailAndPassword, signInWithEmail
 window.firebaseReady = true;
 
 // Track auth state
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   window.currentFirebaseUser = user;
   window.dispatchEvent(new CustomEvent('auth-state-changed', { detail: user }));
   console.log('Auth state:', user ? user.email : 'logged out');
+  
+  // Auto-load user data from Firestore when user is auto-signed-in
+  if (user) {
+    try {
+      // Load profile
+      const userSnap = await getDoc(doc(db, 'users', user.uid));
+      let nickname = user.email.split('@')[0];
+      let joinedAt = new Date().toISOString();
+      if (userSnap.exists()) {
+        nickname = userSnap.data().nickname || nickname;
+        joinedAt = userSnap.data().joinedAt || joinedAt;
+      }
+      const userData = { uid: user.uid, email: user.email, nickname, joinedAt };
+      try { localStorage.setItem('user', JSON.stringify(userData)); } catch(e) {}
+      
+      // Load items
+      const q = query(collection(db, 'orders'), where('userId', '==', user.uid));
+      const snapshot = await getDocs(q);
+      const items = [];
+      const statuses = {};
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const localId = data.localId || Date.now() + Math.random();
+        items.push({
+          id: localId,
+          firestoreId: docSnap.id,
+          title: data.title,
+          desc: data.desc,
+          condition: (data.condition || 'new').toLowerCase().replace(' ', '_'),
+          conditionLabel: data.condition,
+          zip: data.zip || '',
+          location: data.location || null,
+          date: data.date,
+          time: data.time,
+          email: data.email,
+          phone: data.phone || '',
+          photos: data.photos || [],
+          photoUrls: data.photos || [],
+          createdAt: data.createdAt
+        });
+        statuses[localId] = data.status || 'pending';
+      });
+      items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      try { localStorage.setItem('items', JSON.stringify(items)); } catch(e) {}
+      window.initialStatuses = statuses;
+      
+      // Refresh UI if Nav is ready
+      if (window.Nav && window.ListModule) {
+        window.ListModule.statuses = statuses;
+        if (window.Nav.current) window.Nav.updatePostCard && window.Nav.updatePostCard();
+      }
+      console.log('Auto-loaded user data:', nickname, items.length + ' items');
+    } catch(err) {
+      console.log('Auto-load error:', err);
+    }
+  }
 });
 
 // Dispatch event when ready
@@ -538,7 +594,8 @@ const PhotoModule={photos:[],MAX:10,handleFiles(input){const files=Array.from(in
 
 const PostModule={sel:null,selectCondition(el){document.querySelectorAll('.condition-btn').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');this.sel=el.dataset.val;},err(id){const el=document.getElementById(id);if(el)el.classList.add('error');},clearErrors(){document.querySelectorAll('.inp').forEach(i=>i.classList.remove('error'));},isEmail(e){return/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);},submit(){this.clearErrors();let ok=true;const v=id=>(document.getElementById(id)||{value:''}).value.trim();if(!v('f-title')){this.err('f-title');ok=false;}if(!v('f-desc')){this.err('f-desc');ok=false;}if(!this.sel){alert('Please select item condition');return;}if(!LocationModule.data){alert('Please enter ZIP code or use GPS location');return;}if(!v('f-date')){this.err('f-date');ok=false;}if(!v('f-t1')||!v('f-t2')){this.err('f-t1');this.err('f-t2');ok=false;}if(!ok){alert('Please fill all required fields');return;}const user=Storage.get('user');const email=user?user.email:'';const labels={new:'New',like_new:'Like New',very_good:'Very Good',restorable:'Restorable'};const items=Storage.get('items',[]);const item={id:Date.now(),title:v('f-title'),desc:v('f-desc'),condition:this.sel,conditionLabel:labels[this.sel],zip:v('f-zip'),location:LocationModule.data,date:v('f-date'),time:v('f-t1')+' - '+v('f-t2'),email:email,phone:'',photos:PhotoModule.photos.map(p=>p.dataUrl),createdAt:new Date().toISOString()};items.unshift(item);Storage.set('items',items);const submitBtn=document.querySelector('#screen-post .btn:last-child');if(submitBtn){submitBtn.textContent='⏳ Uploading photos...';submitBtn.disabled=true;}sendToFormspree(item).then(()=>{if(submitBtn){submitBtn.textContent='✅ Submit Request';submitBtn.disabled=false;}});['f-title','f-desc','f-zip','f-date','f-t1','f-t2'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.querySelectorAll('.condition-btn').forEach(b=>b.classList.remove('selected'));this.sel=null;PhotoModule.reset();LocationModule.reset();ChatModule.addThread(item);alert('Item posted successfully!');Nav.go('list');}};
 
-const ListModule={cond:{new:'cond-new',like_new:'cond-likenew',very_good:'cond-verygood',restorable:'cond-restorable'},statuses:{},
+const ListModule={cond:{new:'cond-new',like_new:'cond-likenew',very_good:'cond-verygood',restorable:'cond-restorable'},statuses:window.initialStatuses||{},
+
 async fetchStatuses(items){try{if(!window.firebaseDB)return;const{doc,getDoc}=window.firebaseFunctions;for(const i of items){if(!i.firestoreId)continue;try{const snap=await getDoc(doc(window.firebaseDB,'orders',i.firestoreId));if(snap.exists()){this.statuses[i.id]=snap.data().status||'pending';}}catch(e){}}}catch(e){console.log('fetchStatuses error',e);}},
 getStatusBadge(status){if(status==='rejected')return '<div style="background:#fef3c7;color:#dc2626;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:800;margin-top:10px;border:2px solid #dc2626;">❌ Sorry, we can\'t accept your donation</div>';if(status==='confirmed_intent')return '<div style="background:#d1fae5;color:#065f46;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:800;margin-top:10px;border:2px solid #059669;">✅ We are ready to pickup at your time! Please send your exact address, parking info and any other details for a fast and smooth pickup.</div>';if(status==='picked_up')return '<div style="background:#dbeafe;color:#1e40af;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:800;margin-top:10px;border:2px solid #2563eb;">🎉 Item picked up! Points added to your account.</div>';return '<div style="background:#fef9c3;color:#854d0e;padding:10px 14px;border-radius:10px;font-size:12px;font-weight:700;margin-top:10px;">⏳ Your level will grow after your item is picked up</div>';},
 async render(){const items=Storage.get('items',[]);await this.fetchStatuses(items);const pickedCount=items.filter(i=>this.statuses[i.id]==='picked_up').length;const level=Levels.get(pickedCount);document.getElementById('list-level-card').innerHTML='<div class="level-display"><div class="level-emoji">'+level.emoji+'</div><div class="level-info"><div class="li-label">Your Level ('+pickedCount+' items picked up)</div><div class="li-name" style="color:'+level.color+';">'+level.name+'</div><div class="li-disc">Discount: <span style="color:'+level.color+';">'+level.discount+'</span></div></div></div>';const box=document.getElementById('list-items');if(items.length===0){box.innerHTML='<div class="card" style="text-align:center;padding:32px 18px;"><div style="font-size:44px;margin-bottom:4px;">📭</div><div style="font-size:17px;font-weight:900;font-family:var(--font-h);">No items yet</div><div style="font-size:13px;color:var(--sub);margin-top:6px;">Post your first item to start earning rewards</div></div>';return;}box.innerHTML=items.map(i=>{const status=this.statuses[i.id]||'pending';const statusBadge=this.getStatusBadge(status);return '<div class="card"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;"><div style="font-size:16px;font-weight:900;font-family:var(--font-h);">'+i.title+'</div><span class="condition-badge '+(this.cond[i.condition]||'')+'">'+i.conditionLabel+'</span></div><div style="font-size:13px;color:var(--sub);margin-bottom:4px;">'+i.desc+'</div><div style="font-size:12px;color:var(--sub);">📍 '+i.address+'</div><div style="font-size:12px;color:var(--sub);">📅 '+i.date+' ⏰ '+i.time+'</div>'+(i.email?'<div style="font-size:12px;color:var(--sub);">📧 '+i.email+'</div>':'')+(i.phone?'<div style="font-size:12px;color:var(--sub);">📱 '+i.phone+'</div>':'')+(i.photos&&i.photos.length?'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:10px;">'+i.photos.slice(0,8).map(p=>'<img src="'+p+'" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;">').join('')+(i.photos.length>8?'<div style="aspect-ratio:1;background:#f1f5f9;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--sub);">+'+(i.photos.length-8)+'</div>':'')+'</div>':'')+statusBadge+'<div style="margin-top:10px;"><button class="btn-sm" style="background:var(--green);color:white;" onclick="ChatModule.openThread(\''+i.id+'\')">💬 Chat</button></div></div>';}).join('');}};
@@ -591,6 +648,8 @@ async function sendToFormspree(item){try{let photoUrls=[];if(item.photos&&item.p
     photoUrls.forEach((url,i)=>{body['photo_'+(i+1)]=url;});
     const res=await fetch('https://formspree.io/f/xaqaolor',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(body)});const data=await res.json();console.log('Formspree response:',data);}catch(e){console.log('Formspree error',e);}}
 
+window.Nav = Nav;
+window.ListModule = ListModule;
 PWA.init();
 Nav.go('home');
 </script>
@@ -931,7 +990,7 @@ const RegModal = {
       const { signInWithEmailAndPassword } = window.firebaseAuthFunctions;
       const cred = await signInWithEmailAndPassword(window.firebaseAuth, email, password);
       
-      // Try to load nickname from Firestore first
+      // Load user profile from Firestore
       let savedNickname = null;
       let savedJoinedAt = null;
       try {
@@ -946,20 +1005,75 @@ const RegModal = {
         console.log('Could not load profile from Firestore:', err);
       }
       
-      // Priority: Firestore > localStorage > email prefix
-      const existingUser = Storage.get('user') || {};
+      // For legacy users without profile - save their email prefix as nickname
+      if (!savedNickname) {
+        savedNickname = email.split('@')[0];
+        try {
+          const { doc, setDoc } = window.firebaseFunctions;
+          await setDoc(doc(window.firebaseDB, 'users', cred.user.uid), {
+            email: email,
+            nickname: savedNickname,
+            joinedAt: new Date().toISOString()
+          });
+          console.log('Created profile for legacy user');
+        } catch(err) {
+          console.log('Could not create profile:', err);
+        }
+      }
+      
       const user = {
         uid: cred.user.uid,
         email: email,
-        nickname: savedNickname || existingUser.nickname || email.split('@')[0],
-        joinedAt: savedJoinedAt || existingUser.joinedAt || new Date().toISOString()
+        nickname: savedNickname,
+        joinedAt: savedJoinedAt || new Date().toISOString()
       };
       Storage.set('user', user);
+      
+      // Load all user's orders from Firestore
+      try {
+        const { collection, query, where, getDocs } = window.firebaseFunctions;
+        const q = query(
+          collection(window.firebaseDB, 'orders'),
+          where('userId', '==', cred.user.uid)
+        );
+        const snapshot = await getDocs(q);
+        const items = [];
+        const statuses = {};
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const localId = data.localId || Date.now() + Math.random();
+          items.push({
+            id: localId,
+            firestoreId: docSnap.id,
+            title: data.title,
+            desc: data.desc,
+            condition: data.condition?.toLowerCase().replace(' ', '_') || 'new',
+            conditionLabel: data.condition,
+            zip: data.zip || '',
+            location: data.location || null,
+            date: data.date,
+            time: data.time,
+            email: data.email,
+            phone: data.phone || '',
+            photos: data.photos || [],
+            photoUrls: data.photos || [],
+            createdAt: data.createdAt
+          });
+          statuses[localId] = data.status || 'pending';
+        });
+        // Sort by createdAt descending (newest first)
+        items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        Storage.set('items', items);
+        ListModule.statuses = statuses;
+        console.log('Loaded ' + items.length + ' items from Firestore');
+      } catch(err) {
+        console.log('Could not load items:', err);
+      }
       
       document.getElementById('loginModal').classList.remove('open');
       document.body.style.overflow = '';
       alert('Welcome back, ' + user.nickname + '!');
-      Nav.go('post');
+      Nav.go('home');
     } catch(e) {
       console.log('Login error:', e);
       let msg = 'Login failed. ';
