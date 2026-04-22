@@ -143,15 +143,15 @@ onAuthStateChanged(auth, async (user) => {
       const userData = { uid: user.uid, email: user.email, nickname, joinedAt };
       try { localStorage.setItem('user', JSON.stringify(userData)); } catch(e) {}
       
-      // Load items
+      // Load items and MERGE with local (don't replace, to preserve in-progress uploads)
       const q = query(collection(db, 'orders'), where('userId', '==', user.uid));
       const snapshot = await getDocs(q);
-      const items = [];
+      const firestoreItems = [];
       const statuses = {};
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
-        const localId = data.localId || Date.now() + Math.random();
-        items.push({
+        const localId = data.localId || (Date.now() + Math.random());
+        firestoreItems.push({
           id: localId,
           firestoreId: docSnap.id,
           title: data.title,
@@ -164,22 +164,32 @@ onAuthStateChanged(auth, async (user) => {
           time: data.time,
           email: data.email,
           phone: data.phone || '',
+          address: data.address || '',
           photos: data.photos || [],
           photoUrls: data.photos || [],
           createdAt: data.createdAt
         });
         statuses[localId] = data.status || 'pending';
       });
-      items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      try { localStorage.setItem('items', JSON.stringify(items)); } catch(e) {}
+      
+      // Merge: keep local items that are not yet in Firestore, add all Firestore items
+      let localItems = [];
+      try { localItems = JSON.parse(localStorage.getItem('items') || '[]'); } catch(e) {}
+      const firestoreIds = new Set(firestoreItems.map(i => i.id));
+      const localOnly = localItems.filter(i => !firestoreIds.has(i.id));
+      const mergedItems = [...localOnly, ...firestoreItems];
+      mergedItems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      
+      try { localStorage.setItem('items', JSON.stringify(mergedItems)); } catch(e) {}
       window.initialStatuses = statuses;
       
       // Refresh UI if Nav is ready
       if (window.Nav && window.ListModule) {
-        window.ListModule.statuses = statuses;
+        Object.assign(window.ListModule.statuses, statuses);
         if (window.Nav.current) window.Nav.updatePostCard && window.Nav.updatePostCard();
+        if (window.Nav.current === 'list' && window.ListModule.render) window.ListModule.render();
       }
-      console.log('Auto-loaded user data:', nickname, items.length + ' items');
+      console.log('Auto-loaded user data:', nickname, mergedItems.length + ' items (' + firestoreItems.length + ' from Firestore)');
     } catch(err) {
       console.log('Auto-load error:', err);
     }
@@ -596,7 +606,7 @@ const Levels={get(c){if(c>=7)return{name:'Champion',discount:'50%',emoji:'🏆',
 
 const PhotoModule={photos:[],MAX:10,handleFiles(input){const files=Array.from(input.files);const rem=this.MAX-this.photos.length;files.slice(0,rem).forEach(f=>{const r=new FileReader();r.onload=e=>{this.photos.push({dataUrl:e.target.result});this.render();};r.readAsDataURL(f);});if(files.length>rem)alert('Max 10 photos. Only first '+rem+' added.');input.value='';},remove(i){this.photos.splice(i,1);this.render();},render(){const g=document.getElementById('photo-preview-grid');const c=document.getElementById('photo-count');if(!g||!c)return;c.textContent=this.photos.length+' / '+this.MAX+' photos added';g.innerHTML=this.photos.map((p,i)=>'<div class="photo-thumb"><img src="'+p.dataUrl+'"><button class="remove-photo" onclick="PhotoModule.remove('+i+')">x</button></div>').join('');const a=document.querySelector('.photo-upload-area');if(a)a.style.display=this.photos.length>=this.MAX?'none':'block';},reset(){this.photos=[];this.render();}};
 
-const PostModule={sel:null,selectCondition(el){document.querySelectorAll('.condition-btn').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');this.sel=el.dataset.val;},err(id){const el=document.getElementById(id);if(el)el.classList.add('error');},clearErrors(){document.querySelectorAll('.inp').forEach(i=>i.classList.remove('error'));},isEmail(e){return/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);},submit(){this.clearErrors();let ok=true;const v=id=>(document.getElementById(id)||{value:''}).value.trim();if(!v('f-title')){this.err('f-title');ok=false;}if(!v('f-desc')){this.err('f-desc');ok=false;}if(!this.sel){alert('Please select item condition');return;}if(!LocationModule.data){alert('Please enter ZIP code or use GPS location');return;}if(!v('f-date')){this.err('f-date');ok=false;}if(!v('f-t1')||!v('f-t2')){this.err('f-t1');this.err('f-t2');ok=false;}if(!ok){alert('Please fill all required fields');return;}const user=Storage.get('user');const email=user?user.email:'';const labels={new:'New',like_new:'Like New',very_good:'Very Good',restorable:'Restorable'};const items=Storage.get('items',[]);const item={id:Date.now(),title:v('f-title'),desc:v('f-desc'),condition:this.sel,conditionLabel:labels[this.sel],zip:v('f-zip'),location:LocationModule.data,date:v('f-date'),time:v('f-t1')+' - '+v('f-t2'),email:email,phone:'',photos:PhotoModule.photos.map(p=>p.dataUrl),createdAt:new Date().toISOString()};items.unshift(item);Storage.set('items',items);const submitBtn=document.querySelector('#screen-post .btn:last-child');if(submitBtn){submitBtn.textContent='⏳ Uploading photos...';submitBtn.disabled=true;}sendToFormspree(item).then(()=>{if(submitBtn){submitBtn.textContent='✅ Submit Request';submitBtn.disabled=false;}});['f-title','f-desc','f-zip','f-date','f-t1','f-t2'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.querySelectorAll('.condition-btn').forEach(b=>b.classList.remove('selected'));this.sel=null;PhotoModule.reset();LocationModule.reset();ChatModule.addThread(item);alert('Item posted successfully!');Nav.go('list');}};
+const PostModule={sel:null,selectCondition(el){document.querySelectorAll('.condition-btn').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');this.sel=el.dataset.val;},err(id){const el=document.getElementById(id);if(el)el.classList.add('error');},clearErrors(){document.querySelectorAll('.inp').forEach(i=>i.classList.remove('error'));},isEmail(e){return/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);},submit(){this.clearErrors();let ok=true;const v=id=>(document.getElementById(id)||{value:''}).value.trim();if(!v('f-title')){this.err('f-title');ok=false;}if(!v('f-desc')){this.err('f-desc');ok=false;}if(!this.sel){alert('Please select item condition');return;}if(!LocationModule.data){alert('Please enter ZIP code or use GPS location');return;}if(!v('f-date')){this.err('f-date');ok=false;}if(!v('f-t1')||!v('f-t2')){this.err('f-t1');this.err('f-t2');ok=false;}if(!ok){alert('Please fill all required fields');return;}const user=Storage.get('user');const email=user?user.email:'';const labels={new:'New',like_new:'Like New',very_good:'Very Good',restorable:'Restorable'};const items=Storage.get('items',[]);const item={id:Date.now(),title:v('f-title'),desc:v('f-desc'),condition:this.sel,conditionLabel:labels[this.sel],zip:v('f-zip'),location:LocationModule.data,date:v('f-date'),time:v('f-t1')+' - '+v('f-t2'),email:email,phone:'',photos:PhotoModule.photos.map(p=>p.dataUrl),createdAt:new Date().toISOString()};items.unshift(item);Storage.set('items',items);const submitBtn=document.querySelector('#screen-post .btn:last-child');if(submitBtn){submitBtn.textContent='⏳ Uploading photos...';submitBtn.disabled=true;}sendToFormspree(item).then(()=>{if(submitBtn){submitBtn.textContent='✅ Submit Request';submitBtn.disabled=false;}if(Nav.current==='list')ListModule.render();Nav.updatePostCard();});['f-title','f-desc','f-zip','f-date','f-t1','f-t2'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.querySelectorAll('.condition-btn').forEach(b=>b.classList.remove('selected'));this.sel=null;PhotoModule.reset();LocationModule.reset();ChatModule.addThread(item);alert('Item posted successfully!');Nav.go('list');}};
 
 const ListModule={cond:{new:'cond-new',like_new:'cond-likenew',very_good:'cond-verygood',restorable:'cond-restorable'},statuses:window.initialStatuses||{},
 
