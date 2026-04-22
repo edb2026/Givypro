@@ -307,18 +307,12 @@ console.log('Firebase initialized with Auth');
   <div id="f-location-info" style="padding:10px 12px;background:#f0fdf4;font-size:13px;color:#065f46;font-weight:700;"></div>
 </div>
 
-<input id="f-address" placeholder="Street address (will be sent after admin confirms)" class="inp">
-
 <div class="section-label">Pickup Date &amp; Time</div>
 <input type="date" id="f-date" class="inp">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
   <input type="time" id="f-t1" class="inp" style="margin-bottom:0;">
   <input type="time" id="f-t2" class="inp" style="margin-bottom:0;">
 </div>
-
-<div class="section-label" style="margin-top:14px;">Contact</div>
-<input id="f-email" placeholder="Email" class="inp">
-<input id="f-phone" placeholder="Phone" class="inp">
 
 <div style="height:14px;"></div>
 <button class="btn" onclick="PostModule.submit()" style="margin-bottom:0;">&#9989; Submit Request</button>
@@ -403,7 +397,7 @@ const LocationModule = {
   marker: null,
   data: null,
   
-  initMap(lat, lng, zoom=11) {
+  initMap(lat, lng, zoom=13) {
     const container = document.getElementById('f-map-container');
     container.style.display = 'block';
     
@@ -421,16 +415,15 @@ const LocationModule = {
     if (this.circle) this.map.removeLayer(this.circle);
     if (this.marker) this.map.removeLayer(this.marker);
     
-    // Add 5 mile circle (1 mile = 1609 meters)
+    // Add 1 mile circle (1 mile = 1609 meters)
     this.circle = L.circle([lat, lng], {
       color: '#059669',
       fillColor: '#059669',
-      fillOpacity: 0.15,
-      radius: 8046 // 5 miles in meters
+      fillOpacity: 0.2,
+      radius: 1609 // 1 mile in meters
     }).addTo(this.map);
     
-    // Add center marker
-    this.marker = L.marker([lat, lng]).addTo(this.map);
+    // NO marker - just the circle for privacy
     
     // Force map to re-render
     setTimeout(() => this.map.invalidateSize(), 100);
@@ -459,7 +452,7 @@ const LocationModule = {
         method: 'zip'
       };
       
-      info.innerHTML = `📍 ${place['place name']}, ${place['state abbreviation']} ${zip} <span style="color:#6b7280;font-weight:500;">(5 mile radius)</span>`;
+      info.innerHTML = `📍 ${place['place name']}, ${place['state abbreviation']} ${zip} <span style="color:#6b7280;font-weight:500;">(1 mile radius)</span>`;
       this.initMap(lat, lng);
     } catch(e) {
       info.textContent = '❌ ZIP code not found';
@@ -504,10 +497,10 @@ const LocationModule = {
             document.getElementById('f-zip').value = zip;
           }
           
-          info.innerHTML = `📍 ${city}, ${state} ${zip} <span style="color:#6b7280;font-weight:500;">(5 mile radius - GPS)</span>`;
+          info.innerHTML = `📍 ${city}, ${state} ${zip} <span style="color:#6b7280;font-weight:500;">(1 mile radius - GPS)</span>`;
           this.initMap(lat, lng);
         } catch(e) {
-          info.textContent = '📍 Your location (5 mile radius)';
+          info.textContent = '📍 Your location (1 mile radius)';
           this.data = { lat, lng, method: 'gps' };
           this.initMap(lat, lng);
         }
@@ -542,7 +535,7 @@ const Levels={get(c){if(c>=7)return{name:'Champion',discount:'50%',emoji:'🏆',
 
 const PhotoModule={photos:[],MAX:10,handleFiles(input){const files=Array.from(input.files);const rem=this.MAX-this.photos.length;files.slice(0,rem).forEach(f=>{const r=new FileReader();r.onload=e=>{this.photos.push({dataUrl:e.target.result});this.render();};r.readAsDataURL(f);});if(files.length>rem)alert('Max 10 photos. Only first '+rem+' added.');input.value='';},remove(i){this.photos.splice(i,1);this.render();},render(){const g=document.getElementById('photo-preview-grid');const c=document.getElementById('photo-count');if(!g||!c)return;c.textContent=this.photos.length+' / '+this.MAX+' photos added';g.innerHTML=this.photos.map((p,i)=>'<div class="photo-thumb"><img src="'+p.dataUrl+'"><button class="remove-photo" onclick="PhotoModule.remove('+i+')">x</button></div>').join('');const a=document.querySelector('.photo-upload-area');if(a)a.style.display=this.photos.length>=this.MAX?'none':'block';},reset(){this.photos=[];this.render();}};
 
-const PostModule={sel:null,selectCondition(el){document.querySelectorAll('.condition-btn').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');this.sel=el.dataset.val;},err(id){const el=document.getElementById(id);if(el)el.classList.add('error');},clearErrors(){document.querySelectorAll('.inp').forEach(i=>i.classList.remove('error'));},isEmail(e){return/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);},submit(){this.clearErrors();let ok=true;const v=id=>(document.getElementById(id)||{value:''}).value.trim();if(!v('f-title')){this.err('f-title');ok=false;}if(!v('f-desc')){this.err('f-desc');ok=false;}if(!this.sel){alert('Please select item condition');return;}if(!v('f-address')){this.err('f-address');ok=false;}if(!v('f-date')){this.err('f-date');ok=false;}if(!v('f-t1')||!v('f-t2')){this.err('f-t1');this.err('f-t2');ok=false;}const email=v('f-email'),phone=v('f-phone');if(!email&&!phone){this.err('f-email');this.err('f-phone');alert('Email or Phone required');return;}if(email&&!this.isEmail(email)){this.err('f-email');alert('Invalid email');return;}if(!ok){alert('Please fill all required fields');return;}const labels={new:'New',like_new:'Like New',very_good:'Very Good',restorable:'Restorable'};const items=Storage.get('items',[]);const item={id:Date.now(),title:v('f-title'),desc:v('f-desc'),condition:this.sel,conditionLabel:labels[this.sel],address:v('f-address'),zip:v('f-zip'),location:LocationModule.data,date:v('f-date'),time:v('f-t1')+' - '+v('f-t2'),email,phone,photos:PhotoModule.photos.map(p=>p.dataUrl),createdAt:new Date().toISOString()};items.unshift(item);Storage.set('items',items);const submitBtn=document.querySelector('#screen-post .btn:last-child');if(submitBtn){submitBtn.textContent='⏳ Uploading photos...';submitBtn.disabled=true;}sendToFormspree(item).then(()=>{if(submitBtn){submitBtn.textContent='✅ Submit Request';submitBtn.disabled=false;}});['f-title','f-desc','f-address','f-zip','f-date','f-t1','f-t2','f-email','f-phone'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.querySelectorAll('.condition-btn').forEach(b=>b.classList.remove('selected'));this.sel=null;PhotoModule.reset();LocationModule.reset();ChatModule.addThread(item);alert('Item posted successfully!');Nav.go('list');}};
+const PostModule={sel:null,selectCondition(el){document.querySelectorAll('.condition-btn').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');this.sel=el.dataset.val;},err(id){const el=document.getElementById(id);if(el)el.classList.add('error');},clearErrors(){document.querySelectorAll('.inp').forEach(i=>i.classList.remove('error'));},isEmail(e){return/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);},submit(){this.clearErrors();let ok=true;const v=id=>(document.getElementById(id)||{value:''}).value.trim();if(!v('f-title')){this.err('f-title');ok=false;}if(!v('f-desc')){this.err('f-desc');ok=false;}if(!this.sel){alert('Please select item condition');return;}if(!LocationModule.data){alert('Please enter ZIP code or use GPS location');return;}if(!v('f-date')){this.err('f-date');ok=false;}if(!v('f-t1')||!v('f-t2')){this.err('f-t1');this.err('f-t2');ok=false;}if(!ok){alert('Please fill all required fields');return;}const user=Storage.get('user');const email=user?user.email:'';const labels={new:'New',like_new:'Like New',very_good:'Very Good',restorable:'Restorable'};const items=Storage.get('items',[]);const item={id:Date.now(),title:v('f-title'),desc:v('f-desc'),condition:this.sel,conditionLabel:labels[this.sel],zip:v('f-zip'),location:LocationModule.data,date:v('f-date'),time:v('f-t1')+' - '+v('f-t2'),email:email,phone:'',photos:PhotoModule.photos.map(p=>p.dataUrl),createdAt:new Date().toISOString()};items.unshift(item);Storage.set('items',items);const submitBtn=document.querySelector('#screen-post .btn:last-child');if(submitBtn){submitBtn.textContent='⏳ Uploading photos...';submitBtn.disabled=true;}sendToFormspree(item).then(()=>{if(submitBtn){submitBtn.textContent='✅ Submit Request';submitBtn.disabled=false;}});['f-title','f-desc','f-zip','f-date','f-t1','f-t2'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.querySelectorAll('.condition-btn').forEach(b=>b.classList.remove('selected'));this.sel=null;PhotoModule.reset();LocationModule.reset();ChatModule.addThread(item);alert('Item posted successfully!');Nav.go('list');}};
 
 const ListModule={cond:{new:'cond-new',like_new:'cond-likenew',very_good:'cond-verygood',restorable:'cond-restorable'},statuses:{},
 async fetchStatuses(items){try{if(!window.firebaseDB)return;const{doc,getDoc}=window.firebaseFunctions;for(const i of items){if(!i.firestoreId)continue;try{const snap=await getDoc(doc(window.firebaseDB,'orders',i.firestoreId));if(snap.exists()){this.statuses[i.id]=snap.data().status||'pending';}}catch(e){}}}catch(e){console.log('fetchStatuses error',e);}},
