@@ -1,524 +1,604 @@
-import { useState, useMemo } from “react”;
-import { Plus, Copy, Check, ExternalLink, Image as ImageIcon, Trash2, Package, X, ShoppingCart, ArrowLeft, ArrowRight } from “lucide-react”;
+<!DOCTYPE html>
 
-const CATEGORIES = [
-“Sofa / Couch”, “Chair”, “Table”, “Bed / Mattress”, “Dresser”, “Desk”,
-“Bookshelf”, “Lamp / Lighting”, “Rug”, “Mirror”, “Cabinet”, “Other”
-];
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Givy Rewards — Free Pickup & Reuse in Puget Sound</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #ffffff;
+    color: #171717;
+    line-height: 1.5;
+  }
+  .hidden-page { display: none !important; }
+  button { font-family: inherit; }
 
-const CONDITIONS = [“New”, “Like New”, “Good”, “Fair”, “Salvage”];
-
-export default function GivyRewards() {
-const [page, setPage] = useState(“home”); // home | shop | post
-const [form, setForm] = useState({
-title: “”, price: “”, category: “Sofa / Couch”, condition: “Good”,
-location: “”, description: “”, dimensions: “”, material: “”,
-brand: “”, email: “”, phone: “”, images: []
-});
-const [listings, setListings] = useState([]);
-const [activeListing, setActiveListing] = useState(null);
-const [copiedKey, setCopiedKey] = useState(””);
-
-const update = (k, v) => setForm((f) => ({ …f, [k]: v }));
-
-const handleImages = (e) => {
-const files = Array.from(e.target.files || []);
-const readers = files.map(
-(f) => new Promise((res) => {
-const r = new FileReader();
-r.onload = () => res(r.result);
-r.readAsDataURL(f);
-})
-);
-Promise.all(readers).then((imgs) =>
-setForm((f) => ({ …f, images: […f.images, …imgs].slice(0, 10) }))
-);
-};
-
-const removeImage = (i) =>
-setForm((f) => ({ …f, images: f.images.filter((_, idx) => idx !== i) }));
-
-const canSave = form.title && form.price && form.location && form.description;
-
-const saveListing = () => {
-if (!canSave) return;
-const listing = { …form, id: Date.now() };
-setListings((l) => [listing, …l]);
-setActiveListing(listing);
-setPage(“shop”);
-};
-
-const resetForm = () =>
-setForm({
-title: “”, price: “”, category: “Sofa / Couch”, condition: “Good”,
-location: “”, description: “”, dimensions: “”, material: “”,
-brand: “”, email: “”, phone: “”, images: []
-});
-
-const formats = useMemo(() => {
-if (!activeListing) return null;
-const l = activeListing;
-const fb = {
-title: l.title,
-price: l.price,
-category: l.category,
-condition: l.condition,
-description: [
-l.description,
-l.dimensions && `Dimensions: ${l.dimensions}`,
-l.material && `Material: ${l.material}`,
-l.brand && `Brand: ${l.brand}`,
-`Location: ${l.location}`
-].filter(Boolean).join(”\n\n”)
-};
-const craigslist = {
-title: `${l.title} - $${l.price} (${l.location})`,
-body: [
-`${l.title}`, `Price: $${l.price}`, `Condition: ${l.condition}`,
-`Category: ${l.category}`,
-l.brand && `Brand: ${l.brand}`,
-l.material && `Material: ${l.material}`,
-l.dimensions && `Dimensions: ${l.dimensions}`,
-`, l.description, `,
-`Location: ${l.location}`,
-l.email && `Contact: ${l.email}`,
-l.phone && `Phone: ${l.phone}`
-].filter(Boolean).join(”\n”)
-};
-const offerup = {
-title: l.title.slice(0, 60),
-price: l.price,
-condition: l.condition,
-description: [
-l.description, ``,
-`• Condition: ${l.condition}`,
-l.dimensions && `• Dimensions: ${l.dimensions}`,
-l.material && `• Material: ${l.material}`,
-l.brand && `• Brand: ${l.brand}`,
-`• Pickup: ${l.location}`
-].filter(Boolean).join(”\n”)
-};
-return { fb, craigslist, offerup };
-}, [activeListing]);
-
-const copy = (text, key) => {
-navigator.clipboard.writeText(text);
-setCopiedKey(key);
-setTimeout(() => setCopiedKey(””), 1800);
-};
-
-return (
-<div className=“min-h-screen bg-white font-sans” style={{ fontFamily: “-apple-system, BlinkMacSystemFont, ‘Segoe UI’, sans-serif” }}>
-{/* Header */}
-<header className="bg-blue-600 text-white">
-<div className="max-w-5xl mx-auto px-6 py-8 text-center">
-<h1 className="text-3xl sm:text-4xl font-bold mb-6">Givy Rewards</h1>
-<nav className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-base sm:text-lg">
-<button
-onClick={() => setPage(“home”)}
-className={`hover:underline underline-offset-4 ${page === "home" ? "underline" : ""}`}
->
-Home
-</button>
-<button
-onClick={() => setPage(“shop”)}
-className={`hover:underline underline-offset-4 ${page === "shop" ? "underline" : ""}`}
->
-Shop on Marketplace
-</button>
-<button
-onClick={() => setPage(“post”)}
-className={`hover:underline underline-offset-4 ${page === "post" ? "underline" : ""}`}
->
-Post an Item
-</button>
-</nav>
-</div>
-</header>
-
-```
-  {/* Main */}
-  <main className="max-w-5xl mx-auto px-6 py-10 sm:py-14">
-    {page === "home" && <HomePage goShop={() => setPage("shop")} />}
-    {page === "shop" && (
-      <ShopPage
-        listings={listings}
-        activeListing={activeListing}
-        setActiveListing={setActiveListing}
-        formats={formats}
-        copy={copy}
-        copiedKey={copiedKey}
-        removeListing={(id) => {
-          setListings((ls) => ls.filter((x) => x.id !== id));
-          if (activeListing?.id === id) setActiveListing(null);
-        }}
-        goPost={() => setPage("post")}
-      />
-    )}
-    {page === "post" && (
-      <PostPage
-        form={form}
-        update={update}
-        handleImages={handleImages}
-        removeImage={removeImage}
-        canSave={canSave}
-        saveListing={saveListing}
-        resetForm={resetForm}
-      />
-    )}
-  </main>
-
-  {/* Footer */}
-  <footer className="bg-neutral-800 text-white mt-20">
-    <div className="max-w-5xl mx-auto px-6 py-10 text-center">
-      <button
-        onClick={() => setPage("home")}
-        className="inline-flex items-center gap-2 underline underline-offset-4 text-lg mb-6"
-      >
-        <ArrowLeft className="w-4 h-4" /> Back to Home
-      </button>
-      <p className="text-sm text-neutral-300">
-        Givy Rewards © 2026 · Free Pickup &amp; Reuse in Puget Sound
-      </p>
-    </div>
-  </footer>
-</div>
-```
-
-);
+/* HEADER */
+.header { background: #2563eb; color: white; padding: 32px 24px; text-align: center; }
+.header h1 { font-size: 32px; font-weight: 700; margin-bottom: 24px; }
+.nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px 40px; }
+.nav-btn {
+background: none; border: none; color: white; font-size: 17px;
+cursor: pointer; padding: 4px 0;
 }
+.nav-btn:hover { text-decoration: underline; text-underline-offset: 4px; }
+.nav-btn.active { text-decoration: underline; text-underline-offset: 4px; }
 
-/* –––––––– HOME –––––––– */
-function HomePage({ goShop }) {
-return (
-<div className="text-center">
-<div className="inline-block px-4 py-2 rounded-lg bg-green-100 text-green-800 font-semibold text-sm mb-8">
-Givy Donors: up to 50% off
-</div>
+/* MAIN */
+.main { max-width: 880px; margin: 0 auto; padding: 40px 24px; }
+.center { text-align: center; }
 
-```
-  <button
-    onClick={goShop}
-    className="block w-full bg-blue-600 hover:bg-blue-700 transition text-white font-semibold text-xl py-6 rounded-2xl mb-16"
-  >
-    View &amp; Buy on Marketplace →
-  </button>
-
-  <h2 className="text-2xl sm:text-3xl font-bold text-neutral-900 mb-8">How to Get Your Discount</h2>
-
-  <ol className="text-left max-w-xl mx-auto space-y-4 text-lg text-neutral-800 mb-10 list-decimal list-inside">
-    <li>Donate items — earn Gold (20%), Diamond (30%) or Champion (50%) level</li>
-    <li>When buying — open your Givy Rewards profile and show your level</li>
-    <li>Receive instant discount on any item!</li>
-  </ol>
-
-  <p className="max-w-xl mx-auto text-neutral-700 leading-relaxed">
-    All items come from local donors in the Tacoma–Everett area and are carefully prepared for resale.
-  </p>
-</div>
-```
-
-);
+/* HOME */
+.badge {
+display: inline-block; padding: 8px 16px; border-radius: 8px;
+background: #dcfce7; color: #166534; font-weight: 600; font-size: 14px; margin-bottom: 32px;
 }
+.big-btn {
+display: block; width: 100%; background: #2563eb; color: white;
+font-weight: 600; font-size: 20px; padding: 24px; border-radius: 16px;
+border: none; cursor: pointer; margin-bottom: 64px;
+}
+.big-btn:hover { background: #1d4ed8; }
+.h2 { font-size: 28px; font-weight: 700; margin-bottom: 32px; text-align: center; }
+.ol-list { max-width: 560px; margin: 0 auto 40px; text-align: left; font-size: 18px; line-height: 1.6; padding-left: 24px; }
+.ol-list li { margin-bottom: 12px; }
+.note { max-width: 560px; margin: 0 auto; color: #525252; line-height: 1.6; text-align: center; }
 
-/* –––––––– SHOP –––––––– */
-function ShopPage({ listings, activeListing, setActiveListing, formats, copy, copiedKey, removeListing, goPost }) {
-return (
-<div>
-<h2 className="text-2xl sm:text-3xl font-bold text-blue-600 text-center mb-6 flex items-center justify-center gap-3 flex-wrap">
-<ShoppingCart className="w-7 h-7 text-neutral-700" />
-<span>Our Current Items on Facebook Marketplace</span>
-</h2>
+/* SHOP */
+.shop-title { font-size: 26px; font-weight: 700; color: #2563eb; text-align: center; margin-bottom: 24px; }
+.shop-desc { max-width: 640px; margin: 0 auto 40px; text-align: center; line-height: 1.6; color: #262626; }
+.shop-desc p { margin-bottom: 16px; }
+.empty-state {
+text-align: center; padding: 64px 24px; border: 2px dashed #e5e5e5;
+border-radius: 16px; color: #525252;
+}
+.empty-state p { margin-bottom: 24px; }
+.shop-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+@media (min-width: 768px) { .shop-grid { grid-template-columns: 1fr 1fr; } }
+.items-list { display: flex; flex-direction: column; gap: 16px; }
+.item-card {
+border: 1px solid #e5e5e5; border-radius: 16px; overflow: hidden;
+background: white; cursor: pointer;
+}
+.item-card:hover { border-color: #a3a3a3; }
+.item-card.active { border-color: #2563eb; box-shadow: 0 0 0 2px #dbeafe; }
+.item-image { aspect-ratio: 4/3; background: #f5f5f5; position: relative; }
+.item-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.item-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 40px; color: #d4d4d4; }
+.price-tag {
+position: absolute; top: 12px; right: 12px; background: white;
+border-radius: 8px; padding: 4px 12px; font-weight: 700; color: #2563eb;
+box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.item-info { padding: 16px; display: flex; justify-content: space-between; gap: 12px; }
+.item-title { font-weight: 600; color: #171717; margin-bottom: 4px; }
+.item-meta { font-size: 14px; color: #737373; }
+.delete-btn {
+padding: 8px; border-radius: 8px; color: #a3a3a3;
+background: none; border: none; cursor: pointer; font-size: 16px; align-self: flex-start;
+}
+.delete-btn:hover { color: #dc2626; background: #fef2f2; }
 
-```
-  <div className="max-w-2xl mx-auto text-center text-neutral-800 leading-relaxed mb-10 space-y-4">
-    <p>
-      All items are cleaned, repaired when needed, and in <strong>like-new or perfect condition</strong>.
-      Free pickup area: Tacoma to Everett, Puget Sound, Washington.
-    </p>
-    <p>
-      <strong>Donors receive up to 50% discount</strong> — show your Givy Rewards level (Gold, Diamond or Champion) when buying!
-    </p>
-  </div>
+/* EXPORT PANEL */
+.export-wrap { position: sticky; top: 16px; align-self: flex-start; }
+.export-panel {
+background: #171717; color: white; border-radius: 16px; padding: 20px;
+}
+.export-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.export-header h3 { font-size: 18px; font-weight: 700; }
+.export-close { background: none; border: none; color: #a3a3a3; font-size: 20px; cursor: pointer; }
+.export-note {
+font-size: 12px; color: #d4d4d4; background: #262626;
+border-radius: 8px; padding: 12px; line-height: 1.5; margin-bottom: 16px;
+}
+.platform { background: #262626; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+.platform:last-child { margin-bottom: 0; }
+.platform-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.platform-name { font-weight: 700; color: white; }
+.platform-link {
+font-size: 12px; background: #404040; color: #e5e5e5;
+padding: 4px 10px; border-radius: 8px; text-decoration: none;
+}
+.platform-link:hover { background: #525252; color: white; }
+.copy-row { background: #0a0a0a; border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+.copy-row:last-child { margin-bottom: 0; }
+.copy-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.copy-label { font-size: 11px; color: #a3a3a3; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.copy-btn {
+font-size: 11px; background: #404040; color: #e5e5e5;
+border: none; padding: 2px 8px; border-radius: 4px; cursor: pointer;
+}
+.copy-btn:hover { background: #525252; }
+.copy-btn.copied { background: #22c55e; color: white; }
+.copy-text { font-size: 12px; color: #e5e5e5; font-family: ui-monospace, monospace; word-break: break-word; }
+.copy-text.multi { white-space: pre-wrap; }
+.copy-text.single { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  {listings.length === 0 ? (
-    <div className="text-center py-16 border-2 border-dashed border-neutral-200 rounded-2xl">
-      <Package className="w-12 h-12 text-neutral-300 mx-auto mb-4" />
-      <p className="text-neutral-600 mb-6">No items posted yet.</p>
-      <button
-        onClick={goPost}
-        className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl"
-      >
-        <Plus className="w-5 h-5" /> Post an Item
-      </button>
-    </div>
-  ) : (
-    <div className="grid md:grid-cols-2 gap-6">
-      {/* Items grid */}
-      <div className="space-y-4">
-        {listings.map((l) => (
-          <button
-            key={l.id}
-            onClick={() => setActiveListing(l)}
-            className={`w-full text-left border rounded-2xl overflow-hidden transition ${
-              activeListing?.id === l.id
-                ? "border-blue-600 ring-2 ring-blue-200"
-                : "border-neutral-200 hover:border-neutral-400"
-            }`}
-          >
-            <div className="aspect-[4/3] bg-neutral-100 relative">
-              {l.images[0] ? (
-                <img src={l.images[0]} alt={l.title} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <ImageIcon className="w-10 h-10 text-neutral-300" />
-                </div>
-              )}
-              <div className="absolute top-3 right-3 bg-white rounded-lg px-3 py-1 font-bold text-blue-600 shadow">
-                ${l.price}
-              </div>
-            </div>
-            <div className="p-4 flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="font-semibold text-neutral-900 truncate">{l.title}</p>
-                <p className="text-sm text-neutral-500">{l.category} · {l.condition}</p>
-                <p className="text-sm text-neutral-500">{l.location}</p>
-              </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); removeListing(l.id); }}
-                className="p-2 rounded-lg text-neutral-400 hover:text-red-600 hover:bg-red-50"
-                aria-label="Delete"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          </button>
-        ))}
-      </div>
+/* POST FORM */
+.form-wrap { max-width: 640px; margin: 0 auto; }
+.form-title { font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 8px; }
+.form-subtitle { text-align: center; color: #525252; margin-bottom: 32px; }
+.form-group { display: flex; flex-direction: column; gap: 20px; }
+.form-row { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 640px) { .form-row { grid-template-columns: 1fr 1fr; } }
+.field-label { display: block; font-size: 14px; font-weight: 600; color: #262626; margin-bottom: 8px; }
+.required { color: #ef4444; }
+.field-input {
+width: 100%; padding: 12px 16px; border-radius: 12px;
+background: white; border: 2px solid #e5e5e5; font-size: 16px; outline: none;
+font-family: inherit;
+}
+.field-input:focus { border-color: #3b82f6; }
+textarea.field-input { resize: none; }
+.image-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+@media (min-width: 640px) { .image-grid { grid-template-columns: repeat(5, 1fr); } }
+.image-slot {
+aspect-ratio: 1/1; border-radius: 8px; overflow: hidden;
+border: 1px solid #e5e5e5; position: relative;
+}
+.image-slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.image-remove {
+position: absolute; inset: 0; background: rgba(0,0,0,0.6); color: white;
+display: none; align-items: center; justify-content: center; cursor: pointer; font-size: 18px;
+border: none; font-weight: 700; width: 100%; height: 100%;
+}
+.image-slot:hover .image-remove,
+.image-slot:focus-within .image-remove { display: flex; }
+.image-add {
+aspect-ratio: 1/1; border-radius: 8px; border: 2px dashed #d4d4d4;
+background: #fafafa; display: flex; flex-direction: column; align-items: center;
+justify-content: center; color: #737373; cursor: pointer; font-size: 12px; font-weight: 600;
+}
+.image-add:hover { background: #f5f5f5; }
+.image-add-icon { font-size: 24px; margin-bottom: 2px; }
+.form-actions { display: flex; gap: 12px; padding-top: 8px; }
+.submit-btn {
+flex: 1; padding: 16px; border-radius: 12px; background: #2563eb; color: white;
+font-weight: 700; font-size: 18px; border: none; cursor: pointer;
+}
+.submit-btn:hover { background: #1d4ed8; }
+.clear-btn {
+padding: 0 20px; border-radius: 12px; border: 2px solid #e5e5e5;
+background: white; color: #404040; font-weight: 600; cursor: pointer;
+}
+.clear-btn:hover { background: #fafafa; }
 
-      {/* Export panel */}
-      <div className="md:sticky md:top-4 md:self-start">
-        {activeListing && formats ? (
-          <div className="bg-neutral-900 text-white rounded-2xl p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-lg">Export to Marketplaces</h3>
-              <button onClick={() => setActiveListing(null)} className="text-neutral-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <p className="text-xs text-neutral-300 bg-neutral-800 rounded-lg p-3 mb-4 leading-relaxed">
-              These platforms don't allow automated posting. Click a platform to open its form, then paste your pre-formatted content.
-            </p>
+/* FOOTER */
+.footer { background: #262626; color: white; margin-top: 80px; padding: 40px 24px; text-align: center; }
+.footer-link {
+display: inline-block; color: white; text-decoration: underline;
+text-underline-offset: 4px; font-size: 18px; background: none; border: none;
+cursor: pointer; margin-bottom: 24px;
+}
+.footer-copy { font-size: 14px; color: #d4d4d4; }
+</style>
 
-            <PlatformBlock name="Facebook Marketplace" url="https://www.facebook.com/marketplace/create/item">
-              <CopyRow label="Title" text={formats.fb.title} k="fb-title" copiedKey={copiedKey} copy={copy} />
-              <CopyRow label="Price" text={formats.fb.price} k="fb-price" copiedKey={copiedKey} copy={copy} />
-              <CopyRow label="Description" text={formats.fb.description} k="fb-desc" copiedKey={copiedKey} copy={copy} multiline />
-            </PlatformBlock>
+</head>
+<body>
 
-            <PlatformBlock name="Craigslist" url="https://post.craigslist.org/">
-              <CopyRow label="Posting Title" text={formats.craigslist.title} k="cl-title" copiedKey={copiedKey} copy={copy} />
-              <CopyRow label="Body" text={formats.craigslist.body} k="cl-body" copiedKey={copiedKey} copy={copy} multiline />
-            </PlatformBlock>
+<!-- HEADER -->
 
-            <PlatformBlock name="OfferUp" url="https://offerup.com/post/">
-              <CopyRow label="Title (≤60 chars)" text={formats.offerup.title} k="ou-title" copiedKey={copiedKey} copy={copy} />
-              <CopyRow label="Price" text={formats.offerup.price} k="ou-price" copiedKey={copiedKey} copy={copy} />
-              <CopyRow label="Description" text={formats.offerup.description} k="ou-desc" copiedKey={copiedKey} copy={copy} multiline />
-            </PlatformBlock>
-          </div>
-        ) : (
-          <div className="border-2 border-dashed border-neutral-200 rounded-2xl p-8 text-center">
-            <p className="text-neutral-600">Select an item on the left to export it to Facebook Marketplace, Craigslist and OfferUp.</p>
-          </div>
-        )}
-      </div>
-    </div>
-  )}
-
-  <div className="mt-10 text-center">
-    <button
-      onClick={goPost}
-      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl"
-    >
-      <Plus className="w-5 h-5" /> Post Another Item <ArrowRight className="w-4 h-4" />
-    </button>
+<div class="header">
+  <h1>Givy Rewards</h1>
+  <div class="nav">
+    <button class="nav-btn active" data-nav="home">Home</button>
+    <button class="nav-btn" data-nav="shop">Shop on Marketplace</button>
+    <button class="nav-btn" data-nav="post">Post an Item</button>
   </div>
 </div>
+
+<div class="main">
+
+  <!-- HOME PAGE -->
+
+  <div id="page-home" class="center">
+    <div class="badge">Givy Donors: up to 50% off</div>
+    <button class="big-btn" data-nav="shop">View &amp; Buy on Marketplace →</button>
+    <h2 class="h2">How to Get Your Discount</h2>
+    <ol class="ol-list">
+      <li>Donate items — earn Gold (20%), Diamond (30%) or Champion (50%) level</li>
+      <li>When buying — open your Givy Rewards profile and show your level</li>
+      <li>Receive instant discount on any item!</li>
+    </ol>
+    <p class="note">All items come from local donors in the Tacoma–Everett area and are carefully prepared for resale.</p>
+  </div>
+
+  <!-- SHOP PAGE -->
+
+  <div id="page-shop" class="hidden-page">
+    <h2 class="shop-title">🛒 Our Current Items on Facebook Marketplace</h2>
+    <div class="shop-desc">
+      <p>All items are cleaned, repaired when needed, and in <strong>like-new or perfect condition</strong>. Free pickup area: Tacoma to Everett, Puget Sound, Washington.</p>
+      <p><strong>Donors receive up to 50% discount</strong> — show your Givy Rewards level (Gold, Diamond or Champion) when buying!</p>
+    </div>
+
+```
+<div id="shop-empty" class="empty-state">
+  <p>No items posted yet.</p>
+  <button class="big-btn" style="max-width: 240px; margin: 0 auto;" data-nav="post">+ Post an Item</button>
+</div>
+
+<div id="shop-grid" class="shop-grid hidden-page">
+  <div id="items-list" class="items-list"></div>
+  <div class="export-wrap">
+    <div id="export-panel"></div>
+  </div>
+</div>
+
+<div class="center" style="margin-top: 40px;">
+  <button class="big-btn" style="max-width: 280px; margin: 0 auto;" data-nav="post">+ Post Another Item →</button>
+</div>
 ```
 
-);
-}
+  </div>
 
-/* –––––––– POST –––––––– */
-function PostPage({ form, update, handleImages, removeImage, canSave, saveListing, resetForm }) {
-return (
-<div className="max-w-2xl mx-auto">
-<h2 className="text-2xl sm:text-3xl font-bold text-neutral-900 text-center mb-2">Post an Item</h2>
-<p className="text-center text-neutral-600 mb-8">
-Fill in the details once — we’ll format it for Facebook Marketplace, Craigslist and OfferUp.
-</p>
+  <!-- POST PAGE -->
+
+  <div id="page-post" class="hidden-page form-wrap">
+    <h2 class="form-title">Post an Item</h2>
+    <p class="form-subtitle">Fill in the details once — we'll format it for Facebook Marketplace, Craigslist and OfferUp.</p>
 
 ```
-  <div className="space-y-5">
-    {/* Photos */}
+<div class="form-group">
+  <div>
+    <label class="field-label">Photos (up to 10)</label>
+    <div id="image-grid" class="image-grid"></div>
+  </div>
+
+  <div class="form-row">
     <div>
-      <label className="block text-sm font-semibold text-neutral-800 mb-2">Photos (up to 10)</label>
-      <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-        {form.images.map((img, i) => (
-          <div key={i} className="relative aspect-square rounded-lg overflow-hidden group border border-neutral-200">
-            <img src={img} alt="" className="w-full h-full object-cover" />
-            <button
-              onClick={() => removeImage(i)}
-              className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center"
-            >
-              <X className="w-5 h-5 text-white" />
-            </button>
-          </div>
-        ))}
-        {form.images.length < 10 && (
-          <label className="aspect-square rounded-lg border-2 border-dashed border-neutral-300 bg-neutral-50 hover:bg-neutral-100 transition cursor-pointer flex flex-col items-center justify-center text-neutral-500">
-            <ImageIcon className="w-6 h-6" />
-            <span className="text-xs mt-1 font-semibold">Add</span>
-            <input type="file" accept="image/*" multiple className="hidden" onChange={handleImages} />
-          </label>
-        )}
-      </div>
+      <label class="field-label">Title <span class="required">*</span></label>
+      <input id="f-title" type="text" placeholder="Mid-Century Walnut Coffee Table" class="field-input" />
     </div>
-
-    <FieldGroup>
-      <Field label="Title" required>
-        <input type="text" value={form.title} onChange={(e) => update("title", e.target.value)}
-          placeholder="Mid-Century Walnut Coffee Table" className={inputCls} />
-      </Field>
-      <Field label="Price (USD)" required>
-        <input type="number" value={form.price} onChange={(e) => update("price", e.target.value)}
-          placeholder="250" className={inputCls} />
-      </Field>
-    </FieldGroup>
-
-    <FieldGroup>
-      <Field label="Category">
-        <select value={form.category} onChange={(e) => update("category", e.target.value)} className={inputCls}>
-          {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-        </select>
-      </Field>
-      <Field label="Condition">
-        <select value={form.condition} onChange={(e) => update("condition", e.target.value)} className={inputCls}>
-          {CONDITIONS.map((c) => <option key={c}>{c}</option>)}
-        </select>
-      </Field>
-    </FieldGroup>
-
-    <Field label="Location (City, State)" required>
-      <input type="text" value={form.location} onChange={(e) => update("location", e.target.value)}
-        placeholder="Everett, WA" className={inputCls} />
-    </Field>
-
-    <Field label="Description" required>
-      <textarea value={form.description} onChange={(e) => update("description", e.target.value)} rows={5}
-        placeholder="Describe the piece — style, story, any wear."
-        className={`${inputCls} resize-none`} />
-    </Field>
-
-    <FieldGroup>
-      <Field label="Dimensions">
-        <input type="text" value={form.dimensions} onChange={(e) => update("dimensions", e.target.value)}
-          placeholder='48"W × 24"D × 16"H' className={inputCls} />
-      </Field>
-      <Field label="Material">
-        <input type="text" value={form.material} onChange={(e) => update("material", e.target.value)}
-          placeholder="Solid walnut" className={inputCls} />
-      </Field>
-    </FieldGroup>
-
-    <FieldGroup>
-      <Field label="Brand (optional)">
-        <input type="text" value={form.brand} onChange={(e) => update("brand", e.target.value)}
-          placeholder="West Elm" className={inputCls} />
-      </Field>
-      <Field label="Contact Email (Craigslist)">
-        <input type="email" value={form.email} onChange={(e) => update("email", e.target.value)}
-          placeholder="you@example.com" className={inputCls} />
-      </Field>
-    </FieldGroup>
-
-    <div className="flex gap-3 pt-2">
-      <button
-        onClick={saveListing}
-        disabled={!canSave}
-        className="flex-1 py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-      >
-        <Plus className="w-5 h-5" /> Generate Listings
-      </button>
-      <button
-        onClick={resetForm}
-        className="px-5 rounded-xl border-2 border-neutral-200 text-neutral-700 font-semibold hover:bg-neutral-50"
-      >
-        Clear
-      </button>
+    <div>
+      <label class="field-label">Price (USD) <span class="required">*</span></label>
+      <input id="f-price" type="number" placeholder="250" class="field-input" />
     </div>
+  </div>
+
+  <div class="form-row">
+    <div>
+      <label class="field-label">Category</label>
+      <select id="f-category" class="field-input"></select>
+    </div>
+    <div>
+      <label class="field-label">Condition</label>
+      <select id="f-condition" class="field-input"></select>
+    </div>
+  </div>
+
+  <div>
+    <label class="field-label">Location (City, State) <span class="required">*</span></label>
+    <input id="f-location" type="text" placeholder="Everett, WA" class="field-input" />
+  </div>
+
+  <div>
+    <label class="field-label">Description <span class="required">*</span></label>
+    <textarea id="f-description" rows="5" placeholder="Describe the piece — style, story, any wear." class="field-input"></textarea>
+  </div>
+
+  <div class="form-row">
+    <div>
+      <label class="field-label">Dimensions</label>
+      <input id="f-dimensions" type="text" placeholder='48"W x 24"D x 16"H' class="field-input" />
+    </div>
+    <div>
+      <label class="field-label">Material</label>
+      <input id="f-material" type="text" placeholder="Solid walnut" class="field-input" />
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div>
+      <label class="field-label">Brand (optional)</label>
+      <input id="f-brand" type="text" placeholder="West Elm" class="field-input" />
+    </div>
+    <div>
+      <label class="field-label">Contact Email</label>
+      <input id="f-email" type="email" placeholder="you@example.com" class="field-input" />
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button id="save-btn" type="button" class="submit-btn">+ Generate Listings</button>
+    <button id="clear-btn" type="button" class="clear-btn">Clear</button>
   </div>
 </div>
 ```
 
-);
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+
+<div class="footer">
+  <button class="footer-link" data-nav="home">← Back to Home</button>
+  <p class="footer-copy">Givy Rewards © 2026 · Free Pickup &amp; Reuse in Puget Sound</p>
+</div>
+
+<script>
+var CATEGORIES = ["Sofa / Couch","Chair","Table","Bed / Mattress","Dresser","Desk","Bookshelf","Lamp / Lighting","Rug","Mirror","Cabinet","Other"];
+var CONDITIONS = ["New","Like New","Good","Fair","Salvage"];
+
+var state = { page: 'home', images: [], listings: [], activeId: null };
+
+try {
+  var saved = localStorage.getItem('givy-listings');
+  if (saved) state.listings = JSON.parse(saved);
+} catch(e) {}
+
+document.getElementById('f-category').innerHTML = CATEGORIES.map(function(c){return '<option>'+c+'</option>';}).join('');
+document.getElementById('f-condition').innerHTML = CONDITIONS.map(function(c){return '<option>'+c+'</option>';}).join('');
+document.getElementById('f-condition').selectedIndex = 2;
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
 }
 
-/* –––––––– PRIMITIVES –––––––– */
-const inputCls = “w-full px-4 py-3 rounded-xl bg-white border-2 border-neutral-200 focus:border-blue-500 focus:outline-none transition”;
-
-function FieldGroup({ children }) {
-return <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{children}</div>;
+function saveToStorage() {
+  try { localStorage.setItem('givy-listings', JSON.stringify(state.listings)); } catch(e) {}
 }
 
-function Field({ label, required, children }) {
-return (
-<div>
-<label className="block text-sm font-semibold text-neutral-800 mb-2">
-{label}
-{required && <span className="text-red-500 ml-1">*</span>}
-</label>
-{children}
-</div>
-);
+function showPage(name) {
+  state.page = name;
+  ['home','shop','post'].forEach(function(p) {
+    document.getElementById('page-' + p).classList.toggle('hidden-page', p !== name);
+  });
+  document.querySelectorAll('.nav-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.nav === name);
+  });
+  if (name === 'shop') renderShop();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function PlatformBlock({ name, url, children }) {
-return (
-<div className="mb-4 last:mb-0 bg-neutral-800 rounded-xl p-4">
-<div className="flex items-center justify-between mb-3">
-<span className="font-bold text-white">{name}</span>
-<a
-href={url}
-target="_blank"
-rel="noopener noreferrer"
-className="text-xs text-neutral-200 hover:text-white flex items-center gap-1 bg-neutral-700 hover:bg-neutral-600 px-2.5 py-1 rounded-lg transition"
->
-Open <ExternalLink className="w-3 h-3" />
-</a>
-</div>
-<div className="space-y-2">{children}</div>
-</div>
-);
+document.querySelectorAll('[data-nav]').forEach(function(btn) {
+  btn.addEventListener('click', function() { showPage(btn.dataset.nav); });
+});
+
+function renderImages() {
+  var grid = document.getElementById('image-grid');
+  var html = state.images.map(function(img, i) {
+    return '<div class="image-slot">' +
+      '<img src="' + img + '" alt="" />' +
+      '<button type="button" class="image-remove" onclick="removeImage(' + i + ')">X</button>' +
+    '</div>';
+  }).join('');
+  if (state.images.length < 10) {
+    html += '<label class="image-add">' +
+      '<span class="image-add-icon">+</span>' +
+      '<span>Add</span>' +
+      '<input type="file" accept="image/*" multiple style="display:none" onchange="handleImages(event)" />' +
+    '</label>';
+  }
+  grid.innerHTML = html;
 }
 
-function CopyRow({ label, text, k, copiedKey, copy, multiline }) {
-const isCopied = copiedKey === k;
-return (
-<div className="bg-neutral-900 rounded-lg p-2.5">
-<div className="flex items-center justify-between mb-1">
-<span className="text-xs text-neutral-400 font-semibold uppercase tracking-wide">{label}</span>
-<button
-onClick={() => copy(text, k)}
-className={`text-xs flex items-center gap-1 px-2 py-0.5 rounded transition ${ isCopied ? "bg-green-500 text-white" : "bg-neutral-700 text-neutral-200 hover:bg-neutral-600" }`}
->
-{isCopied ? <><Check className="w-3 h-3" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
-</button>
-</div>
-<div className={`text-xs text-neutral-200 font-mono ${multiline ? "whitespace-pre-wrap" : "truncate"}`}>
-{text}
-</div>
-</div>
-);
+function handleImages(e) {
+  var files = Array.prototype.slice.call(e.target.files || []);
+  var readers = files.map(function(f) {
+    return new Promise(function(res) {
+      var r = new FileReader();
+      r.onload = function() { res(r.result); };
+      r.readAsDataURL(f);
+    });
+  });
+  Promise.all(readers).then(function(imgs) {
+    state.images = state.images.concat(imgs).slice(0, 10);
+    renderImages();
+  });
 }
+
+function removeImage(i) {
+  state.images.splice(i, 1);
+  renderImages();
+}
+renderImages();
+
+document.getElementById('save-btn').addEventListener('click', function() {
+  var listing = {
+    id: Date.now(),
+    title: document.getElementById('f-title').value.trim(),
+    price: document.getElementById('f-price').value.trim(),
+    category: document.getElementById('f-category').value,
+    condition: document.getElementById('f-condition').value,
+    location: document.getElementById('f-location').value.trim(),
+    description: document.getElementById('f-description').value.trim(),
+    dimensions: document.getElementById('f-dimensions').value.trim(),
+    material: document.getElementById('f-material').value.trim(),
+    brand: document.getElementById('f-brand').value.trim(),
+    email: document.getElementById('f-email').value.trim(),
+    images: state.images.slice()
+  };
+  if (!listing.title || !listing.price || !listing.location || !listing.description) {
+    alert('Please fill Title, Price, Location and Description.');
+    return;
+  }
+  state.listings.unshift(listing);
+  saveToStorage();
+  state.activeId = listing.id;
+  clearForm();
+  showPage('shop');
+});
+
+document.getElementById('clear-btn').addEventListener('click', clearForm);
+
+function clearForm() {
+  ['title','price','location','description','dimensions','material','brand','email'].forEach(function(k) {
+    document.getElementById('f-' + k).value = '';
+  });
+  document.getElementById('f-category').selectedIndex = 0;
+  document.getElementById('f-condition').selectedIndex = 2;
+  state.images = [];
+  renderImages();
+}
+
+function renderShop() {
+  var empty = document.getElementById('shop-empty');
+  var grid = document.getElementById('shop-grid');
+  if (state.listings.length === 0) {
+    empty.classList.remove('hidden-page');
+    grid.classList.add('hidden-page');
+    return;
+  }
+  empty.classList.add('hidden-page');
+  grid.classList.remove('hidden-page');
+
+  var list = document.getElementById('items-list');
+  list.innerHTML = state.listings.map(function(l) {
+    var imageHtml = l.images[0]
+      ? '<img src="' + l.images[0] + '" alt="" />'
+      : '<div class="item-placeholder">📦</div>';
+    return '<div class="item-card ' + (state.activeId === l.id ? 'active' : '') + '" onclick="selectListing(' + l.id + ')">' +
+      '<div class="item-image">' + imageHtml +
+        '<div class="price-tag">$' + escapeHtml(l.price) + '</div>' +
+      '</div>' +
+      '<div class="item-info">' +
+        '<div style="min-width:0;flex:1;">' +
+          '<p class="item-title">' + escapeHtml(l.title) + '</p>' +
+          '<p class="item-meta">' + escapeHtml(l.category) + ' · ' + escapeHtml(l.condition) + '</p>' +
+          '<p class="item-meta">' + escapeHtml(l.location) + '</p>' +
+        '</div>' +
+        '<button class="delete-btn" onclick="event.stopPropagation(); deleteListing(' + l.id + ')">🗑</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  renderExport();
+}
+
+function selectListing(id) {
+  state.activeId = id;
+  renderShop();
+}
+
+function deleteListing(id) {
+  state.listings = state.listings.filter(function(l) { return l.id !== id; });
+  saveToStorage();
+  if (state.activeId === id) state.activeId = null;
+  renderShop();
+}
+
+function buildFormats(l) {
+  var fbLines = [l.description];
+  if (l.dimensions) fbLines.push('Dimensions: ' + l.dimensions);
+  if (l.material) fbLines.push('Material: ' + l.material);
+  if (l.brand) fbLines.push('Brand: ' + l.brand);
+  fbLines.push('Location: ' + l.location);
+  var fb = { title: l.title, price: l.price, description: fbLines.join('\n\n') };
+
+  var clLines = [l.title, 'Price: $' + l.price, 'Condition: ' + l.condition, 'Category: ' + l.category];
+  if (l.brand) clLines.push('Brand: ' + l.brand);
+  if (l.material) clLines.push('Material: ' + l.material);
+  if (l.dimensions) clLines.push('Dimensions: ' + l.dimensions);
+  clLines.push('', l.description, '', 'Location: ' + l.location);
+  if (l.email) clLines.push('Contact: ' + l.email);
+  var craigslist = {
+    title: l.title + ' - $' + l.price + ' (' + l.location + ')',
+    body: clLines.join('\n')
+  };
+
+  var ouLines = [l.description, '', '• Condition: ' + l.condition];
+  if (l.dimensions) ouLines.push('• Dimensions: ' + l.dimensions);
+  if (l.material) ouLines.push('• Material: ' + l.material);
+  if (l.brand) ouLines.push('• Brand: ' + l.brand);
+  ouLines.push('• Pickup: ' + l.location);
+  var offerup = {
+    title: l.title.slice(0, 60),
+    price: l.price,
+    description: ouLines.join('\n')
+  };
+
+  return { fb: fb, craigslist: craigslist, offerup: offerup };
+}
+
+function renderExport() {
+  var panel = document.getElementById('export-panel');
+  var l = state.listings.filter(function(x){ return x.id === state.activeId; })[0];
+  if (!l) {
+    panel.innerHTML = '<div class="empty-state"><p>Select an item on the left to export it to Facebook Marketplace, Craigslist and OfferUp.</p></div>';
+    return;
+  }
+  var f = buildFormats(l);
+  panel.innerHTML =
+    '<div class="export-panel">' +
+      '<div class="export-header">' +
+        '<h3>Export to Marketplaces</h3>' +
+        '<button class="export-close" onclick="state.activeId=null; renderShop()">✕</button>' +
+      '</div>' +
+      '<div class="export-note">These platforms do not allow automated posting. Click a platform to open its form, then paste your pre-formatted content.</div>' +
+      platformBlock('Facebook Marketplace', 'https://www.facebook.com/marketplace/create/item', [
+        ['Title', f.fb.title, false],
+        ['Price', f.fb.price, false],
+        ['Description', f.fb.description, true]
+      ]) +
+      platformBlock('Craigslist', 'https://post.craigslist.org/', [
+        ['Posting Title', f.craigslist.title, false],
+        ['Body', f.craigslist.body, true]
+      ]) +
+      platformBlock('OfferUp', 'https://offerup.com/post/', [
+        ['Title (max 60 chars)', f.offerup.title, false],
+        ['Price', f.offerup.price, false],
+        ['Description', f.offerup.description, true]
+      ]) +
+    '</div>';
+}
+
+function platformBlock(name, url, rows) {
+  var rowsHtml = rows.map(function(row) {
+    var label = row[0], text = row[1], multi = row[2];
+    var encodedText = encodeURIComponent(text);
+    return '<div class="copy-row">' +
+      '<div class="copy-header">' +
+        '<span class="copy-label">' + label + '</span>' +
+        '<button class="copy-btn" onclick="copyText(this, \'' + encodedText + '\')">Copy</button>' +
+      '</div>' +
+      '<div class="copy-text ' + (multi ? 'multi' : 'single') + '">' + escapeHtml(text) + '</div>' +
+    '</div>';
+  }).join('');
+  return '<div class="platform">' +
+    '<div class="platform-header">' +
+      '<span class="platform-name">' + name + '</span>' +
+      '<a href="' + url + '" target="_blank" rel="noopener noreferrer" class="platform-link">Open ↗</a>' +
+    '</div>' +
+    rowsHtml +
+  '</div>';
+}
+
+function copyText(btn, encodedText) {
+  var text = decodeURIComponent(encodedText);
+  var done = function() {
+    btn.innerHTML = 'Copied ✓';
+    btn.classList.add('copied');
+    setTimeout(function() {
+      btn.innerHTML = 'Copy';
+      btn.classList.remove('copied');
+    }, 1500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(fallback);
+  } else {
+    fallback();
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch(e) {}
+    document.body.removeChild(ta);
+    done();
+  }
+}
+
+showPage('home');
+</script>
+
+</body>
+</html>
