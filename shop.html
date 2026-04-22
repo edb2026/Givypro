@@ -1,0 +1,524 @@
+import { useState, useMemo } from “react”;
+import { Plus, Copy, Check, ExternalLink, Image as ImageIcon, Trash2, Package, X, ShoppingCart, ArrowLeft, ArrowRight } from “lucide-react”;
+
+const CATEGORIES = [
+“Sofa / Couch”, “Chair”, “Table”, “Bed / Mattress”, “Dresser”, “Desk”,
+“Bookshelf”, “Lamp / Lighting”, “Rug”, “Mirror”, “Cabinet”, “Other”
+];
+
+const CONDITIONS = [“New”, “Like New”, “Good”, “Fair”, “Salvage”];
+
+export default function GivyRewards() {
+const [page, setPage] = useState(“home”); // home | shop | post
+const [form, setForm] = useState({
+title: “”, price: “”, category: “Sofa / Couch”, condition: “Good”,
+location: “”, description: “”, dimensions: “”, material: “”,
+brand: “”, email: “”, phone: “”, images: []
+});
+const [listings, setListings] = useState([]);
+const [activeListing, setActiveListing] = useState(null);
+const [copiedKey, setCopiedKey] = useState(””);
+
+const update = (k, v) => setForm((f) => ({ …f, [k]: v }));
+
+const handleImages = (e) => {
+const files = Array.from(e.target.files || []);
+const readers = files.map(
+(f) => new Promise((res) => {
+const r = new FileReader();
+r.onload = () => res(r.result);
+r.readAsDataURL(f);
+})
+);
+Promise.all(readers).then((imgs) =>
+setForm((f) => ({ …f, images: […f.images, …imgs].slice(0, 10) }))
+);
+};
+
+const removeImage = (i) =>
+setForm((f) => ({ …f, images: f.images.filter((_, idx) => idx !== i) }));
+
+const canSave = form.title && form.price && form.location && form.description;
+
+const saveListing = () => {
+if (!canSave) return;
+const listing = { …form, id: Date.now() };
+setListings((l) => [listing, …l]);
+setActiveListing(listing);
+setPage(“shop”);
+};
+
+const resetForm = () =>
+setForm({
+title: “”, price: “”, category: “Sofa / Couch”, condition: “Good”,
+location: “”, description: “”, dimensions: “”, material: “”,
+brand: “”, email: “”, phone: “”, images: []
+});
+
+const formats = useMemo(() => {
+if (!activeListing) return null;
+const l = activeListing;
+const fb = {
+title: l.title,
+price: l.price,
+category: l.category,
+condition: l.condition,
+description: [
+l.description,
+l.dimensions && `Dimensions: ${l.dimensions}`,
+l.material && `Material: ${l.material}`,
+l.brand && `Brand: ${l.brand}`,
+`Location: ${l.location}`
+].filter(Boolean).join(”\n\n”)
+};
+const craigslist = {
+title: `${l.title} - $${l.price} (${l.location})`,
+body: [
+`${l.title}`, `Price: $${l.price}`, `Condition: ${l.condition}`,
+`Category: ${l.category}`,
+l.brand && `Brand: ${l.brand}`,
+l.material && `Material: ${l.material}`,
+l.dimensions && `Dimensions: ${l.dimensions}`,
+`, l.description, `,
+`Location: ${l.location}`,
+l.email && `Contact: ${l.email}`,
+l.phone && `Phone: ${l.phone}`
+].filter(Boolean).join(”\n”)
+};
+const offerup = {
+title: l.title.slice(0, 60),
+price: l.price,
+condition: l.condition,
+description: [
+l.description, ``,
+`• Condition: ${l.condition}`,
+l.dimensions && `• Dimensions: ${l.dimensions}`,
+l.material && `• Material: ${l.material}`,
+l.brand && `• Brand: ${l.brand}`,
+`• Pickup: ${l.location}`
+].filter(Boolean).join(”\n”)
+};
+return { fb, craigslist, offerup };
+}, [activeListing]);
+
+const copy = (text, key) => {
+navigator.clipboard.writeText(text);
+setCopiedKey(key);
+setTimeout(() => setCopiedKey(””), 1800);
+};
+
+return (
+<div className=“min-h-screen bg-white font-sans” style={{ fontFamily: “-apple-system, BlinkMacSystemFont, ‘Segoe UI’, sans-serif” }}>
+{/* Header */}
+<header className="bg-blue-600 text-white">
+<div className="max-w-5xl mx-auto px-6 py-8 text-center">
+<h1 className="text-3xl sm:text-4xl font-bold mb-6">Givy Rewards</h1>
+<nav className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-base sm:text-lg">
+<button
+onClick={() => setPage(“home”)}
+className={`hover:underline underline-offset-4 ${page === "home" ? "underline" : ""}`}
+>
+Home
+</button>
+<button
+onClick={() => setPage(“shop”)}
+className={`hover:underline underline-offset-4 ${page === "shop" ? "underline" : ""}`}
+>
+Shop on Marketplace
+</button>
+<button
+onClick={() => setPage(“post”)}
+className={`hover:underline underline-offset-4 ${page === "post" ? "underline" : ""}`}
+>
+Post an Item
+</button>
+</nav>
+</div>
+</header>
+
+```
+  {/* Main */}
+  <main className="max-w-5xl mx-auto px-6 py-10 sm:py-14">
+    {page === "home" && <HomePage goShop={() => setPage("shop")} />}
+    {page === "shop" && (
+      <ShopPage
+        listings={listings}
+        activeListing={activeListing}
+        setActiveListing={setActiveListing}
+        formats={formats}
+        copy={copy}
+        copiedKey={copiedKey}
+        removeListing={(id) => {
+          setListings((ls) => ls.filter((x) => x.id !== id));
+          if (activeListing?.id === id) setActiveListing(null);
+        }}
+        goPost={() => setPage("post")}
+      />
+    )}
+    {page === "post" && (
+      <PostPage
+        form={form}
+        update={update}
+        handleImages={handleImages}
+        removeImage={removeImage}
+        canSave={canSave}
+        saveListing={saveListing}
+        resetForm={resetForm}
+      />
+    )}
+  </main>
+
+  {/* Footer */}
+  <footer className="bg-neutral-800 text-white mt-20">
+    <div className="max-w-5xl mx-auto px-6 py-10 text-center">
+      <button
+        onClick={() => setPage("home")}
+        className="inline-flex items-center gap-2 underline underline-offset-4 text-lg mb-6"
+      >
+        <ArrowLeft className="w-4 h-4" /> Back to Home
+      </button>
+      <p className="text-sm text-neutral-300">
+        Givy Rewards © 2026 · Free Pickup &amp; Reuse in Puget Sound
+      </p>
+    </div>
+  </footer>
+</div>
+```
+
+);
+}
+
+/* –––––––– HOME –––––––– */
+function HomePage({ goShop }) {
+return (
+<div className="text-center">
+<div className="inline-block px-4 py-2 rounded-lg bg-green-100 text-green-800 font-semibold text-sm mb-8">
+Givy Donors: up to 50% off
+</div>
+
+```
+  <button
+    onClick={goShop}
+    className="block w-full bg-blue-600 hover:bg-blue-700 transition text-white font-semibold text-xl py-6 rounded-2xl mb-16"
+  >
+    View &amp; Buy on Marketplace →
+  </button>
+
+  <h2 className="text-2xl sm:text-3xl font-bold text-neutral-900 mb-8">How to Get Your Discount</h2>
+
+  <ol className="text-left max-w-xl mx-auto space-y-4 text-lg text-neutral-800 mb-10 list-decimal list-inside">
+    <li>Donate items — earn Gold (20%), Diamond (30%) or Champion (50%) level</li>
+    <li>When buying — open your Givy Rewards profile and show your level</li>
+    <li>Receive instant discount on any item!</li>
+  </ol>
+
+  <p className="max-w-xl mx-auto text-neutral-700 leading-relaxed">
+    All items come from local donors in the Tacoma–Everett area and are carefully prepared for resale.
+  </p>
+</div>
+```
+
+);
+}
+
+/* –––––––– SHOP –––––––– */
+function ShopPage({ listings, activeListing, setActiveListing, formats, copy, copiedKey, removeListing, goPost }) {
+return (
+<div>
+<h2 className="text-2xl sm:text-3xl font-bold text-blue-600 text-center mb-6 flex items-center justify-center gap-3 flex-wrap">
+<ShoppingCart className="w-7 h-7 text-neutral-700" />
+<span>Our Current Items on Facebook Marketplace</span>
+</h2>
+
+```
+  <div className="max-w-2xl mx-auto text-center text-neutral-800 leading-relaxed mb-10 space-y-4">
+    <p>
+      All items are cleaned, repaired when needed, and in <strong>like-new or perfect condition</strong>.
+      Free pickup area: Tacoma to Everett, Puget Sound, Washington.
+    </p>
+    <p>
+      <strong>Donors receive up to 50% discount</strong> — show your Givy Rewards level (Gold, Diamond or Champion) when buying!
+    </p>
+  </div>
+
+  {listings.length === 0 ? (
+    <div className="text-center py-16 border-2 border-dashed border-neutral-200 rounded-2xl">
+      <Package className="w-12 h-12 text-neutral-300 mx-auto mb-4" />
+      <p className="text-neutral-600 mb-6">No items posted yet.</p>
+      <button
+        onClick={goPost}
+        className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl"
+      >
+        <Plus className="w-5 h-5" /> Post an Item
+      </button>
+    </div>
+  ) : (
+    <div className="grid md:grid-cols-2 gap-6">
+      {/* Items grid */}
+      <div className="space-y-4">
+        {listings.map((l) => (
+          <button
+            key={l.id}
+            onClick={() => setActiveListing(l)}
+            className={`w-full text-left border rounded-2xl overflow-hidden transition ${
+              activeListing?.id === l.id
+                ? "border-blue-600 ring-2 ring-blue-200"
+                : "border-neutral-200 hover:border-neutral-400"
+            }`}
+          >
+            <div className="aspect-[4/3] bg-neutral-100 relative">
+              {l.images[0] ? (
+                <img src={l.images[0]} alt={l.title} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <ImageIcon className="w-10 h-10 text-neutral-300" />
+                </div>
+              )}
+              <div className="absolute top-3 right-3 bg-white rounded-lg px-3 py-1 font-bold text-blue-600 shadow">
+                ${l.price}
+              </div>
+            </div>
+            <div className="p-4 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-semibold text-neutral-900 truncate">{l.title}</p>
+                <p className="text-sm text-neutral-500">{l.category} · {l.condition}</p>
+                <p className="text-sm text-neutral-500">{l.location}</p>
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); removeListing(l.id); }}
+                className="p-2 rounded-lg text-neutral-400 hover:text-red-600 hover:bg-red-50"
+                aria-label="Delete"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* Export panel */}
+      <div className="md:sticky md:top-4 md:self-start">
+        {activeListing && formats ? (
+          <div className="bg-neutral-900 text-white rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-lg">Export to Marketplaces</h3>
+              <button onClick={() => setActiveListing(null)} className="text-neutral-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-xs text-neutral-300 bg-neutral-800 rounded-lg p-3 mb-4 leading-relaxed">
+              These platforms don't allow automated posting. Click a platform to open its form, then paste your pre-formatted content.
+            </p>
+
+            <PlatformBlock name="Facebook Marketplace" url="https://www.facebook.com/marketplace/create/item">
+              <CopyRow label="Title" text={formats.fb.title} k="fb-title" copiedKey={copiedKey} copy={copy} />
+              <CopyRow label="Price" text={formats.fb.price} k="fb-price" copiedKey={copiedKey} copy={copy} />
+              <CopyRow label="Description" text={formats.fb.description} k="fb-desc" copiedKey={copiedKey} copy={copy} multiline />
+            </PlatformBlock>
+
+            <PlatformBlock name="Craigslist" url="https://post.craigslist.org/">
+              <CopyRow label="Posting Title" text={formats.craigslist.title} k="cl-title" copiedKey={copiedKey} copy={copy} />
+              <CopyRow label="Body" text={formats.craigslist.body} k="cl-body" copiedKey={copiedKey} copy={copy} multiline />
+            </PlatformBlock>
+
+            <PlatformBlock name="OfferUp" url="https://offerup.com/post/">
+              <CopyRow label="Title (≤60 chars)" text={formats.offerup.title} k="ou-title" copiedKey={copiedKey} copy={copy} />
+              <CopyRow label="Price" text={formats.offerup.price} k="ou-price" copiedKey={copiedKey} copy={copy} />
+              <CopyRow label="Description" text={formats.offerup.description} k="ou-desc" copiedKey={copiedKey} copy={copy} multiline />
+            </PlatformBlock>
+          </div>
+        ) : (
+          <div className="border-2 border-dashed border-neutral-200 rounded-2xl p-8 text-center">
+            <p className="text-neutral-600">Select an item on the left to export it to Facebook Marketplace, Craigslist and OfferUp.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )}
+
+  <div className="mt-10 text-center">
+    <button
+      onClick={goPost}
+      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl"
+    >
+      <Plus className="w-5 h-5" /> Post Another Item <ArrowRight className="w-4 h-4" />
+    </button>
+  </div>
+</div>
+```
+
+);
+}
+
+/* –––––––– POST –––––––– */
+function PostPage({ form, update, handleImages, removeImage, canSave, saveListing, resetForm }) {
+return (
+<div className="max-w-2xl mx-auto">
+<h2 className="text-2xl sm:text-3xl font-bold text-neutral-900 text-center mb-2">Post an Item</h2>
+<p className="text-center text-neutral-600 mb-8">
+Fill in the details once — we’ll format it for Facebook Marketplace, Craigslist and OfferUp.
+</p>
+
+```
+  <div className="space-y-5">
+    {/* Photos */}
+    <div>
+      <label className="block text-sm font-semibold text-neutral-800 mb-2">Photos (up to 10)</label>
+      <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+        {form.images.map((img, i) => (
+          <div key={i} className="relative aspect-square rounded-lg overflow-hidden group border border-neutral-200">
+            <img src={img} alt="" className="w-full h-full object-cover" />
+            <button
+              onClick={() => removeImage(i)}
+              className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center"
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        ))}
+        {form.images.length < 10 && (
+          <label className="aspect-square rounded-lg border-2 border-dashed border-neutral-300 bg-neutral-50 hover:bg-neutral-100 transition cursor-pointer flex flex-col items-center justify-center text-neutral-500">
+            <ImageIcon className="w-6 h-6" />
+            <span className="text-xs mt-1 font-semibold">Add</span>
+            <input type="file" accept="image/*" multiple className="hidden" onChange={handleImages} />
+          </label>
+        )}
+      </div>
+    </div>
+
+    <FieldGroup>
+      <Field label="Title" required>
+        <input type="text" value={form.title} onChange={(e) => update("title", e.target.value)}
+          placeholder="Mid-Century Walnut Coffee Table" className={inputCls} />
+      </Field>
+      <Field label="Price (USD)" required>
+        <input type="number" value={form.price} onChange={(e) => update("price", e.target.value)}
+          placeholder="250" className={inputCls} />
+      </Field>
+    </FieldGroup>
+
+    <FieldGroup>
+      <Field label="Category">
+        <select value={form.category} onChange={(e) => update("category", e.target.value)} className={inputCls}>
+          {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+        </select>
+      </Field>
+      <Field label="Condition">
+        <select value={form.condition} onChange={(e) => update("condition", e.target.value)} className={inputCls}>
+          {CONDITIONS.map((c) => <option key={c}>{c}</option>)}
+        </select>
+      </Field>
+    </FieldGroup>
+
+    <Field label="Location (City, State)" required>
+      <input type="text" value={form.location} onChange={(e) => update("location", e.target.value)}
+        placeholder="Everett, WA" className={inputCls} />
+    </Field>
+
+    <Field label="Description" required>
+      <textarea value={form.description} onChange={(e) => update("description", e.target.value)} rows={5}
+        placeholder="Describe the piece — style, story, any wear."
+        className={`${inputCls} resize-none`} />
+    </Field>
+
+    <FieldGroup>
+      <Field label="Dimensions">
+        <input type="text" value={form.dimensions} onChange={(e) => update("dimensions", e.target.value)}
+          placeholder='48"W × 24"D × 16"H' className={inputCls} />
+      </Field>
+      <Field label="Material">
+        <input type="text" value={form.material} onChange={(e) => update("material", e.target.value)}
+          placeholder="Solid walnut" className={inputCls} />
+      </Field>
+    </FieldGroup>
+
+    <FieldGroup>
+      <Field label="Brand (optional)">
+        <input type="text" value={form.brand} onChange={(e) => update("brand", e.target.value)}
+          placeholder="West Elm" className={inputCls} />
+      </Field>
+      <Field label="Contact Email (Craigslist)">
+        <input type="email" value={form.email} onChange={(e) => update("email", e.target.value)}
+          placeholder="you@example.com" className={inputCls} />
+      </Field>
+    </FieldGroup>
+
+    <div className="flex gap-3 pt-2">
+      <button
+        onClick={saveListing}
+        disabled={!canSave}
+        className="flex-1 py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      >
+        <Plus className="w-5 h-5" /> Generate Listings
+      </button>
+      <button
+        onClick={resetForm}
+        className="px-5 rounded-xl border-2 border-neutral-200 text-neutral-700 font-semibold hover:bg-neutral-50"
+      >
+        Clear
+      </button>
+    </div>
+  </div>
+</div>
+```
+
+);
+}
+
+/* –––––––– PRIMITIVES –––––––– */
+const inputCls = “w-full px-4 py-3 rounded-xl bg-white border-2 border-neutral-200 focus:border-blue-500 focus:outline-none transition”;
+
+function FieldGroup({ children }) {
+return <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{children}</div>;
+}
+
+function Field({ label, required, children }) {
+return (
+<div>
+<label className="block text-sm font-semibold text-neutral-800 mb-2">
+{label}
+{required && <span className="text-red-500 ml-1">*</span>}
+</label>
+{children}
+</div>
+);
+}
+
+function PlatformBlock({ name, url, children }) {
+return (
+<div className="mb-4 last:mb-0 bg-neutral-800 rounded-xl p-4">
+<div className="flex items-center justify-between mb-3">
+<span className="font-bold text-white">{name}</span>
+<a
+href={url}
+target="_blank"
+rel="noopener noreferrer"
+className="text-xs text-neutral-200 hover:text-white flex items-center gap-1 bg-neutral-700 hover:bg-neutral-600 px-2.5 py-1 rounded-lg transition"
+>
+Open <ExternalLink className="w-3 h-3" />
+</a>
+</div>
+<div className="space-y-2">{children}</div>
+</div>
+);
+}
+
+function CopyRow({ label, text, k, copiedKey, copy, multiline }) {
+const isCopied = copiedKey === k;
+return (
+<div className="bg-neutral-900 rounded-lg p-2.5">
+<div className="flex items-center justify-between mb-1">
+<span className="text-xs text-neutral-400 font-semibold uppercase tracking-wide">{label}</span>
+<button
+onClick={() => copy(text, k)}
+className={`text-xs flex items-center gap-1 px-2 py-0.5 rounded transition ${ isCopied ? "bg-green-500 text-white" : "bg-neutral-700 text-neutral-200 hover:bg-neutral-600" }`}
+>
+{isCopied ? <><Check className="w-3 h-3" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
+</button>
+</div>
+<div className={`text-xs text-neutral-200 font-mono ${multiline ? "whitespace-pre-wrap" : "truncate"}`}>
+{text}
+</div>
+</div>
+);
+}
