@@ -1,237 +1,117 @@
+<!-- admin.html - Luxury Admin Panel with Facebook Sync -->
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Givy Admin Action</title>
-<style>
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;margin:0;padding:20px;background:#0f1117;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;}
-.box{background:#1a1f2e;border-radius:20px;padding:30px 24px;max-width:440px;width:100%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
-h1{margin:0 0 8px;font-size:24px;}
-.sub{color:#94a3b8;font-size:14px;margin-bottom:20px;}
-.status{padding:14px 16px;border-radius:12px;font-size:15px;font-weight:700;margin:16px 0;}
-.status.reject{background:#fef3c7;color:#dc2626;border:2px solid #dc2626;}
-.status.intent{background:#d1fae5;color:#065f46;border:2px solid #059669;}
-.status.pickup{background:#dbeafe;color:#1e40af;border:2px solid #2563eb;}
-.status.error{background:#fee2e2;color:#991b1b;border:2px solid #991b1b;}
-.status.loading{background:#f3f4f6;color:#374151;}
-.order-info{background:#0f1117;border-radius:12px;padding:16px;margin:16px 0;text-align:left;font-size:13px;line-height:1.7;}
-.order-info strong{color:#94a3b8;display:inline-block;min-width:90px;}
-.btn{display:block;width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:800;cursor:pointer;margin:8px 0;text-decoration:none;text-align:center;}
-.btn-home{background:#059669;color:white;}
-.btn-action{background:#2563eb;color:white;}
-.login-box{text-align:left;}
-.login-box input{width:100%;padding:14px;border-radius:10px;border:1px solid #374151;background:#0f1117;color:white;font-size:15px;margin-bottom:12px;box-sizing:border-box;}
-.login-box input:focus{outline:none;border-color:#059669;}
-.login-box label{font-size:13px;color:#94a3b8;margin-bottom:6px;display:block;}
-.admin-badge{display:inline-block;background:#059669;color:white;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:800;margin-left:8px;}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>GivyRewardsAdmin | Luxury Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background-color: #0A0A0A; font-family: 'Inter', sans-serif; color: #EDEDED; line-height: 1.4; }
+    .admin-container { max-width: 1400px; margin: 0 auto; padding: 0 32px; }
+    .admin-header { display: flex; justify-content: center; align-items: center; padding: 36px 0 24px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 48px; position: relative; }
+    .logo { text-align: center; }
+    .logo h1 { font-family: 'Playfair Display', serif; font-size: 32px; background: linear-gradient(135deg, #C5A267 30%, #E8D5B5 80%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .logo p { font-size: 12px; letter-spacing: 3px; color: #C5A267; margin-top: 6px; }
+    .admin-badge { position: absolute; right: 0; background: rgba(197,162,103,0.15); padding: 6px 16px; border-radius: 40px; font-size: 12px; color: #C5A267; border: 1px solid rgba(197,162,103,0.3); }
+    .dashboard { display: grid; grid-template-columns: 1fr 1.2fr; gap: 40px; margin-bottom: 60px; }
+    .form-card { background: #121212; border-radius: 32px; padding: 32px; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); }
+    .form-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 500; margin-bottom: 28px; border-left: 4px solid #C5A267; padding-left: 18px; }
+    .input-group { margin-bottom: 24px; }
+    .input-group label { display: block; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: #C5A267; margin-bottom: 8px; }
+    .input-group input, .input-group textarea, .input-group select { width: 100%; background: #1E1E1E; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 14px 18px; font-family: 'Inter', sans-serif; font-size: 15px; color: #EDEDED; }
+    .input-group input:focus, .input-group textarea:focus { outline: none; border-color: #C5A267; }
+    .input-group textarea { min-height: 90px; resize: vertical; }
+    .image-upload-area { background: #1A1A1A; border-radius: 24px; padding: 20px; margin-bottom: 24px; border: 1px dashed rgba(197,162,103,0.5); }
+    .image-grid-preview { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+    .preview-img-wrapper { position: relative; width: 80px; height: 80px; border-radius: 16px; overflow: hidden; background: #0A0A0A; border: 1px solid rgba(255,255,255,0.2); }
+    .preview-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+    .remove-img-btn { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); border-radius: 20px; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 10px; color: #fff; }
+    .upload-btn { background: rgba(197,162,103,0.15); border: 1px solid rgba(197,162,103,0.4); border-radius: 40px; padding: 10px 20px; font-size: 13px; font-weight: 500; color: #C5A267; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
+    .upload-btn:hover { background: #C5A267; color: #0A0A0A; }
+    .submit-btn { background: #C5A267; border: none; width: 100%; padding: 16px; font-weight: 700; font-size: 16px; color: #0A0A0A; border-radius: 40px; cursor: pointer; transition: opacity 0.2s; margin-top: 12px; }
+    .submit-btn:hover { opacity: 0.9; }
+    .catalog-section { background: #121212; border-radius: 32px; padding: 28px; margin-bottom: 60px; border: 1px solid rgba(255,255,255,0.05); }
+    .catalog-title { font-family: 'Playfair Display', serif; font-size: 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
+    .product-table { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 14px 8px; border-bottom: 1px solid rgba(255,255,255,0.08); vertical-align: middle; }
+    th { color: #C5A267; font-weight: 600; font-size: 13px; }
+    .product-thumb { width: 50px; height: 50px; border-radius: 12px; object-fit: cover; }
+    .action-icons i { margin: 0 6px; cursor: pointer; color: #aaa; transition: 0.2s; }
+    .action-icons i:hover { color: #C5A267; }
+    .facebook-integrate-btn { background: #1877F2; border: none; padding: 10px 20px; border-radius: 30px; color: white; font-weight: 600; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
+    .facebook-integrate-btn:hover { background: #1464CC; }
+    .toast-msg { position: fixed; bottom: 30px; left: 30px; background: #C5A267; color: #0A0A0A; padding: 12px 24px; border-radius: 40px; font-weight: 600; z-index: 1200; opacity: 0; transform: translateY(20px); transition: 0.25s; pointer-events: none; }
+    .toast-msg.show { opacity: 1; transform: translateY(0); }
+    .logout-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 40px; color: #EDEDED; cursor: pointer; font-size: 12px; margin-left: 16px; transition: 0.2s; }
+    .logout-btn:hover { background: rgba(197,162,103,0.3); border-color: #C5A267; }
+    footer { text-align: center; padding: 30px 0 40px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 12px; color: #6F6F6F; }
+    @media (max-width: 900px) { .dashboard { grid-template-columns: 1fr; } .admin-container { padding: 0 20px; } }
+  </style>
 </head>
 <body>
-<div class="box">
-<h1>🦝 Givy Admin</h1>
-<div class="sub">Order action handler</div>
 
-<!-- Login Screen (shown if not authenticated) -->
+<div class="admin-container">
+  <header class="admin-header">
+    <div class="logo"><h1>GivyRewardsAdmin</h1><p>LUXURY INVENTORY · CREATIVE CONTROL</p></div>
+    <div class="admin-badge"><i class="fas fa-shield-alt"></i> Admin Panel <button id="logoutAdminBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Exit</button></div>
+  </header>
 
-<div id="login-screen" style="display:none;">
-  <div class="login-box">
-    <label for="admin-email">Admin Email</label>
-    <input type="email" id="admin-email" placeholder="GivyRewards@proton.me">
-    <label for="admin-password">Password</label>
-    <input type="password" id="admin-password" placeholder="Your admin password">
-    <button class="btn btn-action" onclick="adminLogin()">🔐 Login as Admin</button>
-    <div id="login-error" style="color:#ef4444;font-size:13px;margin-top:8px;text-align:center;"></div>
+  <div class="dashboard">
+    <div class="form-card">
+      <div class="form-title" id="formTitle">✨ Add New Masterpiece</div>
+      <form id="productForm">
+        <div class="input-group"><label><i class="fas fa-tag"></i> Product Name</label><input type="text" id="productName" placeholder="e.g. Celestial Sofa" required></div>
+        <div class="input-group"><label><i class="fas fa-building"></i> Brand</label><input type="text" id="productBrand" placeholder="GIVY STUDIO / ATELIER NOIR" value="GIVY STUDIO"></div>
+        <div class="input-group"><label><i class="fas fa-layer-group"></i> Category</label><select id="productCategory"><option value="furniture">Furniture</option><option value="seating">Seating</option><option value="beds">Beds</option><option value="rugs">Rugs</option><option value="decor">Decor</option><option value="office">Office</option></select></div>
+        <div class="input-group"><label><i class="fas fa-align-left"></i> Description (English)</label><textarea id="productDesc" placeholder="Luxurious details, materials, dimensions..."></textarea></div>
+        <div class="input-group"><label><i class="fas fa-dollar-sign"></i> Price (USD)</label><input type="number" id="productPrice" placeholder="e.g. 4250" step="1" required></div>
+        <div class="input-group"><label><i class="fas fa-camera"></i> Product Images (up to 10 photos)</label>
+          <div class="image-upload-area"><input type="file" id="imageUpload" accept="image/*" multiple style="display: none;"><button type="button" class="upload-btn" id="triggerUpload"><i class="fas fa-cloud-upload-alt"></i> Select Images (Max 10)</button><div class="image-grid-preview" id="imagePreviewGrid"></div></div>
+        </div>
+        <input type="hidden" id="editId" value="">
+        <button type="submit" class="submit-btn" id="submitBtn"><i class="fas fa-save"></i> Save & Publish to Store</button>
+        <button type="button" id="cancelEditBtn" style="display:none; margin-top:12px; background:#333;" class="submit-btn">Cancel Edit</button>
+      </form>
+    </div>
+
+    <div class="form-card">
+      <div class="form-title">📦 Facebook Marketplace Sync</div>
+      <div style="margin-bottom: 28px;"><p style="color:#B0B0B0; font-size:14px; margin-bottom:20px;">All products are automatically shown on the client storefront. Use the button below to simulate pushing to Facebook Marketplace (customer contact).</p>
+      <button id="bulkFacebookSync" class="facebook-integrate-btn" style="width:100%; justify-content:center;"><i class="fab fa-facebook"></i> Sync All to Facebook Marketplace</button></div>
+      <div style="border-top:1px solid rgba(255,255,255,0.1); padding-top:24px;"><div class="form-title" style="font-size:18px; margin-bottom:12px;">📸 Admin Tips</div>
+      <ul style="color:#aaa; font-size:13px; line-height:1.6; margin-left:20px;"><li>Upload up to 10 high-res images per product</li><li>Each product appears instantly on client store</li><li>Customers click "Buy on FB Marketplace" to contact you</li><li>Set your Facebook Messenger link in shop.html (line with m.me)</li></ul></div>
+    </div>
   </div>
-</div>
 
-<!-- Action Screen (shown after login) -->
-
-<div id="action-screen" style="display:none;">
-  <div style="font-size:13px;color:#94a3b8;margin-bottom:12px;">
-    Logged in as admin <span class="admin-badge">ADMIN</span>
-    <br>
-    <a onclick="adminLogout()" style="color:#4CAF50;cursor:pointer;font-size:12px;text-decoration:underline;">Log out</a>
+  <div class="catalog-section"><div class="catalog-title"><span><i class="fas fa-chair"></i> Current Collection</span><span style="font-size:13px; background:#1E1E1E; padding:5px 12px; border-radius:20px;" id="productCount">0 items</span></div>
+    <div class="product-table"><table id="productTable"><thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Actions</th></tr></thead><tbody id="productTableBody"></tbody></table></div>
   </div>
-  <div id="status" class="status loading">⏳ Loading order...</div>
-  <div id="order-info"></div>
-  <div id="action-button"></div>
+  <footer><p>© GivyRewardsAdmin — Bespoke Inventory | Native Facebook Marketplace Integration</p></footer>
 </div>
+<div id="toastMsg" class="toast-msg">✨ Action completed</div>
 
-<a href="index.html" class="btn btn-home" style="margin-top:20px;">← Back to Givy</a>
+<script>
+  // ======================== AUTHENTICATION ========================
+  const ADMIN_PASSWORD = "LuxuryAdmin2025";
+  function checkAuth() { if(!localStorage.getItem('admin_authenticated')) { const pwd = prompt("🔐 Admin Access Required:\nEnter password:"); if(pwd === ADMIN_PASSWORD) { localStorage.setItem('admin_authenticated', 'true'); } else { alert("Access denied"); window.location.href = "shop.html"; } } }
+  checkAuth();
+  document.getElementById('logoutAdminBtn').addEventListener('click', () => { localStorage.removeItem('admin_authenticated'); localStorage.removeItem('admin_authenticated'); window.location.href = "shop.html"; });
 
-</div>
+  // ======================== PRODUCT STORAGE ========================
+  let products = [];
+  function loadProducts() { const stored = localStorage.getItem('givy_admin_products'); if(stored) { products = JSON.parse(stored); } else { products = []; } renderProductTable(); updateCount(); }
+  function saveProducts() { localStorage.setItem('givy_admin_products', JSON.stringify(products)); renderProductTable(); updateCount(); // Триггер для обновления витрины в других вкладках
+    localStorage.setItem('givy_admin_products_updated', Date.now().toString()); setTimeout(() => localStorage.removeItem('givy_admin_products_updated'), 100); }
+  function updateCount() { document.getElementById('productCount').innerText = products.length + ' items'; }
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  let currentImageFiles = [], currentImagePreviews = [];
+  function renderImagePreviews() { const grid = document.getElementById('imagePreviewGrid'); grid.innerHTML = ''; currentImagePreviews.forEach((src, idx) => { const wrapper = document.createElement('div'); wrapper.className = 'preview-img-wrapper'; const img = document.createElement('img'); img.src = src; const removeBtn = document.createElement('div'); removeBtn.className = 'remove-img-btn'; removeBtn.innerHTML = '<i class="fas fa-times"></i>'; removeBtn.onclick = () => { currentImageFiles.splice(idx,1); currentImagePreviews.splice(idx,1); renderImagePreviews(); }; wrapper.appendChild(img); wrapper.appendChild(removeBtn); grid.appendChild(wrapper); }); if(currentImagePreviews.length===0) grid.innerHTML = '<div style="font-size:12px; color:#777; padding:8px;">No images selected. Upload up to 10.</div>'; }
+  document.getElementById('triggerUpload').addEventListener('click',()=>document.getElementById('imageUpload').click());
+  document.getElementById('imageUpload').addEventListener('change',(e)=>{ const files = Array.from(e.target.files); const remaining = 10 - currentImageFiles.length; const newFiles = files.slice(0,remaining); newFiles.forEach(file=>{ if(file.type.startsWith('image/')){ currentImageFiles.push(file); const reader = new FileReader(); reader.onload=(ev)=>{ currentImagePreviews.push(ev.target.result); renderImagePreviews(); }; reader.readAsDataURL(file); } }); e.target.value=''; });
+  function resetImageSelection() { currentImageFiles = []; currentImagePreviews = []; renderImagePreviews(); }
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAzSh_wSb6hdZtq3HULcNnyZmT8HbA1CRU",
-  authDomain: "givy-rewards-7e086.firebaseapp.com",
-  projectId: "givy-rewards-7e086",
-  storageBucket: "givy-rewards-7e086.firebasestorage.app",
-  messagingSenderId: "279968070839",
-  appId: "1:279968070839:web:8761241835b0ee273da132"
-};
-
-const ADMIN_EMAIL = "givyrewards@proton.me";
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-
-const params = new URLSearchParams(window.location.search);
-const orderId = params.get('id');
-const action = params.get('action');
-
-const loginScreen = document.getElementById('login-screen');
-const actionScreen = document.getElementById('action-screen');
-const statusEl = document.getElementById('status');
-const infoEl = document.getElementById('order-info');
-const actionBtnEl = document.getElementById('action-button');
-
-onAuthStateChanged(auth, (user) => {
-  if (user && user.email && user.email.toLowerCase() === ADMIN_EMAIL) {
-    loginScreen.style.display = 'none';
-    actionScreen.style.display = 'block';
-    processAction();
-  } else {
-    loginScreen.style.display = 'block';
-    actionScreen.style.display = 'none';
-    if (user && user.email && user.email.toLowerCase() !== ADMIN_EMAIL) {
-      document.getElementById('login-error').textContent = 'Access denied: only admin can use this page';
-      signOut(auth);
-    }
-  }
-});
-
-window.adminLogin = async function() {
-  const email = document.getElementById('admin-email').value.trim();
-  const password = document.getElementById('admin-password').value;
-  const errEl = document.getElementById('login-error');
-  errEl.textContent = '';
-  
-  // DEBUG: Show what we're checking
-  console.log('Input email:', email);
-  console.log('Input email lowercase:', email.toLowerCase());
-  console.log('Expected admin email:', ADMIN_EMAIL);
-  console.log('Match?', email.toLowerCase() === ADMIN_EMAIL);
-  
-  errEl.innerHTML = `DEBUG:<br>Input: ${email.toLowerCase()}<br>Expected: ${ADMIN_EMAIL}<br>Match: ${email.toLowerCase() === ADMIN_EMAIL}`;
-  
-  if (email.toLowerCase() !== ADMIN_EMAIL) {
-    errEl.textContent = 'Access denied: only admin can access this page';
-    return;
-  }
-  
-  errEl.textContent = 'Trying to login...';
-  
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
-    errEl.textContent = 'Login successful!';
-  } catch(e) {
-    console.log('Login error:', e);
-    if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
-      errEl.textContent = '❌ Wrong password';
-    } else if (e.code === 'auth/user-not-found') {
-      errEl.textContent = '❌ Admin account not found in Firebase';
-    } else if (e.code === 'auth/too-many-requests') {
-      errEl.textContent = '❌ Too many attempts. Try later.';
-    } else {
-      errEl.textContent = '❌ Login error: ' + e.message;
-    }
-  }
-};
-
-window.adminLogout = async function() {
-  await signOut(auth);
-  location.reload();
-};
-
-async function processAction() {
-  if(!orderId || !action){
-    statusEl.className = 'status error';
-    statusEl.innerHTML = '❌ Invalid link — missing order ID or action';
-    return;
-  }
-
-  try {
-    const ref = doc(db, 'orders', orderId);
-    const snap = await getDoc(ref);
-    
-    if(!snap.exists()){
-      statusEl.className = 'status error';
-      statusEl.innerHTML = '❌ Order not found';
-      return;
-    }
-    
-    const data = snap.data();
-    
-    infoEl.innerHTML = '<div class="order-info">' +
-      '<div><strong>Customer:</strong> ' + (data.nickname || '—') + '</div>' +
-      '<div><strong>Item:</strong> ' + (data.title || '—') + '</div>' +
-      '<div><strong>Condition:</strong> ' + (data.condition || '—') + '</div>' +
-      '<div><strong>Address:</strong> ' + (data.address || '—') + '</div>' +
-      '<div><strong>Date/Time:</strong> ' + (data.date || '—') + ' ' + (data.time || '') + '</div>' +
-      '<div><strong>Email:</strong> ' + (data.email || data.userEmail || '—') + '</div>' +
-      '<div><strong>Phone:</strong> ' + (data.phone || '—') + '</div>' +
-      '<div><strong>Status:</strong> ' + (data.status || 'pending') + '</div>' +
-      '</div>';
-    
-    const currentStatus = data.status || 'pending';
-    const actionMap = {
-      'reject': 'rejected',
-      'intent': 'confirmed_intent',
-      'pickup': 'picked_up'
-    };
-    const newStatus = actionMap[action];
-    
-    if(!newStatus){
-      statusEl.className = 'status error';
-      statusEl.innerHTML = '❌ Unknown action: ' + action;
-      return;
-    }
-    
-    if(currentStatus === newStatus){
-      statusEl.className = 'status ' + action;
-      statusEl.innerHTML = '⚠️ Already applied. Status: <strong>' + newStatus + '</strong>';
-      return;
-    }
-    
-    const actionNames = {
-      'reject': { label: '🔴 Confirm REJECT', class: 'reject', emoji: '🔴', name: 'REJECTED', msg: 'Customer will see: "Sorry, we can\'t accept your donation"' },
-      'intent': { label: '🟢 Confirm INTENT', class: 'intent', emoji: '🟢', name: 'CONFIRMED', msg: 'Customer will see: "We are ready to pickup — send address and parking info"' },
-      'pickup': { label: '🔵 Confirm PICKUP', class: 'pickup', emoji: '🔵', name: 'PICKED UP', msg: 'Customer will see: "Item picked up! Points added."<br>Their level will update automatically.' }
-    };
-    const a = actionNames[action];
-    
-    statusEl.className = 'status loading';
-    statusEl.innerHTML = '⚠️ Review the order details above<br>Click button below to confirm action';
-    
-    actionBtnEl.innerHTML = '<button class="btn btn-action" onclick="window.confirmAction()">' + a.label + '</button>';
-    
-    window.confirmAction = async function() {
-      try {
-        await updateDoc(ref, { status: newStatus, updatedAt: new Date().toISOString(), updatedBy: auth.currentUser.email });
-        statusEl.className = 'status ' + a.class;
-        statusEl.innerHTML = a.emoji + ' Order ' + a.name + '<br><br>' + a.msg;
-        actionBtnEl.innerHTML = '';
-      } catch(e) {
-        statusEl.className = 'status error';
-        statusEl.innerHTML = '❌ Error updating: ' + e.message;
-      }
-    };
-    
-  } catch(e) {
-    console.error(e);
-    statusEl.className = 'status error';
-    statusEl.innerHTML = '❌ Error: ' + e.message;
-  }
-}
-</script>
-
-</body>
-</html>
+  document.getElementById('productForm').addEventListener('submit',(e)=>{ e.preventDefault(); const name = document.getElementById('productName').value.trim(); const brand = document.getElementById('productBrand').value.trim(); const category = document.getElementById('productCategory').value; const description = document.getElementById('productDesc').value.trim(); const price = parseFloat(document.getElementById('productPrice').value); if(!name || !description || isNaN(price)){ showToast("Please fill all fields"); return; } let images = currentImagePreviews.length ? [...currentImagePreviews] : ["https://picsum.photos/id/26/400/500"]; const editId = document.getElementById('editId').value; if(editId){ const idx = products.findIndex(p=>p.id==editId); if(idx!==-1){ products[idx]={ ...products[idx], name, brand, category, description, price, images }; showToast("Product updated"); } document.getElementById('editId').value=''; document.getElementById('submitBtn').innerHTML='<i class="fas fa-save"></i> Save & Publish to Store'; document.getElementById('cancelEditBtn').style.display='none'; document.getElementById('formTitle').innerHTML='✨ Add New Masterpiece'; } else { const newProduct = { id: Date.now(), name, brand, category
