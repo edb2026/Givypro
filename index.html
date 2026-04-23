@@ -502,7 +502,14 @@ function openTawkChat(itemId) {
   // Set visitor info in Tawk so you see who is writing
   if (typeof Tawk_API !== 'undefined') {
     try {
-      // Set visitor attributes (name, email, order info)
+      // Set visitor name BEFORE opening chat (shown to admin in Tawk dashboard)
+      window.Tawk_API = window.Tawk_API || {};
+      Tawk_API.visitor = {
+        name: user.nickname || 'Guest',
+        email: user.email || ''
+      };
+      
+      // Set detailed visitor attributes (name, email, order info)
       Tawk_API.setAttributes({
         name: user.nickname || 'Guest',
         email: user.email || '',
@@ -1363,6 +1370,41 @@ const RegModal = {
 <script type="text/javascript">
 var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
 Tawk_API.customStyle={visibility:{desktop:{position:"br",xOffset:16,yOffset:80},mobile:{position:"br",xOffset:16,yOffset:80}}};
+
+// Auto-set visitor info from logged-in user
+(function(){
+  try {
+    var userStr = localStorage.getItem('user');
+    if (userStr) {
+      var user = JSON.parse(userStr);
+      if (user && user.nickname) {
+        Tawk_API.visitor = {
+          name: user.nickname,
+          email: user.email || ''
+        };
+      }
+    }
+  } catch(e) { console.log('Tawk visitor init error:', e); }
+})();
+
+// When Tawk loads, set attributes so admin sees the nickname
+Tawk_API.onLoad = function(){
+  try {
+    var userStr = localStorage.getItem('user');
+    if (userStr) {
+      var user = JSON.parse(userStr);
+      if (user && user.nickname && Tawk_API.setAttributes) {
+        Tawk_API.setAttributes({
+          'name': user.nickname,
+          'email': user.email || ''
+        }, function(error){
+          if (error) console.log('Tawk onLoad setAttributes error:', error);
+        });
+      }
+    }
+  } catch(e) { console.log('Tawk onLoad error:', e); }
+};
+
 (function(){
 var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
 s1.async=true;
@@ -1372,6 +1414,24 @@ s1.setAttribute('crossorigin','*');
 s0.parentNode.insertBefore(s1,s0);
 })();
 </script>
+
+<!-- Tawk.to Custom Styles - bigger, bolder text in chat widget -->
+
+<style>
+#tawkchat-container iframe,
+.tawk-chat-panel,
+.tawk-messenger-panel {
+  font-size: 17px !important;
+  font-weight: 600 !important;
+}
+.tawk-chat-panel .tawk-message-body,
+.tawk-chat-panel .tawk-text,
+.tawk-messenger-panel .tawk-text {
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  line-height: 1.5 !important;
+}
+</style>
 
 <!--End of Tawk.to Script-->
 
