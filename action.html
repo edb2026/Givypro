@@ -1,1 +1,237 @@
+<!DOCTYPE html>
 
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Givy Admin Action</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;margin:0;padding:20px;background:#0f1117;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+.box{background:#1a1f2e;border-radius:20px;padding:30px 24px;max-width:440px;width:100%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+h1{margin:0 0 8px;font-size:24px;}
+.sub{color:#94a3b8;font-size:14px;margin-bottom:20px;}
+.status{padding:14px 16px;border-radius:12px;font-size:15px;font-weight:700;margin:16px 0;}
+.status.reject{background:#fef3c7;color:#dc2626;border:2px solid #dc2626;}
+.status.intent{background:#d1fae5;color:#065f46;border:2px solid #059669;}
+.status.pickup{background:#dbeafe;color:#1e40af;border:2px solid #2563eb;}
+.status.error{background:#fee2e2;color:#991b1b;border:2px solid #991b1b;}
+.status.loading{background:#f3f4f6;color:#374151;}
+.order-info{background:#0f1117;border-radius:12px;padding:16px;margin:16px 0;text-align:left;font-size:13px;line-height:1.7;}
+.order-info strong{color:#94a3b8;display:inline-block;min-width:90px;}
+.btn{display:block;width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:800;cursor:pointer;margin:8px 0;text-decoration:none;text-align:center;}
+.btn-home{background:#059669;color:white;}
+.btn-action{background:#2563eb;color:white;}
+.login-box{text-align:left;}
+.login-box input{width:100%;padding:14px;border-radius:10px;border:1px solid #374151;background:#0f1117;color:white;font-size:15px;margin-bottom:12px;box-sizing:border-box;}
+.login-box input:focus{outline:none;border-color:#059669;}
+.login-box label{font-size:13px;color:#94a3b8;margin-bottom:6px;display:block;}
+.admin-badge{display:inline-block;background:#059669;color:white;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:800;margin-left:8px;}
+</style>
+</head>
+<body>
+<div class="box">
+<h1>🦝 Givy Admin</h1>
+<div class="sub">Order action handler</div>
+
+<!-- Login Screen (shown if not authenticated) -->
+
+<div id="login-screen" style="display:none;">
+  <div class="login-box">
+    <label for="admin-email">Admin Email</label>
+    <input type="email" id="admin-email" placeholder="GivyRewards@proton.me">
+    <label for="admin-password">Password</label>
+    <input type="password" id="admin-password" placeholder="Your admin password">
+    <button class="btn btn-action" onclick="adminLogin()">🔐 Login as Admin</button>
+    <div id="login-error" style="color:#ef4444;font-size:13px;margin-top:8px;text-align:center;"></div>
+  </div>
+</div>
+
+<!-- Action Screen (shown after login) -->
+
+<div id="action-screen" style="display:none;">
+  <div style="font-size:13px;color:#94a3b8;margin-bottom:12px;">
+    Logged in as admin <span class="admin-badge">ADMIN</span>
+    <br>
+    <a onclick="adminLogout()" style="color:#4CAF50;cursor:pointer;font-size:12px;text-decoration:underline;">Log out</a>
+  </div>
+  <div id="status" class="status loading">⏳ Loading order...</div>
+  <div id="order-info"></div>
+  <div id="action-button"></div>
+</div>
+
+<a href="index.html" class="btn btn-home" style="margin-top:20px;">← Back to Givy</a>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAzSh_wSb6hdZtq3HULcNnyZmT8HbA1CRU",
+  authDomain: "givy-rewards-7e086.firebaseapp.com",
+  projectId: "givy-rewards-7e086",
+  storageBucket: "givy-rewards-7e086.firebasestorage.app",
+  messagingSenderId: "279968070839",
+  appId: "1:279968070839:web:8761241835b0ee273da132"
+};
+
+const ADMIN_EMAIL = "givyrewards@proton.me";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const params = new URLSearchParams(window.location.search);
+const orderId = params.get('id');
+const action = params.get('action');
+
+const loginScreen = document.getElementById('login-screen');
+const actionScreen = document.getElementById('action-screen');
+const statusEl = document.getElementById('status');
+const infoEl = document.getElementById('order-info');
+const actionBtnEl = document.getElementById('action-button');
+
+onAuthStateChanged(auth, (user) => {
+  if (user && user.email && user.email.toLowerCase() === ADMIN_EMAIL) {
+    loginScreen.style.display = 'none';
+    actionScreen.style.display = 'block';
+    processAction();
+  } else {
+    loginScreen.style.display = 'block';
+    actionScreen.style.display = 'none';
+    if (user && user.email && user.email.toLowerCase() !== ADMIN_EMAIL) {
+      document.getElementById('login-error').textContent = 'Access denied: only admin can use this page';
+      signOut(auth);
+    }
+  }
+});
+
+window.adminLogin = async function() {
+  const email = document.getElementById('admin-email').value.trim();
+  const password = document.getElementById('admin-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  
+  // DEBUG: Show what we're checking
+  console.log('Input email:', email);
+  console.log('Input email lowercase:', email.toLowerCase());
+  console.log('Expected admin email:', ADMIN_EMAIL);
+  console.log('Match?', email.toLowerCase() === ADMIN_EMAIL);
+  
+  errEl.innerHTML = `DEBUG:<br>Input: ${email.toLowerCase()}<br>Expected: ${ADMIN_EMAIL}<br>Match: ${email.toLowerCase() === ADMIN_EMAIL}`;
+  
+  if (email.toLowerCase() !== ADMIN_EMAIL) {
+    errEl.textContent = 'Access denied: only admin can access this page';
+    return;
+  }
+  
+  errEl.textContent = 'Trying to login...';
+  
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    errEl.textContent = 'Login successful!';
+  } catch(e) {
+    console.log('Login error:', e);
+    if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+      errEl.textContent = '❌ Wrong password';
+    } else if (e.code === 'auth/user-not-found') {
+      errEl.textContent = '❌ Admin account not found in Firebase';
+    } else if (e.code === 'auth/too-many-requests') {
+      errEl.textContent = '❌ Too many attempts. Try later.';
+    } else {
+      errEl.textContent = '❌ Login error: ' + e.message;
+    }
+  }
+};
+
+window.adminLogout = async function() {
+  await signOut(auth);
+  location.reload();
+};
+
+async function processAction() {
+  if(!orderId || !action){
+    statusEl.className = 'status error';
+    statusEl.innerHTML = '❌ Invalid link — missing order ID or action';
+    return;
+  }
+
+  try {
+    const ref = doc(db, 'orders', orderId);
+    const snap = await getDoc(ref);
+    
+    if(!snap.exists()){
+      statusEl.className = 'status error';
+      statusEl.innerHTML = '❌ Order not found';
+      return;
+    }
+    
+    const data = snap.data();
+    
+    infoEl.innerHTML = '<div class="order-info">' +
+      '<div><strong>Customer:</strong> ' + (data.nickname || '—') + '</div>' +
+      '<div><strong>Item:</strong> ' + (data.title || '—') + '</div>' +
+      '<div><strong>Condition:</strong> ' + (data.condition || '—') + '</div>' +
+      '<div><strong>Address:</strong> ' + (data.address || '—') + '</div>' +
+      '<div><strong>Date/Time:</strong> ' + (data.date || '—') + ' ' + (data.time || '') + '</div>' +
+      '<div><strong>Email:</strong> ' + (data.email || data.userEmail || '—') + '</div>' +
+      '<div><strong>Phone:</strong> ' + (data.phone || '—') + '</div>' +
+      '<div><strong>Status:</strong> ' + (data.status || 'pending') + '</div>' +
+      '</div>';
+    
+    const currentStatus = data.status || 'pending';
+    const actionMap = {
+      'reject': 'rejected',
+      'intent': 'confirmed_intent',
+      'pickup': 'picked_up'
+    };
+    const newStatus = actionMap[action];
+    
+    if(!newStatus){
+      statusEl.className = 'status error';
+      statusEl.innerHTML = '❌ Unknown action: ' + action;
+      return;
+    }
+    
+    if(currentStatus === newStatus){
+      statusEl.className = 'status ' + action;
+      statusEl.innerHTML = '⚠️ Already applied. Status: <strong>' + newStatus + '</strong>';
+      return;
+    }
+    
+    const actionNames = {
+      'reject': { label: '🔴 Confirm REJECT', class: 'reject', emoji: '🔴', name: 'REJECTED', msg: 'Customer will see: "Sorry, we can\'t accept your donation"' },
+      'intent': { label: '🟢 Confirm INTENT', class: 'intent', emoji: '🟢', name: 'CONFIRMED', msg: 'Customer will see: "We are ready to pickup — send address and parking info"' },
+      'pickup': { label: '🔵 Confirm PICKUP', class: 'pickup', emoji: '🔵', name: 'PICKED UP', msg: 'Customer will see: "Item picked up! Points added."<br>Their level will update automatically.' }
+    };
+    const a = actionNames[action];
+    
+    statusEl.className = 'status loading';
+    statusEl.innerHTML = '⚠️ Review the order details above<br>Click button below to confirm action';
+    
+    actionBtnEl.innerHTML = '<button class="btn btn-action" onclick="window.confirmAction()">' + a.label + '</button>';
+    
+    window.confirmAction = async function() {
+      try {
+        await updateDoc(ref, { status: newStatus, updatedAt: new Date().toISOString(), updatedBy: auth.currentUser.email });
+        statusEl.className = 'status ' + a.class;
+        statusEl.innerHTML = a.emoji + ' Order ' + a.name + '<br><br>' + a.msg;
+        actionBtnEl.innerHTML = '';
+      } catch(e) {
+        statusEl.className = 'status error';
+        statusEl.innerHTML = '❌ Error updating: ' + e.message;
+      }
+    };
+    
+  } catch(e) {
+    console.error(e);
+    statusEl.className = 'status error';
+    statusEl.innerHTML = '❌ Error: ' + e.message;
+  }
+}
+</script>
+
+</body>
+</html>
