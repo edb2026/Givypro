@@ -416,6 +416,15 @@ console.log('Firebase initialized with Auth');
   <div id="list-banner-container"></div>
   <div id="list-level-card" class="card"></div>
   <div id="list-items"></div>
+
+  <!-- Log out button at bottom right -->
+
+  <div style="display:flex;justify-content:flex-end;margin-top:20px;padding:0 4px;">
+    <button onclick="logoutUser()" style="background:#dc2626;color:white;border:2px solid #991b1b;border-radius:999px;padding:12px 28px;font-size:15px;font-weight:900;font-family:var(--font-b);cursor:pointer;box-shadow:0 4px 12px rgba(220,38,38,0.4);display:flex;align-items:center;gap:8px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+      Log out
+    </button>
+  </div>
 </div>
 </div>
 
@@ -476,6 +485,37 @@ console.log('Firebase initialized with Auth');
 const Storage={get(k,f=null){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch{return f;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}},remove(k){try{localStorage.removeItem(k);}catch{}}};
 function handleGiveClick(){const user=Storage.get('user');if(user&&user.email){Nav.go('post');}else{RegModal.open();}}
 function handleMyItemsClick(){const user=Storage.get('user');if(user&&user.email){Nav.go('list');}else{RegModal.open();}}
+
+async function logoutUser() {
+  if (!confirm('Are you sure you want to log out?')) return;
+  
+  try {
+    // Sign out from Firebase
+    if (window.firebaseAuth && window.firebaseAuthFunctions) {
+      const { signOut } = window.firebaseAuthFunctions;
+      await signOut(window.firebaseAuth);
+    }
+  } catch(e) { console.log('Firebase signOut error:', e); }
+  
+  // Clear local data
+  Storage.remove('user');
+  Storage.remove('items');
+  Storage.remove('shown_banners');
+  Storage.remove('dismissed_banners');
+  Storage.remove('chat_threads');
+  
+  // Clear Tawk.to session
+  try {
+    if (typeof Tawk_API !== 'undefined' && Tawk_API.endChat) {
+      Tawk_API.endChat();
+    }
+  } catch(e) {}
+  
+  alert('You have been logged out.');
+  
+  // Reload page to reset everything
+  location.reload();
+}
 
 function openTawkChat(itemId) {
   const items = Storage.get('items', []);
