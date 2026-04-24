@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Givy Admin Dashboard</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;margin:0;padding:0;background:#0f1117;color:#fff;min-height:100vh;}
+.header{background:linear-gradient(135deg,#059669 0%,#047857 100%);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.3);}
+.header h1{margin:0;font-size:24px;font-weight:900;}
+.header-right{display:flex;align-items:center;gap:12px;font-size:13px;font-weight:700;}
+.logout-btn{background:rgba(255,255,255,0.2);color:white;border:2px solid white;border-radius:999px;padding:8px 20px;font-size:13px;font-weight:900;cursor:pointer;}
+.logout-btn:hover{background:rgba(255,255,255,0.3);}
+
+.login-container{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.login-box{background:#1a1f2e;border-radius:20px;padding:40px 28px;max-width:420px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+.login-box h2{margin:0 0 8px;font-size:28px;text-align:center;font-weight:900;}
+.login-box .sub{color:#94a3b8;font-size:15px;margin-bottom:24px;text-align:center;font-weight:700;}
+.login-box input{width:100%;padding:16px;border-radius:12px;border:2px solid #374151;background:#0f1117;color:white;font-size:16px;font-weight:700;margin-bottom:12px;}
+.login-box input:focus{outline:none;border-color:#059669;}
+.login-box label{font-size:14px;color:#94a3b8;margin-bottom:6px;display:block;font-weight:800;}
+.login-box .btn{width:100%;padding:16px;border-radius:12px;border:none;background:#059669;color:white;font-size:17px;font-weight:900;cursor:pointer;margin-top:8px;}
+.login-error{color:#ef4444;font-size:14px;text-align:center;margin-top:12px;font-weight:700;}
+
+.content{max-width:1200px;margin:0 auto;padding:20px;}
+
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.stat-card{background:#1a1f2e;border-radius:14px;padding:16px;text-align:center;cursor:pointer;border:2px solid transparent;transition:all 0.2s;}
+.stat-card:hover{border-color:#059669;}
+.stat-card.active{border-color:#059669;background:#059669;}
+.stat-number{font-size:32px;font-weight:900;color:#fff;}
+.stat-label{font-size:12px;color:#94a3b8;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-top:4px;}
+.stat-card.active .stat-label{color:#fff;}
+
+.toolbar{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+.search-box{flex:1;min-width:250px;padding:14px 18px;border-radius:12px;border:2px solid #374151;background:#1a1f2e;color:white;font-size:15px;font-weight:700;}
+.search-box:focus{outline:none;border-color:#059669;}
+.refresh-btn{background:#2563eb;color:white;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:900;cursor:pointer;}
+.refresh-btn:hover{background:#1d4ed8;}
+.tawk-btn{background:#f59e0b;color:white;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:900;cursor:pointer;}
+.tawk-btn:hover{background:#d97706;}
+
+.orders-list{display:flex;flex-direction:column;gap:14px;}
+.order-card{background:#1a1f2e;border-radius:16px;padding:20px;border:2px solid transparent;transition:border-color 0.2s;}
+.order-card:hover{border-color:#374151;}
+.order-card.pending{border-left:5px solid #f59e0b;}
+.order-card.confirmed_intent{border-left:5px solid #059669;}
+.order-card.picked_up{border-left:5px solid #2563eb;}
+.order-card.rejected{border-left:5px solid #dc2626;}
+
+.order-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
+.order-title{font-size:22px;font-weight:900;color:#fff;}
+.order-nick{font-size:14px;color:#94a3b8;font-weight:700;margin-top:2px;}
+.order-time{font-size:12px;color:#6b7280;font-weight:700;}
+
+.status-badge{display:inline-block;padding:6px 14px;border-radius:99px;font-size:13px;font-weight:900;}
+.status-badge.pending{background:#fef9c3;color:#854d0e;}
+.status-badge.confirmed_intent{background:#d1fae5;color:#065f46;}
+.status-badge.picked_up{background:#dbeafe;color:#1e40af;}
+.status-badge.rejected{background:#fee2e2;color:#991b1b;}
+
+.order-details{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;font-size:14px;font-weight:700;}
+.order-details .detail{color:#e5e7eb;}
+.order-details strong{color:#94a3b8;font-weight:800;margin-right:6px;}
+
+.order-desc{color:#cbd5e1;font-size:14px;font-weight:600;margin-bottom:12px;padding:10px 12px;background:#0f1117;border-radius:8px;}
+
+.photos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px;margin-bottom:12px;}
+.photos-grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid #374151;transition:border-color 0.2s;}
+.photos-grid img:hover{border-color:#059669;}
+
+.map-container{margin-bottom:12px;border-radius:12px;overflow:hidden;border:2px solid #374151;}
+.map-container .map{width:100%;height:200px;}
+
+.action-buttons{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.action-btn{padding:10px 18px;border-radius:10px;border:none;font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:6px;}
+.action-btn.reject{background:#f59e0b;color:white;}
+.action-btn.reject:hover{background:#d97706;}
+.action-btn.confirm{background:#059669;color:white;}
+.action-btn.confirm:hover{background:#047857;}
+.action-btn.pickup{background:#2563eb;color:white;}
+.action-btn.pickup:hover{background:#1d4ed8;}
+.action-btn.chat{background:#7c3aed;color:white;}
+.action-btn.chat:hover{background:#6d28d9;}
+.action-btn:disabled{opacity:0.5;cursor:not-allowed;}
+
+.empty-state{text-align:center;padding:60px 20px;color:#6b7280;}
+.empty-state .emoji{font-size:64px;margin-bottom:12px;}
+.empty-state .title{font-size:20px;font-weight:900;color:#e5e7eb;margin-bottom:6px;}
+.empty-state .sub{font-size:14px;font-weight:700;}
+
+.loading{text-align:center;padding:60px 20px;}
+.spinner{width:50px;height:50px;border:5px solid #374151;border-top-color:#059669;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Photo viewer modal */
+.photo-modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);z-index:1000;align-items:center;justify-content:center;padding:20px;cursor:pointer;}
+.photo-modal.open{display:flex;}
+.photo-modal img{max-width:100%;max-height:100%;object-fit:contain;border-radius:12px;}
+.photo-modal .close{position:absolute;top:20px;right:20px;background:rgba(255,255,255,0.2);color:white;border:2px solid white;border-radius:50%;width:44px;height:44px;font-size:22px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+/* Confirmation modal */
+.confirm-modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+.confirm-modal.open{display:flex;}
+.confirm-box{background:#1a1f2e;border-radius:20px;padding:28px;max-width:420px;width:100%;}
+.confirm-box h3{margin:0 0 12px;font-size:22px;font-weight:900;}
+.confirm-box p{color:#cbd5e1;font-size:15px;font-weight:700;line-height:1.5;margin-bottom:20px;}
+.confirm-box .btns{display:flex;gap:10px;}
+.confirm-box button{flex:1;padding:14px;border-radius:10px;border:none;font-size:15px;font-weight:900;cursor:pointer;}
+.confirm-yes{background:#059669;color:white;}
+.confirm-no{background:#374151;color:white;}
+
+@media(max-width:768px){
+.stats-grid{grid-template-columns:repeat(2,1fr);}
+.order-details{grid-template-columns:1fr;}
+.header h1{font-size:18px;}
+}
+</style>
+
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+
+<div id="login-screen" class="login-container" style="display:none;">
+  <div class="login-box">
+    <h2>🦝 Givy Admin</h2>
+    <div class="sub">Dashboard login</div>
+    <label>Admin Email</label>
+    <input type="email" id="admin-email" placeholder="givyrewards@proton.me">
+    <label>Password</label>
+    <input type="password" id="admin-password" placeholder="Your admin password">
+    <button class="btn" onclick="adminLogin()">🔐 Login as Admin</button>
+    <div id="login-error" class="login-error"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+
+<div id="dashboard" style="display:none;">
+  <div class="header">
+    <h1>🦝 Givy Admin Dashboard</h1>
+    <div class="header-right">
+      <span id="admin-email-display"></span>
+      <button class="logout-btn" onclick="adminLogout()">Log out</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Stats cards (clickable filters) -->
+    <div class="stats-grid">
+      <div class="stat-card active" data-filter="all" onclick="filterByStatus('all')">
+        <div class="stat-number" id="count-all">0</div>
+        <div class="stat-label">All</div>
+      </div>
+      <div class="stat-card" data-filter="pending" onclick="filterByStatus('pending')">
+        <div class="stat-number" id="count-pending">0</div>
+        <div class="stat-label">⏳ Pending</div>
+      </div>
+      <div class="stat-card" data-filter="confirmed_intent" onclick="filterByStatus('confirmed_intent')">
+        <div class="stat-number" id="count-confirmed">0</div>
+        <div class="stat-label">✅ Confirmed</div>
+      </div>
+      <div class="stat-card" data-filter="picked_up" onclick="filterByStatus('picked_up')">
+        <div class="stat-number" id="count-picked">0</div>
+        <div class="stat-label">🔵 Picked Up</div>
+      </div>
+      <div class="stat-card" data-filter="rejected" onclick="filterByStatus('rejected')">
+        <div class="stat-number" id="count-rejected">0</div>
+        <div class="stat-label">⚠️ Rejected</div>
+      </div>
+    </div>
+
+```
+<div class="toolbar">
+  <input type="text" class="search-box" id="search-input" placeholder="🔍 Search by name, item, email, location..." oninput="applyFilters()">
+  <button class="refresh-btn" onclick="loadOrders()">🔄 Refresh</button>
+  <button class="tawk-btn" onclick="openTawkDashboard()">💬 Open Tawk.to</button>
+</div>
+
+<div id="orders-container">
+  <div class="loading">
+    <div class="spinner"></div>
+    <div style="color:#94a3b8;font-weight:700;">Loading orders...</div>
+  </div>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- Photo viewer -->
+
+<div id="photo-modal" class="photo-modal" onclick="closePhotoModal()">
+  <button class="close" onclick="closePhotoModal()">✕</button>
+  <img id="photo-modal-img" src="" alt="">
+</div>
+
+<!-- Confirmation modal -->
+
+<div id="confirm-modal" class="confirm-modal">
+  <div class="confirm-box">
+    <h3 id="confirm-title">Confirm action</h3>
+    <p id="confirm-message">Are you sure?</p>
+    <div class="btns">
+      <button class="confirm-no" onclick="closeConfirmModal()">Cancel</button>
+      <button class="confirm-yes" id="confirm-yes-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, orderBy, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAzSh_wSb6hdZtq3HULcNnyZmT8HbA1CRU",
+  authDomain: "givy-rewards-7e086.firebaseapp.com",
+  projectId: "givy-rewards-7e086",
+  storageBucket: "givy-rewards-7e086.firebasestorage.app",
+  messagingSenderId: "279968070839",
+  appId: "1:279968070839:web:8761241835b0ee273da132"
+};
+
+const ADMIN_EMAIL = "givyrewards@proton.me";
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const loginScreen = document.getElementById('login-screen');
+const dashboard = document.getElementById('dashboard');
+
+let allOrders = [];
+let currentFilter = 'all';
+
+// Auth state handler
+onAuthStateChanged(auth, (user) => {
+  if (user && user.email && user.email.toLowerCase() === ADMIN_EMAIL) {
+    loginScreen.style.display = 'none';
+    dashboard.style.display = 'block';
+    document.getElementById('admin-email-display').textContent = user.email;
+    loadOrders();
+  } else {
+    loginScreen.style.display = 'flex';
+    dashboard.style.display = 'none';
+    if (user && user.email && user.email.toLowerCase() !== ADMIN_EMAIL) {
+      document.getElementById('login-error').textContent = 'Access denied: only admin can access this page';
+      signOut(auth);
+    }
+  }
+});
+
+window.adminLogin = async function() {
+  const email = document.getElementById('admin-email').value.trim();
+  const password = document.getElementById('admin-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  
+  if (email.toLowerCase() !== ADMIN_EMAIL) {
+    errEl.textContent = 'Access denied: only admin can access this page';
+    return;
+  }
+  
+  errEl.textContent = 'Logging in...';
+  
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    errEl.textContent = '';
+  } catch(e) {
+    if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+      errEl.textContent = 'Wrong password';
+    } else if (e.code === 'auth/user-not-found') {
+      errEl.textContent = 'Admin account not found';
+    } else {
+      errEl.textContent = 'Login error: ' + e.message;
+    }
+  }
+};
+
+window.adminLogout = async function() {
+  if (!confirm('Log out from admin?')) return;
+  await signOut(auth);
+};
+
+window.loadOrders = async function() {
+  const container = document.getElementById('orders-container');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div><div style="color:#94a3b8;font-weight:700;">Loading orders...</div></div>';
+  
+  try {
+    const q = query(collection(db, 'orders'));
+    const snap = await getDocs(q);
+    allOrders = [];
+    snap.forEach(docSnap => {
+      allOrders.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    // Sort by createdAt descending
+    allOrders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    updateStats();
+    applyFilters();
+  } catch(e) {
+    console.error('Error loading orders:', e);
+    container.innerHTML = '<div class="empty-state"><div class="emoji">❌</div><div class="title">Error loading orders</div><div class="sub">' + e.message + '</div></div>';
+  }
+};
+
+function updateStats() {
+  document.getElementById('count-all').textContent = allOrders.length;
+  document.getElementById('count-pending').textContent = allOrders.filter(o => !o.status || o.status === 'pending').length;
+  document.getElementById('count-confirmed').textContent = allOrders.filter(o => o.status === 'confirmed_intent').length;
+  document.getElementById('count-picked').textContent = allOrders.filter(o => o.status === 'picked_up').length;
+  document.getElementById('count-rejected').textContent = allOrders.filter(o => o.status === 'rejected').length;
+}
+
+window.filterByStatus = function(status) {
+  currentFilter = status;
+  document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+  document.querySelector('[data-filter="' + status + '"]').classList.add('active');
+  applyFilters();
+};
+
+window.applyFilters = function() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  let filtered = allOrders;
+  
+  if (currentFilter !== 'all') {
+    if (currentFilter === 'pending') {
+      filtered = filtered.filter(o => !o.status || o.status === 'pending');
+    } else {
+      filtered = filtered.filter(o => o.status === currentFilter);
+    }
+  }
+  
+  if (search) {
+    filtered = filtered.filter(o => {
+      const loc = o.location || {};
+      const hay = (o.title + ' ' + (o.desc||'') + ' ' + (o.nickname||'') + ' ' + (o.email||'') + ' ' + (o.userEmail||'') + ' ' + (loc.city||'') + ' ' + (loc.state||'') + ' ' + (loc.zip||'') + ' ' + (o.zip||'')).toLowerCase();
+      return hay.includes(search);
+    });
+  }
+  
+  renderOrders(filtered);
+}
+
+function renderOrders(orders) {
+  const container = document.getElementById('orders-container');
+  
+  if (orders.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><div class="title">No orders found</div><div class="sub">Try changing filters or search</div></div>';
+    return;
+  }
+  
+  container.innerHTML = '<div class="orders-list">' + orders.map(o => renderOrderCard(o)).join('') + '</div>';
+  
+  // Init maps for orders with location
+  orders.forEach(o => {
+    const loc = o.location || {};
+    if (loc.lat && loc.lng) {
+      setTimeout(() => initMap(o.id, loc.lat, loc.lng), 50);
+    }
+  });
+}
+
+function renderOrderCard(o) {
+  const status = o.status || 'pending';
+  const statusLabel = {
+    pending: '⏳ Pending',
+    confirmed_intent: '✅ Confirmed',
+    picked_up: '🔵 Picked Up',
+    rejected: '⚠️ Rejected'
+  }[status];
+  
+  const loc = o.location || {};
+  const locText = loc.city ? `${loc.city}, ${loc.state || ''} ${loc.zip || ''}` : (o.zip || o.address || '—');
+  const googleMaps = loc.lat ? `<a href="https://www.google.com/maps?q=${loc.lat},${loc.lng}" target="_blank" style="color:#10b981;">📍 Google Maps</a>` : '';
+  
+  const timeAgo = formatTimeAgo(o.createdAt);
+  
+  const photosHTML = o.photos && o.photos.length > 0 ?
+    `<div class="photos-grid">${o.photos.map(p => `<img src="${p}" onclick="openPhoto('${p}')">`).join('')}</div>` : '';
+  
+  const mapHTML = loc.lat ? `<div class="map-container"><div class="map" id="map-${o.id}"></div></div>` : '';
+  
+  // Action buttons based on current status
+  let actions = '';
+  if (status === 'pending') {
+    actions = `
+      <button class="action-btn confirm" onclick="confirmOrder('${o.id}', 'confirmed_intent', '${escapeHtml(o.nickname || 'Customer')}', '${escapeHtml(o.title)}')">✅ Confirm</button>
+      <button class="action-btn reject" onclick="confirmOrder('${o.id}', 'rejected', '${escapeHtml(o.nickname || 'Customer')}', '${escapeHtml(o.title)}')">⚠️ Reject</button>
+    `;
+  } else if (status === 'confirmed_intent') {
+    actions = `
+      <button class="action-btn pickup" onclick="confirmOrder('${o.id}', 'picked_up', '${escapeHtml(o.nickname || 'Customer')}', '${escapeHtml(o.title)}')">🔵 Mark as Picked Up</button>
+      <button class="action-btn reject" onclick="confirmOrder('${o.id}', 'rejected', '${escapeHtml(o.nickname || 'Customer')}', '${escapeHtml(o.title)}')">⚠️ Reject</button>
+    `;
+  } else {
+    actions = `<button class="action-btn" style="background:#374151;color:#94a3b8;cursor:default;" disabled>Status finalized</button>`;
+  }
+  
+  return `
+    <div class="order-card ${status}">
+      <div class="order-header">
+        <div>
+          <div class="order-title">📦 ${escapeHtml(o.title || 'Untitled')}</div>
+          <div class="order-nick">👤 ${escapeHtml(o.nickname || 'Guest')} · ${escapeHtml(o.email || o.userEmail || 'no email')}</div>
+        </div>
+        <div style="text-align:right;">
+          <span class="status-badge ${status}">${statusLabel}</span>
+          <div class="order-time" style="margin-top:4px;">${timeAgo}</div>
+        </div>
+      </div>
+      
+      ${o.desc ? `<div class="order-desc">${escapeHtml(o.desc)}</div>` : ''}
+      
+      <div class="order-details">
+        <div class="detail"><strong>Condition:</strong> ${escapeHtml(o.condition || '—')}</div>
+        <div class="detail"><strong>Location:</strong> ${escapeHtml(locText)} ${googleMaps}</div>
+        <div class="detail"><strong>Pickup Date:</strong> ${escapeHtml(o.date || '—')}</div>
+        <div class="detail"><strong>Time:</strong> ${escapeHtml(o.time || '—')}</div>
+      </div>
+      
+      ${mapHTML}
+      ${photosHTML}
+      
+      <div class="action-buttons">
+        ${actions}
+        <button class="action-btn chat" onclick="openTawkDashboard()">💬 Open Chat</button>
+      </div>
+    </div>
+  `;
+}
+
+function initMap(orderId, lat, lng) {
+  const mapEl = document.getElementById('map-' + orderId);
+  if (!mapEl || mapEl._leaflet_id) return;
+  try {
+    const map = L.map(mapEl).setView([lat, lng], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map);
+    L.circle([lat, lng], { color: '#059669', fillColor: '#059669', fillOpacity: 0.2, radius: 1609 }).addTo(map);
+  } catch(e) { console.log('Map init error:', e); }
+}
+
+window.openPhoto = function(url) {
+  document.getElementById('photo-modal-img').src = url;
+  document.getElementById('photo-modal').classList.add('open');
+};
+
+window.closePhotoModal = function() {
+  document.getElementById('photo-modal').classList.remove('open');
+};
+
+window.confirmOrder = function(orderId, newStatus, nickname, title) {
+  const messages = {
+    'confirmed_intent': { title: '✅ Confirm order?', msg: `Mark "${title}" from ${nickname} as CONFIRMED. Customer will see: "Your order is confirmed. We are ready to pick it up."` },
+    'rejected': { title: '⚠️ Reject order?', msg: `Mark "${title}" from ${nickname} as REJECTED. Customer will see: "We cannot accept your item."` },
+    'picked_up': { title: '🔵 Mark as picked up?', msg: `Confirm you picked up "${title}" from ${nickname}. Their rewards level will update automatically.` }
+  };
+  
+  const m = messages[newStatus];
+  document.getElementById('confirm-title').textContent = m.title;
+  document.getElementById('confirm-message').textContent = m.msg;
+  document.getElementById('confirm-yes-btn').onclick = async function() {
+    closeConfirmModal();
+    await doUpdateStatus(orderId, newStatus);
+  };
+  document.getElementById('confirm-modal').classList.add('open');
+};
+
+window.closeConfirmModal = function() {
+  document.getElementById('confirm-modal').classList.remove('open');
+};
+
+async function doUpdateStatus(orderId, newStatus) {
+  try {
+    await updateDoc(doc(db, 'orders', orderId), {
+      status: newStatus,
+      updatedAt: new Date().toISOString(),
+      updatedBy: auth.currentUser.email
+    });
+    // Update local copy
+    const idx = allOrders.findIndex(o => o.id === orderId);
+    if (idx >= 0) allOrders[idx].status = newStatus;
+    updateStats();
+    applyFilters();
+    alert('✅ Status updated!');
+  } catch(e) {
+    alert('❌ Error: ' + e.message);
+  }
+}
+
+window.openTawkDashboard = function() {
+  window.open('https://dashboard.tawk.to', '_blank');
+};
+
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, "&#39;");
+}
+
+function formatTimeAgo(isoDate) {
+  if (!isoDate) return '';
+  const now = new Date();
+  const then = new Date(isoDate);
+  const diff = Math.floor((now - then) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff/60) + ' min ago';
+  if (diff < 86400) return Math.floor(diff/3600) + ' hr ago';
+  if (diff < 2592000) return Math.floor(diff/86400) + ' days ago';
+  return then.toLocaleDateString();
+}
+
+// Auto-refresh every 30 seconds
+setInterval(() => {
+  if (dashboard.style.display === 'block') {
+    loadOrders();
+  }
+}, 30000);
+
+</script>
+
+</body>
+</html>
