@@ -2,603 +2,355 @@
 
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Givy Rewards — Free Pickup & Reuse in Puget Sound</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #ffffff;
-    color: #171717;
-    line-height: 1.5;
-  }
-  .hidden-page { display: none !important; }
-  button { font-family: inherit; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GivyRewardsShop</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0A0A; font-family: Arial, sans-serif; color: #EDEDED; padding: 20px; }
+    h1 { text-align: center; margin-bottom: 20px; color: #FFFFFF; }
+    h1 .shop-accent { color: #C5A267; }
+    h1 .logo-float { display: inline-block; animation: floaty 3s ease-in-out infinite; transform-origin: center; }
+    @keyframes floaty {
+      0%   { transform: translateY(0)    rotate(0deg);  }
+      25%  { transform: translateY(-6px) rotate(-3deg); }
+      50%  { transform: translateY(0)    rotate(0deg);  }
+      75%  { transform: translateY(-6px) rotate(3deg);  }
+      100% { transform: translateY(0)    rotate(0deg);  }
+    }
 
-/* HEADER */
-.header { background: #2563eb; color: white; padding: 32px 24px; text-align: center; }
-.header h1 { font-size: 32px; font-weight: 700; margin-bottom: 24px; }
-.nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px 40px; }
-.nav-btn {
-background: none; border: none; color: white; font-size: 17px;
-cursor: pointer; padding: 4px 0;
+```
+/* Back to Givy Rewards button */
+.back-to-givy {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: white;
+  padding: 10px 16px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(5,150,105,0.4);
+  z-index: 100;
+  transition: transform 0.15s, box-shadow 0.15s;
 }
-.nav-btn:hover { text-decoration: underline; text-underline-offset: 4px; }
-.nav-btn.active { text-decoration: underline; text-underline-offset: 4px; }
+.back-to-givy:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(5,150,105,0.5); }
+.back-to-givy:active { transform: scale(0.97); }
+@media (max-width: 480px) {
+  .back-to-givy { padding: 8px 12px; font-size: 12px; }
+}
 
-/* MAIN */
-.main { max-width: 880px; margin: 0 auto; padding: 40px 24px; }
-.center { text-align: center; }
+.filters { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 30px; }
+.filter-btn { background: #1A1A1A; border: 1px solid #333; padding: 8px 20px; border-radius: 40px; color: white; cursor: pointer; }
+.filter-btn.active { background: #C5A267; color: black; }
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
+.product-card { background: #121212; border-radius: 16px; padding: 15px; transition: transform 0.2s; }
+.product-card:hover { transform: translateY(-5px); }
+.product-img { background: #1E1E1E; height: 250px; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 15px; position: relative; cursor: pointer; }
+.product-img img { width: 100%; height: 100%; object-fit: cover; }
+.img-placeholder { font-size: 60px; }
+.image-counter { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 20px; font-size: 11px; }
+.sold-badge { position: absolute; bottom: 10px; left: 10px; background: #E41E3F; color: white; font-weight: bold; font-size: 13px; padding: 5px 12px; border-radius: 6px; letter-spacing: 1px; box-shadow: 0 2px 6px rgba(0,0,0,0.4); text-transform: uppercase; }
+.sold-card .product-img img { filter: grayscale(35%) brightness(0.85); }
+.brand { color: #C5A267; font-size: 12px; }
+.title { font-size: 18px; font-weight: bold; margin: 8px 0; }
+.desc { color: #999; font-size: 13px; margin: 10px 0; line-height: 1.4; }
+.price { color: #C5A267; font-size: 20px; font-weight: bold; }
+.action-btns { display: flex; gap: 8px; margin-top: 15px; }
+.fb-btn { background: #1877F2; border: none; padding: 10px; border-radius: 30px; color: white; font-weight: bold; flex: 1; cursor: pointer; font-size: 13px; }
+.mp-btn { background: #2a7f4f; border: none; padding: 10px; border-radius: 30px; color: white; font-weight: bold; flex: 1; cursor: pointer; font-size: 13px; }
+.admin-icon { position: fixed; bottom: 20px; left: 20px; width: 40px; height: 40px; background: #C5A267; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0.3; cursor: pointer; z-index: 999; }
+.empty { text-align: center; padding: 50px; color: #666; }
+.lightbox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: 0.2s; }
+.lightbox.active { visibility: visible; opacity: 1; }
+.lightbox img { max-width: 90%; max-height: 85%; object-fit: contain; user-select: none; }
+.lightbox-close { position: absolute; top: 20px; right: 30px; font-size: 40px; cursor: pointer; color: white; user-select: none; }
+.lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.1); border: none; color: white; font-size: 30px; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; user-select: none; }
+.lightbox-nav:hover { background: rgba(255,255,255,0.2); }
+.lightbox-prev { left: 20px; }
+.lightbox-next { right: 20px; }
+.lightbox-counter { position: absolute; top: 20px; left: 30px; color: white; font-size: 16px; background: rgba(0,0,0,0.5); padding: 6px 14px; border-radius: 20px; }
+.lightbox-thumbs { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; max-width: 90%; overflow-x: auto; padding: 6px; }
+.lightbox-thumb { width: 50px; height: 50px; border-radius: 8px; overflow: hidden; cursor: pointer; border: 2px solid transparent; flex-shrink: 0; }
+.lightbox-thumb.active { border-color: #C5A267; }
+.lightbox-thumb img { width: 100%; height: 100%; object-fit: cover; }
+```
 
-/* HOME */
-.badge {
-display: inline-block; padding: 8px 16px; border-radius: 8px;
-background: #dcfce7; color: #166534; font-weight: 600; font-size: 14px; margin-bottom: 32px;
-}
-.big-btn {
-display: block; width: 100%; background: #2563eb; color: white;
-font-weight: 600; font-size: 20px; padding: 24px; border-radius: 16px;
-border: none; cursor: pointer; margin-bottom: 64px;
-}
-.big-btn:hover { background: #1d4ed8; }
-.h2 { font-size: 28px; font-weight: 700; margin-bottom: 32px; text-align: center; }
-.ol-list { max-width: 560px; margin: 0 auto 40px; text-align: left; font-size: 18px; line-height: 1.6; padding-left: 24px; }
-.ol-list li { margin-bottom: 12px; }
-.note { max-width: 560px; margin: 0 auto; color: #525252; line-height: 1.6; text-align: center; }
-
-/* SHOP */
-.shop-title { font-size: 26px; font-weight: 700; color: #2563eb; text-align: center; margin-bottom: 24px; }
-.shop-desc { max-width: 640px; margin: 0 auto 40px; text-align: center; line-height: 1.6; color: #262626; }
-.shop-desc p { margin-bottom: 16px; }
-.empty-state {
-text-align: center; padding: 64px 24px; border: 2px dashed #e5e5e5;
-border-radius: 16px; color: #525252;
-}
-.empty-state p { margin-bottom: 24px; }
-.shop-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
-@media (min-width: 768px) { .shop-grid { grid-template-columns: 1fr 1fr; } }
-.items-list { display: flex; flex-direction: column; gap: 16px; }
-.item-card {
-border: 1px solid #e5e5e5; border-radius: 16px; overflow: hidden;
-background: white; cursor: pointer;
-}
-.item-card:hover { border-color: #a3a3a3; }
-.item-card.active { border-color: #2563eb; box-shadow: 0 0 0 2px #dbeafe; }
-.item-image { aspect-ratio: 4/3; background: #f5f5f5; position: relative; }
-.item-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.item-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 40px; color: #d4d4d4; }
-.price-tag {
-position: absolute; top: 12px; right: 12px; background: white;
-border-radius: 8px; padding: 4px 12px; font-weight: 700; color: #2563eb;
-box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-.item-info { padding: 16px; display: flex; justify-content: space-between; gap: 12px; }
-.item-title { font-weight: 600; color: #171717; margin-bottom: 4px; }
-.item-meta { font-size: 14px; color: #737373; }
-.delete-btn {
-padding: 8px; border-radius: 8px; color: #a3a3a3;
-background: none; border: none; cursor: pointer; font-size: 16px; align-self: flex-start;
-}
-.delete-btn:hover { color: #dc2626; background: #fef2f2; }
-
-/* EXPORT PANEL */
-.export-wrap { position: sticky; top: 16px; align-self: flex-start; }
-.export-panel {
-background: #171717; color: white; border-radius: 16px; padding: 20px;
-}
-.export-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.export-header h3 { font-size: 18px; font-weight: 700; }
-.export-close { background: none; border: none; color: #a3a3a3; font-size: 20px; cursor: pointer; }
-.export-note {
-font-size: 12px; color: #d4d4d4; background: #262626;
-border-radius: 8px; padding: 12px; line-height: 1.5; margin-bottom: 16px;
-}
-.platform { background: #262626; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-.platform:last-child { margin-bottom: 0; }
-.platform-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.platform-name { font-weight: 700; color: white; }
-.platform-link {
-font-size: 12px; background: #404040; color: #e5e5e5;
-padding: 4px 10px; border-radius: 8px; text-decoration: none;
-}
-.platform-link:hover { background: #525252; color: white; }
-.copy-row { background: #0a0a0a; border-radius: 8px; padding: 10px; margin-bottom: 8px; }
-.copy-row:last-child { margin-bottom: 0; }
-.copy-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-.copy-label { font-size: 11px; color: #a3a3a3; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-.copy-btn {
-font-size: 11px; background: #404040; color: #e5e5e5;
-border: none; padding: 2px 8px; border-radius: 4px; cursor: pointer;
-}
-.copy-btn:hover { background: #525252; }
-.copy-btn.copied { background: #22c55e; color: white; }
-.copy-text { font-size: 12px; color: #e5e5e5; font-family: ui-monospace, monospace; word-break: break-word; }
-.copy-text.multi { white-space: pre-wrap; }
-.copy-text.single { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-/* POST FORM */
-.form-wrap { max-width: 640px; margin: 0 auto; }
-.form-title { font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 8px; }
-.form-subtitle { text-align: center; color: #525252; margin-bottom: 32px; }
-.form-group { display: flex; flex-direction: column; gap: 20px; }
-.form-row { display: grid; grid-template-columns: 1fr; gap: 16px; }
-@media (min-width: 640px) { .form-row { grid-template-columns: 1fr 1fr; } }
-.field-label { display: block; font-size: 14px; font-weight: 600; color: #262626; margin-bottom: 8px; }
-.required { color: #ef4444; }
-.field-input {
-width: 100%; padding: 12px 16px; border-radius: 12px;
-background: white; border: 2px solid #e5e5e5; font-size: 16px; outline: none;
-font-family: inherit;
-}
-.field-input:focus { border-color: #3b82f6; }
-textarea.field-input { resize: none; }
-.image-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-@media (min-width: 640px) { .image-grid { grid-template-columns: repeat(5, 1fr); } }
-.image-slot {
-aspect-ratio: 1/1; border-radius: 8px; overflow: hidden;
-border: 1px solid #e5e5e5; position: relative;
-}
-.image-slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.image-remove {
-position: absolute; inset: 0; background: rgba(0,0,0,0.6); color: white;
-display: none; align-items: center; justify-content: center; cursor: pointer; font-size: 18px;
-border: none; font-weight: 700; width: 100%; height: 100%;
-}
-.image-slot:hover .image-remove,
-.image-slot:focus-within .image-remove { display: flex; }
-.image-add {
-aspect-ratio: 1/1; border-radius: 8px; border: 2px dashed #d4d4d4;
-background: #fafafa; display: flex; flex-direction: column; align-items: center;
-justify-content: center; color: #737373; cursor: pointer; font-size: 12px; font-weight: 600;
-}
-.image-add:hover { background: #f5f5f5; }
-.image-add-icon { font-size: 24px; margin-bottom: 2px; }
-.form-actions { display: flex; gap: 12px; padding-top: 8px; }
-.submit-btn {
-flex: 1; padding: 16px; border-radius: 12px; background: #2563eb; color: white;
-font-weight: 700; font-size: 18px; border: none; cursor: pointer;
-}
-.submit-btn:hover { background: #1d4ed8; }
-.clear-btn {
-padding: 0 20px; border-radius: 12px; border: 2px solid #e5e5e5;
-background: white; color: #404040; font-weight: 600; cursor: pointer;
-}
-.clear-btn:hover { background: #fafafa; }
-
-/* FOOTER */
-.footer { background: #262626; color: white; margin-top: 80px; padding: 40px 24px; text-align: center; }
-.footer-link {
-display: inline-block; color: white; text-decoration: underline;
-text-underline-offset: 4px; font-size: 18px; background: none; border: none;
-cursor: pointer; margin-bottom: 24px;
-}
-.footer-copy { font-size: 14px; color: #d4d4d4; }
-</style>
-
+  </style>
 </head>
 <body>
+  <a href="../" class="back-to-givy" title="Back to Givy Rewards">&#8592; Givy Rewards</a>
 
-<!-- HEADER -->
+  <h1><span class="logo-float">&#128715;&#65039;</span> GivyRewards<span class="shop-accent">Shop</span></h1>
+  <div id="filters" class="filters"></div>
+  <div id="products" class="product-grid"><div class="empty">Loading...</div></div>
+  <div class="admin-icon" id="adminIcon">&#128081;</div>
 
-<div class="header">
-  <h1>Givy Rewards</h1>
-  <div class="nav">
-    <button class="nav-btn active" data-nav="home">Home</button>
-    <button class="nav-btn" data-nav="shop">Shop on Marketplace</button>
-    <button class="nav-btn" data-nav="post">Post an Item</button>
-  </div>
-</div>
-
-<div class="main">
-
-  <!-- HOME PAGE -->
-
-  <div id="page-home" class="center">
-    <div class="badge">Givy Donors: up to 50% off</div>
-    <button class="big-btn" data-nav="shop">View &amp; Buy on Marketplace →</button>
-    <h2 class="h2">How to Get Your Discount</h2>
-    <ol class="ol-list">
-      <li>Donate items — earn Gold (20%), Diamond (30%) or Champion (50%) level</li>
-      <li>When buying — open your Givy Rewards profile and show your level</li>
-      <li>Receive instant discount on any item!</li>
-    </ol>
-    <p class="note">All items come from local donors in the Tacoma–Everett area and are carefully prepared for resale.</p>
+  <div id="lightbox" class="lightbox">
+    <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+    <div class="lightbox-counter" id="lbCounter"></div>
+    <button class="lightbox-nav lightbox-prev" onclick="navLightbox(event, -1)">&lsaquo;</button>
+    <img id="lightboxImg" src="" alt="">
+    <button class="lightbox-nav lightbox-next" onclick="navLightbox(event, 1)">&rsaquo;</button>
+    <div class="lightbox-thumbs" id="lbThumbs"></div>
   </div>
 
-  <!-- SHOP PAGE -->
+  <script>
+    const DB_NAME = 'GivyRewardsDB';
+    const DB_VERSION = 1;
+    const STORE_PRODUCTS = 'products';
+    const STORE_SETTINGS = 'settings';
 
-  <div id="page-shop" class="hidden-page">
-    <h2 class="shop-title">🛒 Our Current Items on Facebook Marketplace</h2>
-    <div class="shop-desc">
-      <p>All items are cleaned, repaired when needed, and in <strong>like-new or perfect condition</strong>. Free pickup area: Tacoma to Everett, Puget Sound, Washington.</p>
-      <p><strong>Donors receive up to 50% discount</strong> — show your Givy Rewards level (Gold, Diamond or Champion) when buying!</p>
-    </div>
+    let products = [];
+    let categories = ['furniture', 'seating', 'beds', 'rugs', 'decor', 'office'];
+    let activeFilter = 'all';
+    let globalFb = '';
+    let clickCount = 0;
+    let lbImages = [];
+    let lbIndex = 0;
+    let db = null;
 
-```
-<div id="shop-empty" class="empty-state">
-  <p>No items posted yet.</p>
-  <button class="big-btn" style="max-width: 240px; margin: 0 auto;" data-nav="post">+ Post an Item</button>
-</div>
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = (e) => {
+          const database = e.target.result;
+          if (!database.objectStoreNames.contains(STORE_PRODUCTS)) {
+            database.createObjectStore(STORE_PRODUCTS, { keyPath: 'id' });
+          }
+          if (!database.objectStoreNames.contains(STORE_SETTINGS)) {
+            database.createObjectStore(STORE_SETTINGS, { keyPath: 'key' });
+          }
+        };
+        req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+        req.onerror = (e) => reject(e.target.error);
+      });
+    }
 
-<div id="shop-grid" class="shop-grid hidden-page">
-  <div id="items-list" class="items-list"></div>
-  <div class="export-wrap">
-    <div id="export-panel"></div>
-  </div>
-</div>
+    function idbGetAll(storeName) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readonly');
+        const req = tx.objectStore(storeName).getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    }
 
-<div class="center" style="margin-top: 40px;">
-  <button class="big-btn" style="max-width: 280px; margin: 0 auto;" data-nav="post">+ Post Another Item →</button>
-</div>
-```
+    function idbGet(storeName, key) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readonly');
+        const req = tx.objectStore(storeName).get(key);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
 
-  </div>
+    async function loadData() {
+      try {
+        if (!db) await openDB();
+        products = await idbGetAll(STORE_PRODUCTS);
+        products.sort((a, b) => (a.id || 0) - (b.id || 0));
 
-  <!-- POST PAGE -->
+        const catsRow = await idbGet(STORE_SETTINGS, 'categories');
+        if (catsRow && catsRow.value) categories = catsRow.value;
 
-  <div id="page-post" class="hidden-page form-wrap">
-    <h2 class="form-title">Post an Item</h2>
-    <p class="form-subtitle">Fill in the details once — we'll format it for Facebook Marketplace, Craigslist and OfferUp.</p>
+        const fbRow = await idbGet(STORE_SETTINGS, 'globalFb');
+        globalFb = (fbRow && fbRow.value) || '';
+      } catch(err) {
+        console.error('Load error:', err);
+        const savedProducts = localStorage.getItem('givy_products');
+        products = savedProducts ? JSON.parse(savedProducts) : [];
+        const savedCats = localStorage.getItem('givy_categories');
+        if (savedCats) categories = JSON.parse(savedCats);
+        globalFb = localStorage.getItem('givy_global_fb') || '';
+      }
+      renderFilters();
+      renderProducts();
+    }
 
-```
-<div class="form-group">
-  <div>
-    <label class="field-label">Photos (up to 10)</label>
-    <div id="image-grid" class="image-grid"></div>
-  </div>
+    function renderFilters() {
+      const container = document.getElementById('filters');
+      container.innerHTML = '';
+      const allBtn = document.createElement('button');
+      allBtn.className = 'filter-btn' + (activeFilter === 'all' ? ' active' : '');
+      allBtn.textContent = 'All';
+      allBtn.onclick = () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        allBtn.classList.add('active');
+        activeFilter = 'all';
+        renderProducts();
+      };
+      container.appendChild(allBtn);
 
-  <div class="form-row">
-    <div>
-      <label class="field-label">Title <span class="required">*</span></label>
-      <input id="f-title" type="text" placeholder="Mid-Century Walnut Coffee Table" class="field-input" />
-    </div>
-    <div>
-      <label class="field-label">Price (USD) <span class="required">*</span></label>
-      <input id="f-price" type="number" placeholder="250" class="field-input" />
-    </div>
-  </div>
+      categories.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-btn' + (activeFilter === cat ? ' active' : '');
+        btn.textContent = cat;
+        btn.onclick = () => {
+          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          activeFilter = cat;
+          renderProducts();
+        };
+        container.appendChild(btn);
+      });
 
-  <div class="form-row">
-    <div>
-      <label class="field-label">Category</label>
-      <select id="f-category" class="field-input"></select>
-    </div>
-    <div>
-      <label class="field-label">Condition</label>
-      <select id="f-condition" class="field-input"></select>
-    </div>
-  </div>
+      const soldBtn = document.createElement('button');
+      soldBtn.className = 'filter-btn' + (activeFilter === '__sold' ? ' active' : '');
+      soldBtn.textContent = '\uD83C\uDFF7\uFE0F Sold';
+      soldBtn.style.borderColor = '#E41E3F';
+      soldBtn.onclick = () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        soldBtn.classList.add('active');
+        activeFilter = '__sold';
+        renderProducts();
+      };
+      container.appendChild(soldBtn);
+    }
 
-  <div>
-    <label class="field-label">Location (City, State) <span class="required">*</span></label>
-    <input id="f-location" type="text" placeholder="Everett, WA" class="field-input" />
-  </div>
+    function openLightbox(images, index) {
+      if (!images || images.length === 0) return;
+      lbImages = images;
+      lbIndex = index || 0;
+      updateLightbox();
+      document.getElementById('lightbox').classList.add('active');
+    }
 
-  <div>
-    <label class="field-label">Description <span class="required">*</span></label>
-    <textarea id="f-description" rows="5" placeholder="Describe the piece — style, story, any wear." class="field-input"></textarea>
-  </div>
+    function updateLightbox() {
+      document.getElementById('lightboxImg').src = lbImages[lbIndex];
+      document.getElementById('lbCounter').textContent = (lbIndex + 1) + ' / ' + lbImages.length;
+      const showNav = lbImages.length > 1;
+      document.querySelector('.lightbox-prev').style.display = showNav ? 'block' : 'none';
+      document.querySelector('.lightbox-next').style.display = showNav ? 'block' : 'none';
+      const thumbs = document.getElementById('lbThumbs');
+      if (lbImages.length > 1) {
+        thumbs.style.display = 'flex';
+        thumbs.innerHTML = lbImages.map((src, i) =>
+          '<div class="lightbox-thumb ' + (i === lbIndex ? 'active' : '') + '" onclick="jumpLightbox(event, ' + i + ')"><img src="' + src + '"></div>'
+        ).join('');
+      } else {
+        thumbs.style.display = 'none';
+      }
+    }
 
-  <div class="form-row">
-    <div>
-      <label class="field-label">Dimensions</label>
-      <input id="f-dimensions" type="text" placeholder='48"W x 24"D x 16"H' class="field-input" />
-    </div>
-    <div>
-      <label class="field-label">Material</label>
-      <input id="f-material" type="text" placeholder="Solid walnut" class="field-input" />
-    </div>
-  </div>
+    function navLightbox(e, dir) {
+      if (e) e.stopPropagation();
+      lbIndex = (lbIndex + dir + lbImages.length) % lbImages.length;
+      updateLightbox();
+    }
 
-  <div class="form-row">
-    <div>
-      <label class="field-label">Brand (optional)</label>
-      <input id="f-brand" type="text" placeholder="West Elm" class="field-input" />
-    </div>
-    <div>
-      <label class="field-label">Contact Email</label>
-      <input id="f-email" type="email" placeholder="you@example.com" class="field-input" />
-    </div>
-  </div>
+    function jumpLightbox(e, i) {
+      if (e) e.stopPropagation();
+      lbIndex = i;
+      updateLightbox();
+    }
 
-  <div class="form-actions">
-    <button id="save-btn" type="button" class="submit-btn">+ Generate Listings</button>
-    <button id="clear-btn" type="button" class="clear-btn">Clear</button>
-  </div>
-</div>
-```
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('active');
+    }
 
-  </div>
-
-</div>
-
-<!-- FOOTER -->
-
-<div class="footer">
-  <button class="footer-link" data-nav="home">← Back to Home</button>
-  <p class="footer-copy">Givy Rewards © 2026 · Free Pickup &amp; Reuse in Puget Sound</p>
-</div>
-
-<script>
-var CATEGORIES = ["Sofa / Couch","Chair","Table","Bed / Mattress","Dresser","Desk","Bookshelf","Lamp / Lighting","Rug","Mirror","Cabinet","Other"];
-var CONDITIONS = ["New","Like New","Good","Fair","Salvage"];
-
-var state = { page: 'home', images: [], listings: [], activeId: null };
-
-try {
-  var saved = localStorage.getItem('givy-listings');
-  if (saved) state.listings = JSON.parse(saved);
-} catch(e) {}
-
-document.getElementById('f-category').innerHTML = CATEGORIES.map(function(c){return '<option>'+c+'</option>';}).join('');
-document.getElementById('f-condition').innerHTML = CONDITIONS.map(function(c){return '<option>'+c+'</option>';}).join('');
-document.getElementById('f-condition').selectedIndex = 2;
-
-function escapeHtml(s) {
-  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
-    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
-  });
-}
-
-function saveToStorage() {
-  try { localStorage.setItem('givy-listings', JSON.stringify(state.listings)); } catch(e) {}
-}
-
-function showPage(name) {
-  state.page = name;
-  ['home','shop','post'].forEach(function(p) {
-    document.getElementById('page-' + p).classList.toggle('hidden-page', p !== name);
-  });
-  document.querySelectorAll('.nav-btn').forEach(function(btn) {
-    btn.classList.toggle('active', btn.dataset.nav === name);
-  });
-  if (name === 'shop') renderShop();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-document.querySelectorAll('[data-nav]').forEach(function(btn) {
-  btn.addEventListener('click', function() { showPage(btn.dataset.nav); });
-});
-
-function renderImages() {
-  var grid = document.getElementById('image-grid');
-  var html = state.images.map(function(img, i) {
-    return '<div class="image-slot">' +
-      '<img src="' + img + '" alt="" />' +
-      '<button type="button" class="image-remove" onclick="removeImage(' + i + ')">X</button>' +
-    '</div>';
-  }).join('');
-  if (state.images.length < 10) {
-    html += '<label class="image-add">' +
-      '<span class="image-add-icon">+</span>' +
-      '<span>Add</span>' +
-      '<input type="file" accept="image/*" multiple style="display:none" onchange="handleImages(event)" />' +
-    '</label>';
-  }
-  grid.innerHTML = html;
-}
-
-function handleImages(e) {
-  var files = Array.prototype.slice.call(e.target.files || []);
-  var readers = files.map(function(f) {
-    return new Promise(function(res) {
-      var r = new FileReader();
-      r.onload = function() { res(r.result); };
-      r.readAsDataURL(f);
+    document.getElementById('lightbox').addEventListener('click', (e) => {
+      if (e.target.id === 'lightbox') closeLightbox();
     });
-  });
-  Promise.all(readers).then(function(imgs) {
-    state.images = state.images.concat(imgs).slice(0, 10);
-    renderImages();
-  });
-}
 
-function removeImage(i) {
-  state.images.splice(i, 1);
-  renderImages();
-}
-renderImages();
+    document.addEventListener('keydown', (e) => {
+      if (!document.getElementById('lightbox').classList.contains('active')) return;
+      if (e.key === 'Escape') closeLightbox();
+      else if (e.key === 'ArrowLeft' && lbImages.length > 1) { lbIndex = (lbIndex - 1 + lbImages.length) % lbImages.length; updateLightbox(); }
+      else if (e.key === 'ArrowRight' && lbImages.length > 1) { lbIndex = (lbIndex + 1) % lbImages.length; updateLightbox(); }
+    });
 
-document.getElementById('save-btn').addEventListener('click', function() {
-  var listing = {
-    id: Date.now(),
-    title: document.getElementById('f-title').value.trim(),
-    price: document.getElementById('f-price').value.trim(),
-    category: document.getElementById('f-category').value,
-    condition: document.getElementById('f-condition').value,
-    location: document.getElementById('f-location').value.trim(),
-    description: document.getElementById('f-description').value.trim(),
-    dimensions: document.getElementById('f-dimensions').value.trim(),
-    material: document.getElementById('f-material').value.trim(),
-    brand: document.getElementById('f-brand').value.trim(),
-    email: document.getElementById('f-email').value.trim(),
-    images: state.images.slice()
-  };
-  if (!listing.title || !listing.price || !listing.location || !listing.description) {
-    alert('Please fill Title, Price, Location and Description.');
-    return;
-  }
-  state.listings.unshift(listing);
-  saveToStorage();
-  state.activeId = listing.id;
-  clearForm();
-  showPage('shop');
-});
+    function openMessenger(product) {
+      const user = (product.fbUser || globalFb || '').replace(/^@/, '').trim();
+      const msg = 'Hello! I\'m interested in "' + product.name + '" (' + (product.brand || 'GIVY STUDIO') + ') - $' + product.price + '. Is it still available?';
+      const encoded = encodeURIComponent(msg);
 
-document.getElementById('clear-btn').addEventListener('click', clearForm);
+      if (!user) {
+        alert('No Facebook username set yet.\n\nContact the seller about: ' + product.name + '\n\n(Admin can add a username in the admin panel.)');
+        return;
+      }
+      const url = 'https://m.me/' + user + '?text=' + encoded;
+      window.open(url, '_blank');
+    }
 
-function clearForm() {
-  ['title','price','location','description','dimensions','material','brand','email'].forEach(function(k) {
-    document.getElementById('f-' + k).value = '';
-  });
-  document.getElementById('f-category').selectedIndex = 0;
-  document.getElementById('f-condition').selectedIndex = 2;
-  state.images = [];
-  renderImages();
-}
+    function openMarketplace(product) {
+      const query = encodeURIComponent((product.name + ' ' + (product.brand || '')).trim());
+      const url = 'https://www.facebook.com/marketplace/search/?query=' + query;
+      window.open(url, '_blank');
+    }
 
-function renderShop() {
-  var empty = document.getElementById('shop-empty');
-  var grid = document.getElementById('shop-grid');
-  if (state.listings.length === 0) {
-    empty.classList.remove('hidden-page');
-    grid.classList.add('hidden-page');
-    return;
-  }
-  empty.classList.add('hidden-page');
-  grid.classList.remove('hidden-page');
+    function renderProducts() {
+      const container = document.getElementById('products');
+      let filtered;
+      if (activeFilter === '__sold') {
+        filtered = products.filter(p => p.sold);
+      } else if (activeFilter === 'all') {
+        filtered = products.filter(p => !p.sold);
+      } else {
+        filtered = products.filter(p => !p.sold && p.category === activeFilter);
+      }
 
-  var list = document.getElementById('items-list');
-  list.innerHTML = state.listings.map(function(l) {
-    var imageHtml = l.images[0]
-      ? '<img src="' + l.images[0] + '" alt="" />'
-      : '<div class="item-placeholder">📦</div>';
-    return '<div class="item-card ' + (state.activeId === l.id ? 'active' : '') + '" onclick="selectListing(' + l.id + ')">' +
-      '<div class="item-image">' + imageHtml +
-        '<div class="price-tag">$' + escapeHtml(l.price) + '</div>' +
-      '</div>' +
-      '<div class="item-info">' +
-        '<div style="min-width:0;flex:1;">' +
-          '<p class="item-title">' + escapeHtml(l.title) + '</p>' +
-          '<p class="item-meta">' + escapeHtml(l.category) + ' · ' + escapeHtml(l.condition) + '</p>' +
-          '<p class="item-meta">' + escapeHtml(l.location) + '</p>' +
-        '</div>' +
-        '<button class="delete-btn" onclick="event.stopPropagation(); deleteListing(' + l.id + ')">🗑</button>' +
-      '</div>' +
-    '</div>';
-  }).join('');
+      if(filtered.length === 0) {
+        const msg = activeFilter === '__sold' ? '\uD83D\uDCED No sold products yet' : '\u2728 No products';
+        container.innerHTML = '<div class="empty">' + msg + '</div>';
+        return;
+      }
 
-  renderExport();
-}
+      container.innerHTML = '';
+      filtered.forEach((p) => {
+        const images = p.images && p.images.length ? p.images : [];
+        const firstImage = images.length > 0 ? images[0] : null;
+        const imageCount = images.length;
+        const isSold = !!p.sold;
 
-function selectListing(id) {
-  state.activeId = id;
-  renderShop();
-}
+        const card = document.createElement('div');
+        card.className = 'product-card' + (isSold ? ' sold-card' : '');
+        card.innerHTML =
+          '<div class="product-img">' +
+            (firstImage ? '<img src="' + firstImage + '" alt="' + escapeHtml(p.name) + '">' : '<div class="img-placeholder">\uD83E\uDE91</div>') +
+            (imageCount > 1 ? '<div class="image-counter">\uD83D\uDCF7 ' + imageCount + '</div>' : '') +
+            (isSold ? '<div class="sold-badge">Sold</div>' : '') +
+          '</div>' +
+          '<div class="brand">' + escapeHtml(p.brand || 'GIVY STUDIO') + '</div>' +
+          '<div class="title">' + escapeHtml(p.name) + '</div>' +
+          '<div class="desc">' + escapeHtml(p.desc || 'Luxury piece') + '</div>' +
+          '<div class="price">$' + p.price + '</div>' +
+          '<div class="action-btns">' +
+            '<button class="fb-btn" title="Message seller on Messenger"' + (isSold ? ' disabled style="opacity:0.5; cursor:not-allowed;"' : '') + '>\uD83D\uDCAC Interested</button>' +
+            '<button class="mp-btn" title="Find on Facebook Marketplace">\uD83D\uDED2 Marketplace</button>' +
+          '</div>';
+        const imgDiv = card.querySelector('.product-img');
+        imgDiv.onclick = () => openLightbox(images, 0);
+        if (!isSold) card.querySelector('.fb-btn').onclick = () => openMessenger(p);
+        card.querySelector('.mp-btn').onclick = () => openMarketplace(p);
+        container.appendChild(card);
+      });
+    }
 
-function deleteListing(id) {
-  state.listings = state.listings.filter(function(l) { return l.id !== id; });
-  saveToStorage();
-  if (state.activeId === id) state.activeId = null;
-  renderShop();
-}
+    document.getElementById('adminIcon').onclick = () => {
+      clickCount++;
+      setTimeout(() => clickCount = 0, 500);
+      if(clickCount >= 3) location.href = 'admin.html';
+    };
 
-function buildFormats(l) {
-  var fbLines = [l.description];
-  if (l.dimensions) fbLines.push('Dimensions: ' + l.dimensions);
-  if (l.material) fbLines.push('Material: ' + l.material);
-  if (l.brand) fbLines.push('Brand: ' + l.brand);
-  fbLines.push('Location: ' + l.location);
-  var fb = { title: l.title, price: l.price, description: fbLines.join('\n\n') };
+    try {
+      const bc = new BroadcastChannel('givy_sync');
+      bc.onmessage = (e) => { if (e.data && e.data.type === 'update') loadData(); };
+    } catch(e) {}
 
-  var clLines = [l.title, 'Price: $' + l.price, 'Condition: ' + l.condition, 'Category: ' + l.category];
-  if (l.brand) clLines.push('Brand: ' + l.brand);
-  if (l.material) clLines.push('Material: ' + l.material);
-  if (l.dimensions) clLines.push('Dimensions: ' + l.dimensions);
-  clLines.push('', l.description, '', 'Location: ' + l.location);
-  if (l.email) clLines.push('Contact: ' + l.email);
-  var craigslist = {
-    title: l.title + ' - $' + l.price + ' (' + l.location + ')',
-    body: clLines.join('\n')
-  };
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'givy_updated') loadData();
+    });
 
-  var ouLines = [l.description, '', '• Condition: ' + l.condition];
-  if (l.dimensions) ouLines.push('• Dimensions: ' + l.dimensions);
-  if (l.material) ouLines.push('• Material: ' + l.material);
-  if (l.brand) ouLines.push('• Brand: ' + l.brand);
-  ouLines.push('• Pickup: ' + l.location);
-  var offerup = {
-    title: l.title.slice(0, 60),
-    price: l.price,
-    description: ouLines.join('\n')
-  };
+    function escapeHtml(str) { return str ? String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])) : ''; }
 
-  return { fb: fb, craigslist: craigslist, offerup: offerup };
-}
-
-function renderExport() {
-  var panel = document.getElementById('export-panel');
-  var l = state.listings.filter(function(x){ return x.id === state.activeId; })[0];
-  if (!l) {
-    panel.innerHTML = '<div class="empty-state"><p>Select an item on the left to export it to Facebook Marketplace, Craigslist and OfferUp.</p></div>';
-    return;
-  }
-  var f = buildFormats(l);
-  panel.innerHTML =
-    '<div class="export-panel">' +
-      '<div class="export-header">' +
-        '<h3>Export to Marketplaces</h3>' +
-        '<button class="export-close" onclick="state.activeId=null; renderShop()">✕</button>' +
-      '</div>' +
-      '<div class="export-note">These platforms do not allow automated posting. Click a platform to open its form, then paste your pre-formatted content.</div>' +
-      platformBlock('Facebook Marketplace', 'https://www.facebook.com/marketplace/create/item', [
-        ['Title', f.fb.title, false],
-        ['Price', f.fb.price, false],
-        ['Description', f.fb.description, true]
-      ]) +
-      platformBlock('Craigslist', 'https://post.craigslist.org/', [
-        ['Posting Title', f.craigslist.title, false],
-        ['Body', f.craigslist.body, true]
-      ]) +
-      platformBlock('OfferUp', 'https://offerup.com/post/', [
-        ['Title (max 60 chars)', f.offerup.title, false],
-        ['Price', f.offerup.price, false],
-        ['Description', f.offerup.description, true]
-      ]) +
-    '</div>';
-}
-
-function platformBlock(name, url, rows) {
-  var rowsHtml = rows.map(function(row) {
-    var label = row[0], text = row[1], multi = row[2];
-    var encodedText = encodeURIComponent(text);
-    return '<div class="copy-row">' +
-      '<div class="copy-header">' +
-        '<span class="copy-label">' + label + '</span>' +
-        '<button class="copy-btn" onclick="copyText(this, \'' + encodedText + '\')">Copy</button>' +
-      '</div>' +
-      '<div class="copy-text ' + (multi ? 'multi' : 'single') + '">' + escapeHtml(text) + '</div>' +
-    '</div>';
-  }).join('');
-  return '<div class="platform">' +
-    '<div class="platform-header">' +
-      '<span class="platform-name">' + name + '</span>' +
-      '<a href="' + url + '" target="_blank" rel="noopener noreferrer" class="platform-link">Open ↗</a>' +
-    '</div>' +
-    rowsHtml +
-  '</div>';
-}
-
-function copyText(btn, encodedText) {
-  var text = decodeURIComponent(encodedText);
-  var done = function() {
-    btn.innerHTML = 'Copied ✓';
-    btn.classList.add('copied');
-    setTimeout(function() {
-      btn.innerHTML = 'Copy';
-      btn.classList.remove('copied');
-    }, 1500);
-  };
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(done).catch(fallback);
-  } else {
-    fallback();
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed'; ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    try { document.execCommand('copy'); } catch(e) {}
-    document.body.removeChild(ta);
-    done();
-  }
-}
-
-showPage('home');
-</script>
+    loadData();
+  </script>
 
 </body>
 </html>
