@@ -546,6 +546,11 @@ function handleGiveClick(){const user=Storage.get('user');if(user&&user.email){N
 function handleMyItemsClick(){const user=Storage.get('user');if(user&&user.email){Nav.go('list');}else{RegModal.open();}}
 function handleQuickPickupClick(){alert('⚡ Quick Schedule Pickup — coming soon!\n\nThis option will allow you to schedule a pickup without registration.\nNo rewards will be earned.');}
 
+// Make functions globally available immediately
+window.handleGiveClick = handleGiveClick;
+window.handleMyItemsClick = handleMyItemsClick;
+window.handleQuickPickupClick = handleQuickPickupClick;
+
 const NotificationModule = {
   // Check for status changes and show popups
   async checkStatusChanges() {
@@ -1108,6 +1113,11 @@ const res=await fetch('https://formspree.io/f/xaqaolor',{method:'POST',headers:{
 
 window.Nav = Nav;
 window.ListModule = ListModule;
+window.handleGiveClick = handleGiveClick;
+window.handleMyItemsClick = handleMyItemsClick;
+window.handleQuickPickupClick = handleQuickPickupClick;
+window.logoutUser = logoutUser;
+window.openTawkChat = openTawkChat;
 PWA.init();
 Nav.go(‘home’);
 </script>
