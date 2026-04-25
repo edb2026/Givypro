@@ -518,72 +518,112 @@ async function sendClientNotification(order, newStatus) {
   const messages = {
     'confirmed_intent': {
       subject: '✅ Your Givy Order is Confirmed!',
+      title: 'Order Confirmed!',
+      color: '#059669',
       body: 
-        `Hello ${order.nickname || 'there'}!\n\n` +
-        `Great news! Your order "${order.title}" has been CONFIRMED.\n\n` +
-        `📦 Item: ${order.title}\n` +
-        `📅 Pickup Date: ${order.date}\n` +
-        `⏰ Time Window: ${order.time}\n\n` +
-        `We are ready to pick it up at your scheduled time!\n\n` +
-        `🏠 IMPORTANT: Please reply to this email or open the chat in the Givy app and send us:\n` +
-        `   • Your exact street address\n` +
-        `   • Parking instructions\n` +
-        `   • Gate codes (if any)\n` +
-        `   • Any special instructions for pickup\n\n` +
-        `This information helps us pick up your item smoothly and on time.\n\n` +
-        `Thank you for using Givy Rewards!\n\n` +
-        `— The Givy Team`
+        `<h2 style="color:#059669;">✅ Order Confirmed!</h2>` +
+        `<p>Hello <strong>${order.nickname || 'there'}</strong>!</p>` +
+        `<p>Great news! Your order <strong>"${order.title}"</strong> has been <strong>CONFIRMED</strong>.</p>` +
+        `<div style="background:#f0fdf4;border-left:4px solid #059669;padding:14px;margin:16px 0;border-radius:8px;">` +
+        `<p style="margin:4px 0;"><strong>📦 Item:</strong> ${order.title}</p>` +
+        `<p style="margin:4px 0;"><strong>📅 Pickup Date:</strong> ${order.date}</p>` +
+        `<p style="margin:4px 0;"><strong>⏰ Time Window:</strong> ${order.time}</p>` +
+        `</div>` +
+        `<p>We are ready to pick it up at your scheduled time!</p>` +
+        `<div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:14px;margin:16px 0;border-radius:8px;">` +
+        `<p style="margin:0;"><strong>🏠 IMPORTANT — Please reply with:</strong></p>` +
+        `<ul style="margin:8px 0;">` +
+        `<li>Your exact street address</li>` +
+        `<li>Parking instructions</li>` +
+        `<li>Gate codes (if any)</li>` +
+        `<li>Any special instructions for pickup</li>` +
+        `</ul>` +
+        `</div>` +
+        `<p>This information helps us pick up your item smoothly and on time.</p>` +
+        `<p>Thank you for using Givy Rewards!</p>` +
+        `<p style="color:#6b7280;">— The Givy Team</p>`
     },
     'rejected': {
       subject: '⚠️ About Your Givy Order',
+      title: 'About Your Order',
+      color: '#f59e0b',
       body:
-        `Hello ${order.nickname || 'there'},\n\n` +
-        `We received your donation request for "${order.title}".\n\n` +
-        `Unfortunately, we are not able to accept this item at this time. We are very sorry for the inconvenience.\n\n` +
-        `Please feel free to try another item — we would love to help you earn rewards!\n\n` +
-        `Thank you for your understanding.\n\n` +
-        `— The Givy Team`
+        `<h2 style="color:#f59e0b;">⚠️ About Your Order</h2>` +
+        `<p>Hello <strong>${order.nickname || 'there'}</strong>,</p>` +
+        `<p>We received your donation request for <strong>"${order.title}"</strong>.</p>` +
+        `<div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:14px;margin:16px 0;border-radius:8px;">` +
+        `<p style="margin:0;">Unfortunately, we are not able to accept this item at this time. We are very sorry for the inconvenience.</p>` +
+        `</div>` +
+        `<p>Please feel free to try another item — we would love to help you earn rewards! 🎁</p>` +
+        `<p>Thank you for your understanding.</p>` +
+        `<p style="color:#6b7280;">— The Givy Team</p>`
     },
     'picked_up': {
       subject: '🎉 Your Item Has Been Picked Up!',
+      title: 'Item Picked Up!',
+      color: '#2563eb',
       body:
-        `Hello ${order.nickname || 'there'}!\n\n` +
-        `Your item "${order.title}" has been successfully picked up. 🎉\n\n` +
-        `You have received the corresponding reward points in your Givy account.\n\n` +
-        `📊 Check your updated level and discount in the My Items section of the app.\n\n` +
-        `Thank you so much for your contribution! We appreciate you using Givy Rewards.\n\n` +
-        `Looking forward to your next item!\n\n` +
-        `— The Givy Team`
+        `<h2 style="color:#2563eb;">🎉 Item Picked Up!</h2>` +
+        `<p>Hello <strong>${order.nickname || 'there'}</strong>!</p>` +
+        `<p>Your item <strong>"${order.title}"</strong> has been successfully picked up. 🎉</p>` +
+        `<div style="background:#dbeafe;border-left:4px solid #2563eb;padding:14px;margin:16px 0;border-radius:8px;">` +
+        `<p style="margin:0;">🎁 <strong>Reward points have been added to your account!</strong></p>` +
+        `</div>` +
+        `<p>📊 Check your updated level and discount in the <strong>My Items</strong> section of the app.</p>` +
+        `<p>Thank you so much for your contribution! We appreciate you using Givy Rewards.</p>` +
+        `<p>Looking forward to your next item! 🦝</p>` +
+        `<p style="color:#6b7280;">— The Givy Team</p>`
     }
   };
   
   const msg = messages[newStatus];
   if (!msg) return;
   
+  // Resend API config - REPLACE WITH YOUR API KEY:
+  const RESEND_API_KEY = 're_Yojdd1ie_Gki7MrhMTd7ctoCuLqCD5ESC';
+  
+  if (RESEND_API_KEY === 'YOUR_RESEND_API_KEY_HERE') {
+    console.log('⚠️ Resend not configured yet. Skipping email to', clientEmail);
+    console.log('Email content:', msg);
+    return;
+  }
+  
   try {
-    const response = await fetch('https://formspree.io/f/xaqaolor', {
+    const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Authorization': 'Bearer ' + RESEND_API_KEY,
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        _subject: msg.subject,
-        _replyto: 'givyrewards@proton.me',
-        email: clientEmail,
-        name: order.nickname || 'Customer',
-        message: msg.body,
-        _to: clientEmail  // Note: Formspree free plan sends to your verified email
+        from: 'Givy Rewards <noreply@givyrewards.com>',
+        to: clientEmail,
+        subject: msg.subject,
+        html: `
+          <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#ffffff;">
+            <div style="background:linear-gradient(135deg,${msg.color} 0%,${msg.color}dd 100%);padding:30px;border-radius:16px 16px 0 0;text-align:center;">
+              <div style="font-size:36px;color:white;font-weight:900;">🦝 Givy Rewards</div>
+              <div style="color:white;font-size:16px;opacity:0.9;margin-top:8px;">It's more than just giving</div>
+            </div>
+            <div style="padding:30px;background:#ffffff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 16px 16px;color:#111827;">
+              ${msg.body}
+            </div>
+            <div style="text-align:center;padding:20px;color:#6b7280;font-size:13px;">
+              You are receiving this because you submitted an order on Givy Rewards.
+            </div>
+          </div>
+        `
       })
     });
     
+    const result = await response.json();
     if (response.ok) {
-      console.log('Email notification sent to client:', clientEmail);
+      console.log('✅ Email sent to client:', clientEmail, result);
     } else {
-      console.log('Email notification failed');
+      console.log('❌ Resend error:', result);
     }
   } catch(e) {
-    console.log('Email notification error:', e);
+    console.log('❌ Email send error:', e);
   }
 }
 
