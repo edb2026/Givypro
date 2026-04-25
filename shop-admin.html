@@ -134,7 +134,7 @@
     <strong>How it works - one-time setup:</strong>
     <ol>
       <li>Go to <code>business.facebook.com</code> &rarr; create Commerce Manager catalog (type: E-commerce).</li>
-      <li>Click <strong>"Export Images ZIP"</strong> below &rarr; unpack the archive &rarr; upload the <code>images/</code> folder to your GitHub repo (next to <code>index.html</code>).</li>
+      <li>Click <strong>"Export Images ZIP"</strong> below &rarr; unpack the archive &rarr; upload the <code>images/</code> folder to your GitHub repo (next to <code>shop.html</code>).</li>
       <li>Click <strong>"Export Catalog Feed"</strong> &rarr; upload <code>feed.csv</code> to the same repo.</li>
       <li>In Commerce Manager &rarr; Data Sources &rarr; Add Feed &rarr; paste URL <code>[your-site]/feed.csv</code> &rarr; set "Update daily".</li>
     </ol>
@@ -724,7 +724,7 @@
         csvField(p.sold ? 'out of stock' : 'in stock'),
         csvField('new'),
         csvField(Number(p.price).toFixed(2) + ' USD'),
-        csvField(base + '/index.html'),
+        csvField(base + '/shop.html'),
         csvField(mainImg),
         csvField(p.brand || 'GIVY STUDIO'),
         csvField(extraImgs)
@@ -758,7 +758,7 @@
     if (!csv) return;
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     downloadBlob(blob, 'feed.csv');
-    status.innerHTML = '\u2705 feed.csv downloaded (' + productsWithImages.length + ' products). Upload it to your GitHub repo next to index.html.';
+    status.innerHTML = '\u2705 feed.csv downloaded (' + productsWithImages.length + ' products). Upload it to your GitHub repo next to shop.html.';
     setTimeout(() => { status.innerHTML = ''; }, 8000);
   };
 
@@ -803,7 +803,7 @@
         status.innerHTML = '\u23F3 Packing: ' + Math.round(meta.percent) + '%';
       });
       downloadBlob(content, 'givy-images.zip');
-      status.innerHTML = '\u2705 givy-images.zip downloaded (' + fileCount + ' images). Unpack the ZIP and upload the <code>images/</code> folder to your GitHub repo (next to index.html).';
+      status.innerHTML = '\u2705 givy-images.zip downloaded (' + fileCount + ' images). Unpack the ZIP and upload the <code>images/</code> folder to your GitHub repo (next to shop.html).';
       setTimeout(() => { status.innerHTML = ''; }, 12000);
     } catch(err) {
       alert('ZIP failed: ' + err.message);
@@ -812,8 +812,8 @@
   };
 
   // Exit buttons
-  document.getElementById('exitBtn').onclick = () => { window.location.href = 'index.html'; };
-  document.getElementById('exitToGivyBtn').onclick = () => { window.location.href = '../'; };
+  document.getElementById('exitBtn').onclick = () => { window.location.href = 'shop.html'; };
+  document.getElementById('exitToGivyBtn').onclick = () => { window.location.href = 'index.html'; };
 
   function showToast(msg) {
     const t = document.getElementById('toast');
