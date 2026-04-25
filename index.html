@@ -94,13 +94,27 @@ input[type=“date”]:not(.date-empty),input[type=“time”]:not(.time-empty){
 .inp-dark{background:rgba(255,255,255,0.06);border:2px solid rgba(255,255,255,0.1);border-radius:12px;padding:13px 15px;font-size:15px;font-family:var(–font-b);width:100%;color:white;margin-bottom:4px;display:block;transition:border-color 0.2s;}
 .inp-dark:focus{outline:none;border-color:var(–green);}.inp-dark::placeholder{color:#475569;}
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:99px;}
-</style>
 
-<!-- Firebase SDK -->
+.reg-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);z-index:10000;justify-content:center;align-items:center;}
+.reg-modal.open{display:flex;}
+.reg-box{background:white;padding:28px 24px;border-radius:16px;width:calc(100% - 32px);max-width:420px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.3);text-align:center;}
+.reg-box h2{margin:0 0 6px;color:#222;font-size:22px;font-family:var(–font-h);}
+.reg-box .reg-sub{color:#666;font-size:14px;margin-bottom:22px;}
+.reg-input-group{margin-bottom:16px;text-align:left;}
+.reg-input-group label{display:block;margin-bottom:6px;font-weight:700;color:#444;font-size:14px;}
+.reg-input-group input{width:100%;padding:13px;border:2px solid #ddd;border-radius:10px;font-size:16px;box-sizing:border-box;font-family:var(–font-b);}
+.reg-input-group input:focus{border-color:#4CAF50;outline:none;}
+.reg-terms{display:flex;align-items:flex-start;gap:10px;margin:18px 0;text-align:left;font-size:14px;}
+.reg-terms input[type=checkbox]{width:22px;height:22px;accent-color:#4CAF50;margin-top:3px;flex-shrink:0;}
+.reg-terms a{color:#4CAF50;text-decoration:underline;cursor:pointer;}
+.reg-complete-btn{width:100%;padding:15px;border-radius:10px;font-size:17px;font-weight:900;border:none;cursor:pointer;margin-top:8px;font-family:var(–font-b);}
+.reg-complete-btn:not(:disabled){background:#4CAF50;color:white;}
+.reg-complete-btn:disabled{background:#aaa;color:white;cursor:not-allowed;}
+</style>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, updateDoc, getDoc, getDocs, query, where, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, doc, setDoc, updateDoc, getDoc, getDocs, query, where, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -116,23 +130,19 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// Expose to global window
 window.firebaseDB = db;
 window.firebaseAuth = auth;
-window.firebaseFunctions = { collection, addDoc, doc, updateDoc, getDoc, getDocs, query, where, orderBy, onSnapshot };
+window.firebaseFunctions = { collection, addDoc, doc, setDoc, updateDoc, getDoc, getDocs, query, where, orderBy, onSnapshot };
 window.firebaseAuthFunctions = { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail };
 window.firebaseReady = true;
 
-// Track auth state
 onAuthStateChanged(auth, async (user) => {
   window.currentFirebaseUser = user;
   window.dispatchEvent(new CustomEvent('auth-state-changed', { detail: user }));
   console.log('Auth state:', user ? user.email : 'logged out');
-  
-  // Auto-load user data from Firestore when user is auto-signed-in
+
   if (user) {
     try {
-      // Load profile
       const userSnap = await getDoc(doc(db, 'users', user.uid));
       let nickname = user.email.split('@')[0];
       let joinedAt = new Date().toISOString();
@@ -142,8 +152,7 @@ onAuthStateChanged(auth, async (user) => {
       }
       const userData = { uid: user.uid, email: user.email, nickname, joinedAt };
       try { localStorage.setItem('user', JSON.stringify(userData)); } catch(e) {}
-      
-      // Load items and MERGE with local (don't replace, to preserve in-progress uploads)
+
       const q = query(collection(db, 'orders'), where('userId', '==', user.uid));
       const snapshot = await getDocs(q);
       const firestoreItems = [];
@@ -171,38 +180,26 @@ onAuthStateChanged(auth, async (user) => {
         });
         statuses[localId] = data.status || 'pending';
       });
-      
-      // Merge: keep local items that are not yet in Firestore, add all Firestore items
+
       let localItems = [];
       try { localItems = JSON.parse(localStorage.getItem('items') || '[]'); } catch(e) {}
       const firestoreIds = new Set(firestoreItems.map(i => i.id));
-      // Keep local items that are either: not in Firestore yet, OR created in last 5 minutes
-      const fiveMinAgo = Date.now() - 5*60*1000;
-      const localOnly = localItems.filter(i => {
-        if (firestoreIds.has(i.id)) return false; // already have Firestore version
-        return true; // keep ALL local-only items
-      });
+      const localOnly = localItems.filter(i => !firestoreIds.has(i.id));
       const mergedItems = [...localOnly, ...firestoreItems];
       mergedItems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      
-      // SAFETY: Only overwrite if we actually got something from Firestore OR if local is empty
-      // This prevents wiping local items when Firestore rules block reads
+
       if (firestoreItems.length > 0 || localItems.length === 0) {
         try { localStorage.setItem('items', JSON.stringify(mergedItems)); } catch(e) {}
-      } else {
-        console.log('Firestore returned empty but local has', localItems.length, 'items - keeping local');
       }
       window.initialStatuses = statuses;
-      
-      // Refresh UI if Nav is ready
+
       if (window.Nav && window.ListModule) {
         Object.assign(window.ListModule.statuses, statuses);
         if (window.Nav.current) window.Nav.updatePostCard && window.Nav.updatePostCard();
         if (window.Nav.current === 'list' && window.ListModule.render) window.ListModule.render();
       }
-      console.log('Auto-loaded user data:', nickname, mergedItems.length + ' items (' + firestoreItems.length + ' from Firestore)');
-      
-      // Check for status change notifications after data loads
+      console.log('Auto-loaded user data:', nickname, mergedItems.length + ' items');
+
       if (window.NotificationModule) {
         setTimeout(() => window.NotificationModule.checkStatusChanges(), 1000);
       }
@@ -212,7 +209,6 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// Dispatch event when ready
 window.dispatchEvent(new Event('firebase-ready'));
 console.log('Firebase initialized with Auth');
 </script>
@@ -235,55 +231,47 @@ console.log('Firebase initialized with Auth');
     <div class="pwa-icon">&#128242;</div>
     <div class="pwa-text">
       <div class="pwa-title">Install App</div>
-      <div class="pwa-sub" id="pwa-sub-text">Add to home screen — works offline</div>
+      <div class="pwa-sub" id="pwa-sub-text">Add to home screen - works offline</div>
     </div>
     <button class="pwa-install-btn" id="pwa-install-btn" onclick="PWA.install()">Install</button>
   </div>
 
-  <!-- TWO BUTTONS - moved to top -->
-
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;margin-top:14px;">
     <div>
-      <button onclick="handleQuickPickupClick()" style="background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);color:white;padding:18px 8px;width:100%;border-radius:14px;font-weight:900;font-size:16px;font-family:var(--font-b);border:none;cursor:pointer;box-shadow:0 8px 24px rgba(37,99,235,0.4);display:block;line-height:1.2;letter-spacing:0.3px;">⚡ Quick<br>Schedule Pickup</button>
+      <button onclick="handleQuickPickupClick()" style="background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);color:white;padding:18px 8px;width:100%;border-radius:14px;font-weight:900;font-size:16px;font-family:var(--font-b);border:none;cursor:pointer;box-shadow:0 8px 24px rgba(37,99,235,0.4);display:block;line-height:1.2;letter-spacing:0.3px;">&#9889; Quick<br>Schedule Pickup</button>
       <div style="text-align:center;font-size:17px;color:#94a3b8;font-weight:600;margin-top:8px;padding:0 4px;line-height:1.4;">No registration<br>No rewards</div>
     </div>
     <div>
-      <button onclick="handleGiveClick()" style="background:linear-gradient(135deg,#059669 0%,#047857 100%);color:white;padding:18px 8px;width:100%;border-radius:14px;font-weight:900;font-size:16px;font-family:var(--font-b);border:none;cursor:pointer;box-shadow:0 8px 24px rgba(5,150,105,0.4);display:block;line-height:1.2;letter-spacing:0.3px;">🎁 Schedule<br>Pickup</button>
+      <button onclick="handleGiveClick()" style="background:linear-gradient(135deg,#059669 0%,#047857 100%);color:white;padding:18px 8px;width:100%;border-radius:14px;font-weight:900;font-size:16px;font-family:var(--font-b);border:none;cursor:pointer;box-shadow:0 8px 24px rgba(5,150,105,0.4);display:block;line-height:1.2;letter-spacing:0.3px;">&#127873; Schedule<br>Pickup</button>
       <div style="text-align:center;font-size:17px;color:#94a3b8;font-weight:600;margin-top:8px;padding:0 4px;line-height:1.4;">With registration<br>Earn rewards</div>
     </div>
   </div>
-
-  <!-- HERO TEXT -->
 
   <div style="text-align:center;padding:32px 8px 28px;">
     <div style="font-family:'Playfair Display',Georgia,serif;font-size:30px;font-weight:900;color:#ffffff;line-height:1.25;letter-spacing:-0.5px;margin-bottom:14px;">We pick up quality items<br><span style="color:#fbbf24;font-style:italic;">you're ready to give away</span></div>
     <div style="width:60px;height:3px;background:linear-gradient(90deg,#fbbf24,#059669);margin:0 auto;border-radius:99px;"></div>
   </div>
 
-  <!-- SERVICE VALUE -->
-
   <div style="background:linear-gradient(145deg,#1a1f2e 0%,#0f1117 100%);border:1px solid rgba(251,191,36,0.2);border-radius:20px;padding:24px 22px;margin-bottom:14px;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-      <span style="font-size:28px;">📦</span>
+      <span style="font-size:28px;">&#128230;</span>
       <span style="font-family:'Playfair Display',Georgia,serif;font-size:21px;font-weight:900;color:#fbbf24;letter-spacing:3px;text-transform:uppercase;">Service Value</span>
     </div>
     <div style="font-size:18px;font-weight:800;color:#ffffff;line-height:1.4;margin-bottom:12px;">Free fast pickup at your location and convenient time.</div>
-    <div style="font-size:22px;color:#cbd5e1;font-weight:500;line-height:1.65;">We help you easily get rid of unwanted household items — furniture, décor, office items, and more — so you can focus on what matters most.</div>
+    <div style="font-size:22px;color:#cbd5e1;font-weight:500;line-height:1.65;">We help you easily get rid of unwanted household items - furniture, decor, office items, and more - so you can focus on what matters most.</div>
   </div>
-
-  <!-- ITEM CONDITION -->
 
   <div style="background:linear-gradient(145deg,#1a1f2e 0%,#0f1117 100%);border:1px solid rgba(251,191,36,0.2);border-radius:20px;padding:24px 22px;margin-bottom:14px;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-      <span style="font-size:28px;">📋</span>
+      <span style="font-size:28px;">&#128203;</span>
       <span style="font-family:'Playfair Display',Georgia,serif;font-size:21px;font-weight:900;color:#fbbf24;letter-spacing:3px;text-transform:uppercase;">Item Condition</span>
     </div>
     <div style="font-size:16px;color:#ffffff;font-weight:700;line-height:1.5;margin-bottom:14px;">We accept items in different conditions:</div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(251,191,36,0.08);border-left:3px solid #fbbf24;border-radius:8px;"><span style="color:#fbbf24;font-size:18px;">✦</span><span style="font-size:15px;color:#ffffff;font-weight:700;">New</span></div>
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(251,191,36,0.08);border-left:3px solid #fbbf24;border-radius:8px;"><span style="color:#fbbf24;font-size:18px;">✦</span><span style="font-size:15px;color:#ffffff;font-weight:700;">Like New</span></div>
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(251,191,36,0.08);border-left:3px solid #fbbf24;border-radius:8px;"><span style="color:#fbbf24;font-size:18px;">✦</span><span style="font-size:15px;color:#ffffff;font-weight:700;">Very Good</span> <span style="font-size:19px;color:#94a3b8;font-weight:500;">(considered)</span></div>
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(251,191,36,0.08);border-left:3px solid #fbbf24;border-radius:8px;"><span style="color:#fbbf24;font-size:18px;">✦</span><span style="font-size:15px;color:#ffffff;font-weight:700;">Lightly Used</span> <span style="font-size:19px;color:#94a3b8;font-weight:500;">(minor wear)</span></div>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(251,191,36,0.08);border-left:3px solid #fbbf24;border-radius:8px;"><span style="color:#fbbf24;font-size:18px;">&#10022;</span><span style="font-size:15px;color:#ffffff;font-weight:700;">New</span></div>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(251,191,36,0.08);border-left:3px solid #fbbf24;border-radius:8px;"><span style="color:#fbbf24;font-size:18px;">&#10022;</span><span style="font-size:15px;color:#ffffff;font-weight:700;">Like New</span></div>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(251,191,36,0.08);border-left:3px solid #fbbf24;border-radius:8px;"><span style="color:#fbbf24;font-size:18px;">&#10022;</span><span style="font-size:15px;color:#ffffff;font-weight:700;">Very Good</span> <span style="font-size:19px;color:#94a3b8;font-weight:500;">(considered)</span></div>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(251,191,36,0.08);border-left:3px solid #fbbf24;border-radius:8px;"><span style="color:#fbbf24;font-size:18px;">&#10022;</span><span style="font-size:15px;color:#ffffff;font-weight:700;">Lightly Used</span> <span style="font-size:19px;color:#94a3b8;font-weight:500;">(minor wear)</span></div>
     </div>
     <div style="font-size:21px;color:#cbd5e1;font-weight:500;line-height:1.65;margin-bottom:8px;">We also accept gently broken items if they are still usable.</div>
     <div style="font-size:21px;color:#cbd5e1;font-weight:500;line-height:1.65;margin-bottom:8px;">A fast, simple review will help us decide quickly.</div>
@@ -291,66 +279,55 @@ console.log('Firebase initialized with Auth');
     <div style="font-size:19px;color:#94a3b8;font-weight:500;font-style:italic;line-height:1.6;margin-top:12px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08);">We apologize in advance if we are unable to accept your item.</div>
   </div>
 
-  <!-- SECOND LIFE -->
-
   <div style="background:linear-gradient(145deg,#1a1f2e 0%,#0f1117 100%);border:1px solid rgba(5,150,105,0.25);border-radius:20px;padding:24px 22px;margin-bottom:14px;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-      <span style="font-size:28px;">♻️</span>
+      <span style="font-size:28px;">&#9851;</span>
       <span style="font-family:'Playfair Display',Georgia,serif;font-size:21px;font-weight:900;color:#10b981;letter-spacing:3px;text-transform:uppercase;">Second Life</span>
     </div>
     <div style="font-size:18px;font-weight:800;color:#ffffff;line-height:1.4;margin-bottom:10px;">Good items are reused, not wasted.</div>
     <div style="font-size:22px;color:#cbd5e1;font-weight:500;line-height:1.65;">We clean and prepare items for resale and reuse.</div>
   </div>
 
-  <!-- WHY IT MATTERS -->
-
   <div style="background:linear-gradient(145deg,#1e3a8a 0%,#1e40af 100%);border-radius:20px;padding:24px 22px;margin-bottom:14px;box-shadow:0 12px 40px rgba(30,58,138,0.4);">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-      <span style="font-size:28px;">🌍</span>
+      <span style="font-size:28px;">&#127757;</span>
       <span style="font-family:'Playfair Display',Georgia,serif;font-size:21px;font-weight:900;color:#fbbf24;letter-spacing:3px;text-transform:uppercase;">Why It Matters More</span>
     </div>
     <div style="font-size:17px;font-weight:700;color:#ffffff;line-height:1.55;"><span style="color:#fbbf24;font-weight:900;font-size:22px;">10%</span> of proceeds are directed to addiction recovery programs and community initiatives.</div>
   </div>
 
-  <!-- REWARDS -->
-
   <div style="background:linear-gradient(145deg,#1a1f2e 0%,#0f1117 100%);border:1px solid rgba(251,191,36,0.3);border-radius:20px;padding:24px 22px;margin-bottom:14px;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-      <span style="font-size:28px;">🎁</span>
+      <span style="font-size:28px;">&#127873;</span>
       <span style="font-family:'Playfair Display',Georgia,serif;font-size:21px;font-weight:900;color:#fbbf24;letter-spacing:3px;text-transform:uppercase;">Rewards</span>
     </div>
     <div style="font-size:18px;font-weight:800;color:#ffffff;line-height:1.4;margin-bottom:10px;">Get value back for what you give.</div>
     <div style="font-size:22px;color:#cbd5e1;font-weight:500;line-height:1.65;">You receive discounts in our marketplace as a thank you for your contribution.</div>
   </div>
 
-  <!-- REWARDS SYSTEM -->
-
   <div style="background:linear-gradient(145deg,#1a1f2e 0%,#0f1117 100%);border:1px solid rgba(251,191,36,0.4);border-radius:20px;padding:24px 22px;margin-bottom:14px;box-shadow:0 12px 40px rgba(0,0,0,0.5);">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
-      <span style="font-size:28px;">💎</span>
+      <span style="font-size:28px;">&#128142;</span>
       <span style="font-family:'Playfair Display',Georgia,serif;font-size:21px;font-weight:900;color:#fbbf24;letter-spacing:3px;text-transform:uppercase;">Rewards System</span>
     </div>
     <div style="font-size:19px;color:#94a3b8;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">Giver Levels</div>
 
 ```
 <div style="display:flex;flex-direction:column;gap:12px;">
-  <!-- Active Giver -->
   <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
     <div>
       <div style="font-family:'Playfair Display',Georgia,serif;font-size:18px;font-weight:900;color:#fbbf24;">Active Giver</div>
-      <div style="font-size:19px;color:#94a3b8;font-weight:600;margin-top:2px;">1–3 items</div>
+      <div style="font-size:19px;color:#94a3b8;font-weight:600;margin-top:2px;">1-3 items</div>
     </div>
     <div style="background:linear-gradient(135deg,#fbbf24,#f59e0b);border-radius:99px;padding:8px 18px;font-size:18px;font-weight:900;color:#1a1f2e;">5%</div>
   </div>
-  <!-- Impact Giver -->
   <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
     <div>
       <div style="font-family:'Playfair Display',Georgia,serif;font-size:18px;font-weight:900;color:#a78bfa;">Impact Giver</div>
-      <div style="font-size:19px;color:#94a3b8;font-weight:600;margin-top:2px;">4–7 items</div>
+      <div style="font-size:19px;color:#94a3b8;font-weight:600;margin-top:2px;">4-7 items</div>
     </div>
     <div style="background:linear-gradient(135deg,#a78bfa,#7c3aed);border-radius:99px;padding:8px 18px;font-size:18px;font-weight:900;color:#ffffff;">20%</div>
   </div>
-  <!-- Hero Giver -->
   <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
     <div>
       <div style="font-family:'Playfair Display',Georgia,serif;font-size:18px;font-weight:900;color:#10b981;">Hero Giver</div>
@@ -362,8 +339,6 @@ console.log('Firebase initialized with Auth');
 ```
 
   </div>
-
-  <!-- TAGLINE -->
 
   <div style="text-align:center;padding:24px 8px 8px;">
     <div style="font-family:'Playfair Display',Georgia,serif;font-size:24px;font-weight:900;color:#ffffff;line-height:1.3;font-style:italic;">It's more than just giving.</div>
@@ -386,8 +361,6 @@ console.log('Firebase initialized with Auth');
 
   <div id="post-banner-container"></div>
 
-  <!-- User greeting card -->
-
   <div id="post-user-card" class="card" style="margin-bottom:8px;padding:14px 16px;">
     <div id="post-greeting" style="font-size:18px;font-weight:900;color:#111827;margin-bottom:8px;"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;">
@@ -405,6 +378,7 @@ console.log('Firebase initialized with Auth');
       </div>
     </div>
   </div>
+
   <div class="card">
     <div class="section-label">Item Details</div>
     <input id="f-title" placeholder="Item title" class="inp">
@@ -441,7 +415,7 @@ console.log('Firebase initialized with Auth');
 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
   <input id="f-zip" placeholder="ZIP Code (98101)" class="inp" style="margin-bottom:0;" maxlength="5" oninput="LocationModule.onZipChange(this.value)">
-  <button type="button" onclick="LocationModule.useMyLocation()" style="background:#059669;color:white;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-b);">📍 Use My Location</button>
+  <button type="button" onclick="LocationModule.useMyLocation()" style="background:#059669;color:white;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-b);">&#128205; Use My Location</button>
 </div>
 
 <div id="f-map-container" style="display:none;margin-bottom:8px;border-radius:12px;overflow:hidden;border:2px solid #e5e7eb;">
@@ -475,8 +449,6 @@ console.log('Firebase initialized with Auth');
   <div id="list-banner-container"></div>
   <div id="list-level-card" class="card"></div>
   <div id="list-items"></div>
-
-  <!-- Log out button at bottom right -->
 
   <div style="display:flex;justify-content:flex-end;margin-top:20px;padding:0 4px;">
     <button onclick="logoutUser()" style="background:#dc2626;color:white;border:2px solid #991b1b;border-radius:999px;padding:12px 28px;font-size:15px;font-weight:900;font-family:var(--font-b);cursor:pointer;box-shadow:0 4px 12px rgba(220,38,38,0.4);display:flex;align-items:center;gap:8px;">
@@ -514,7 +486,7 @@ console.log('Firebase initialized with Auth');
   </div>
   <div id="chat-messages" class="chat-messages" style="flex:1;min-height:300px;padding:14px;"></div>
   <div class="chat-input-bar">
-    <input id="chat-msg-input" type="text" placeholder="Type a message…" onkeydown="if(event.key==='Enter')ChatModule.send()">
+    <input id="chat-msg-input" type="text" placeholder="Type a message..." onkeydown="if(event.key==='Enter')ChatModule.send()">
     <button class="chat-send-btn" onclick="ChatModule.send()">&#10148;</button>
   </div>
 </div>
@@ -530,7 +502,7 @@ console.log('Firebase initialized with Auth');
     <span class="nav-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M20 6h-3V4c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM9 4h6v2H9V4zm3 13l-5-5h3v-2h4v2h3l-5 5z"/></svg></span>Give
   </button>
   <a class="nav-btn" href="shop.html" style="text-decoration:none;">
-    <span class="nav-icon" style="color:#ffffff;">🛍️</span><span style="color:#4da6ff;font-size:11px;font-weight:800;">Shop</span>
+    <span class="nav-icon" style="color:#ffffff;">&#128717;</span><span style="color:#4da6ff;font-size:11px;font-weight:800;">Shop</span>
   </a>
   <button class="nav-btn" id="nav-list" onclick="handleMyItemsClick()">
     <span class="nav-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm10 8h-8v-2h8v2zm0-4h-8v-2h8v2zm0-4h-8V7h8v2z"/></svg></span>My Items
@@ -541,713 +513,866 @@ console.log('Firebase initialized with Auth');
 </nav>
 
 <script>
-const Storage={get(k,f=null){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f;}catch{return f;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}},remove(k){try{localStorage.removeItem(k);}catch{}}};
-function handleGiveClick(){const user=Storage.get('user');if(user&&user.email){Nav.go('post');}else{RegModal.open();}}
-function handleMyItemsClick(){const user=Storage.get('user');if(user&&user.email){Nav.go('list');}else{RegModal.open();}}
-function handleQuickPickupClick(){alert('⚡ Quick Schedule Pickup — coming soon!\n\nThis option will allow you to schedule a pickup without registration.\nNo rewards will be earned.');}
+const Storage = {
+  get(k, f = null) {
+    try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : f; } catch { return f; }
+  },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  remove(k) { try { localStorage.removeItem(k); } catch {} }
+};
 
-// Make functions globally available immediately
+function handleGiveClick() {
+  const user = Storage.get('user');
+  if (user && user.email) { Nav.go('post'); } else { RegModal.open(); }
+}
+function handleMyItemsClick() {
+  const user = Storage.get('user');
+  if (user && user.email) { Nav.go('list'); } else { RegModal.open(); }
+}
+function handleQuickPickupClick() {
+  alert('Quick Schedule Pickup - coming soon!\n\nThis option will allow you to schedule a pickup without registration.\nNo rewards will be earned.');
+}
+
 window.handleGiveClick = handleGiveClick;
 window.handleMyItemsClick = handleMyItemsClick;
 window.handleQuickPickupClick = handleQuickPickupClick;
 
 const NotificationModule = {
-  // Check for status changes and show popups
   async checkStatusChanges() {
     const items = Storage.get('items', []);
     if (items.length === 0) return;
-    
+
     const seenStatuses = Storage.get('seen_statuses', {});
     const newPopups = [];
-    
-    // Get current statuses from ListModule (already fetched)
+
     for (const item of items) {
       const currentStatus = ListModule.statuses[item.id] || 'pending';
       const lastSeenStatus = seenStatuses[item.id] || 'pending';
-      
-      // If status changed - show popup
       if (currentStatus !== lastSeenStatus && currentStatus !== 'pending') {
         newPopups.push({ item, status: currentStatus });
         seenStatuses[item.id] = currentStatus;
       }
     }
-    
-    // Save updated seen statuses
     Storage.set('seen_statuses', seenStatuses);
-    
-    // Show popups one by one
-    for (const popup of newPopups) {
-      this.showPopup(popup.item, popup.status);
-    }
+    for (const popup of newPopups) { this.showPopup(popup.item, popup.status); }
   },
-  
+
   showPopup(item, status) {
     const messages = {
       'confirmed_intent': {
-        emoji: '✅',
+        emoji: '\u2705',
         title: 'Order Confirmed!',
         color: '#059669',
         bg: 'linear-gradient(135deg,#059669 0%,#047857 100%)',
-        text: `Great news! Your order "${item.title}" has been confirmed!\n\nWe are ready to pick it up at your scheduled time.\n\n🏠 Please send us through chat:\n• Your exact street address\n• Parking instructions\n• Gate codes (if any)\n\nThis helps us pick up smoothly!`
+        text: 'Great news! Your order "' + item.title + '" has been confirmed!\n\nWe are ready to pick it up at your scheduled time.\n\nPlease send us through chat:\n- Your exact street address\n- Parking instructions\n- Gate codes (if any)\n\nThis helps us pick up smoothly!'
       },
       'rejected': {
-        emoji: '⚠️',
+        emoji: '\u26A0\uFE0F',
         title: 'Order Update',
         color: '#f59e0b',
         bg: 'linear-gradient(135deg,#f59e0b 0%,#d97706 100%)',
-        text: `We received your donation request for "${item.title}".\n\nUnfortunately, we cannot accept this item at this time.\n\nWe are very sorry for the inconvenience. Please try another item — we'd love to help you earn rewards!`
+        text: 'We received your donation request for "' + item.title + '".\n\nUnfortunately, we cannot accept this item at this time.\n\nWe are very sorry for the inconvenience. Please try another item - we would love to help you earn rewards!'
       },
       'picked_up': {
-        emoji: '🎉',
+        emoji: '\uD83C\uDF89',
         title: 'Item Picked Up!',
         color: '#2563eb',
         bg: 'linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%)',
-        text: `Your item "${item.title}" has been successfully picked up!\n\n🎁 Reward points have been added to your account.\n\nCheck your updated level and discount in the My Items section.\n\nThank you so much!`
+        text: 'Your item "' + item.title + '" has been successfully picked up!\n\nReward points have been added to your account.\n\nCheck your updated level and discount in the My Items section.\n\nThank you so much!'
       }
     };
-    
+
     const msg = messages[status];
     if (!msg) return;
-    
-    // Remove any existing popup
+
     const existing = document.getElementById('notification-popup');
     if (existing) existing.remove();
-    
-    // Create popup
+
     const popup = document.createElement('div');
     popup.id = 'notification-popup';
-    popup.innerHTML = `
-      <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn 0.3s;">
-        <div style="background:${msg.bg};color:white;border-radius:24px;padding:28px 24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:slideUp 0.4s;position:relative;">
-          <button onclick="document.getElementById('notification-popup').remove()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.25);border:2px solid white;color:white;border-radius:50%;width:36px;height:36px;font-size:20px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;">✕</button>
-          <div style="font-size:64px;text-align:center;margin-bottom:14px;">${msg.emoji}</div>
-          <div style="font-size:24px;font-weight:900;text-align:center;margin-bottom:14px;font-family:var(--font-h);">${msg.title}</div>
-          <div style="font-size:15px;line-height:1.6;font-weight:600;white-space:pre-wrap;">${msg.text}</div>
-          <button onclick="document.getElementById('notification-popup').remove();Nav.go('list');" style="background:white;color:${msg.color};border:none;border-radius:14px;padding:14px 24px;width:100%;font-size:16px;font-weight:900;margin-top:18px;cursor:pointer;">Go to My Items</button>
-        </div>
-      </div>
-      <style>
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-      </style>
+    popup.innerHTML =
+      '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;">' +
+        '<div style="background:' + msg.bg + ';color:white;border-radius:24px;padding:28px 24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.5);position:relative;">' +
+          '<button onclick="document.getElementById(\'notification-popup\').remove()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.25);border:2px solid white;color:white;border-radius:50%;width:36px;height:36px;font-size:20px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;">&#10005;</button>' +
+          '<div style="font-size:64px;text-align:center;margin-bottom:14px;">' + msg.emoji + '</div>' +
+          '<div style="font-size:24px;font-weight:900;text-align:center;margin-bottom:14px;font-family:var(--font-h);">' + msg.title + '</div>' +
+          '<div style="font-size:15px;line-height:1.6;font-weight:600;white-space:pre-wrap;">' + msg.text + '</div>' +
+          '<button onclick="document.getElementById(\'notification-popup\').remove();Nav.go(\'list\');" style="background:white;color:' + msg.color + ';border:none;border-radius:14px;padding:14px 24px;width:100%;font-size:16px;font-weight:900;margin-top:18px;cursor:pointer;">Go to My Items</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(popup);
+  },
 
-```
-`;
-document.body.appendChild(popup);
-```
-
-},
-
-// Start polling for status changes every 30 seconds
-startPolling() {
-// Initial check after 3 seconds (let everything load)
-setTimeout(() => this.checkStatusChanges(), 3000);
-
-```
-// Then every 30 seconds
-setInterval(() => this.checkStatusChanges(), 30000);
-```
-
-}
+  startPolling() {
+    setTimeout(() => this.checkStatusChanges(), 3000);
+    setInterval(() => this.checkStatusChanges(), 30000);
+  }
 };
 
-// Start notification polling
-if (typeof window !== ‘undefined’) {
 window.NotificationModule = NotificationModule;
 setTimeout(() => NotificationModule.startPolling(), 5000);
-}
 
 async function logoutUser() {
-if (!confirm(‘Are you sure you want to log out?’)) return;
+  if (!confirm('Are you sure you want to log out?')) return;
+  try {
+    if (window.firebaseAuth && window.firebaseAuthFunctions) {
+      const { signOut } = window.firebaseAuthFunctions;
+      await signOut(window.firebaseAuth);
+    }
+  } catch(e) { console.log('Firebase signOut error:', e); }
 
-try {
-// Sign out from Firebase
-if (window.firebaseAuth && window.firebaseAuthFunctions) {
-const { signOut } = window.firebaseAuthFunctions;
-await signOut(window.firebaseAuth);
-}
-} catch(e) { console.log(‘Firebase signOut error:’, e); }
+  Storage.remove('user');
+  Storage.remove('items');
+  Storage.remove('shown_banners');
+  Storage.remove('dismissed_banners');
+  Storage.remove('chat_threads');
 
-// Clear local data
-Storage.remove(‘user’);
-Storage.remove(‘items’);
-Storage.remove(‘shown_banners’);
-Storage.remove(‘dismissed_banners’);
-Storage.remove(‘chat_threads’);
+  try {
+    if (typeof Tawk_API !== 'undefined' && Tawk_API.endChat) { Tawk_API.endChat(); }
+  } catch(e) {}
 
-// Clear Tawk.to session
-try {
-if (typeof Tawk_API !== ‘undefined’ && Tawk_API.endChat) {
-Tawk_API.endChat();
-}
-} catch(e) {}
-
-alert(‘You have been logged out.’);
-
-// Reload page to reset everything
-location.reload();
+  alert('You have been logged out.');
+  location.reload();
 }
 
 function openTawkChat(itemId) {
-const items = Storage.get(‘items’, []);
-const item = items.find(i => i.id == itemId);
-const user = Storage.get(‘user’) || {};
+  const items = Storage.get('items', []);
+  const item = items.find(i => i.id == itemId);
+  const user = Storage.get('user') || {};
 
-if (!item) {
-if (typeof Tawk_API !== ‘undefined’ && Tawk_API.maximize) Tawk_API.maximize();
-return;
-}
+  if (!item) {
+    if (typeof Tawk_API !== 'undefined' && Tawk_API.maximize) Tawk_API.maximize();
+    return;
+  }
 
-// Build context message
-const loc = item.location || {};
-const locText = loc.city ? `${loc.city}, ${loc.state || ''} ${loc.zip || ''}` : (item.address || item.zip || ‘—’);
-const photoInfo = item.photos && item.photos.length ? `\n📷 Photos: ${item.photos.length} uploaded` : ‘’;
+  const loc = item.location || {};
+  const locText = loc.city ? (loc.city + ', ' + (loc.state || '') + ' ' + (loc.zip || '')) : (item.address || item.zip || '-');
 
-const contextMessage =
-`📦 Order: ${item.title}\n` +
-`🏷️ Condition: ${item.conditionLabel}\n` +
-`📍 Location: ${locText}\n` +
-`📅 Pickup: ${item.date} at ${item.time}` +
-photoInfo;
+  if (typeof Tawk_API !== 'undefined') {
+    try {
+      window.Tawk_API = window.Tawk_API || {};
+      Tawk_API.visitor = {
+        name: user.nickname || 'Guest',
+        email: user.email || ''
+      };
+      Tawk_API.setAttributes({
+        name: user.nickname || 'Guest',
+        email: user.email || '',
+        'Order': item.title,
+        'Order Condition': item.conditionLabel,
+        'Pickup Location': locText,
+        'Pickup Date': item.date + ' ' + item.time,
+        'Order ID': item.firestoreId || item.id
+      }, function(error) { if (error) console.log('Tawk setAttributes error:', error); });
 
-// Set visitor info in Tawk so you see who is writing
-if (typeof Tawk_API !== ‘undefined’) {
-try {
-// Set visitor name BEFORE opening chat (shown to admin in Tawk dashboard)
-window.Tawk_API = window.Tawk_API || {};
-Tawk_API.visitor = {
-name: user.nickname || ‘Guest’,
-email: user.email || ‘’
-};
+      Tawk_API.addTags([item.title, locText], function(error) { if (error) console.log('Tawk addTags error:', error); });
 
-```
-  // Set detailed visitor attributes (name, email, order info)
-  Tawk_API.setAttributes({
-    name: user.nickname || 'Guest',
-    email: user.email || '',
-    'Order': item.title,
-    'Order Condition': item.conditionLabel,
-    'Pickup Location': locText,
-    'Pickup Date': item.date + ' ' + item.time,
-    'Order ID': item.firestoreId || item.id
-  }, function(error) {
-    if (error) console.log('Tawk setAttributes error:', error);
-  });
-  
-  // Add tags to conversation
-  Tawk_API.addTags([item.title, locText], function(error) {
-    if (error) console.log('Tawk addTags error:', error);
-  });
-  
-  // Open chat
-  Tawk_API.maximize();
-  
-  // Auto-send context message after a short delay
-  setTimeout(() => {
-    if (Tawk_API.addEvent) {
-      Tawk_API.addEvent('order-inquiry', {
-        item: item.title,
-        location: locText,
-        date: item.date,
-        time: item.time
-      }, function(error) {
-        if (error) console.log('Tawk addEvent error:', error);
-      });
+      Tawk_API.maximize();
+    } catch (e) {
+      console.log('Tawk error:', e);
+      alert('Chat is loading, please try again in a moment.');
     }
-  }, 500);
-} catch (e) {
-  console.log('Tawk error:', e);
-  alert('Chat is loading, please try again in a moment.');
-}
-```
-
-} else {
-alert(‘Chat is loading, please try again in a moment.’);
-}
+  } else {
+    alert('Chat is loading, please try again in a moment.');
+  }
 }
 
 const BannerModule = {
-// Get all pending submission banners (items that were submitted and user hasn’t dismissed)
-getPendingIds() {
-const shown = Storage.get(‘shown_banners’, []);
-const dismissed = Storage.get(‘dismissed_banners’, []);
-return shown.filter(id => !dismissed.includes(id));
-},
-dismiss(itemId) {
-const dismissed = Storage.get(‘dismissed_banners’, []);
-if (!dismissed.includes(itemId)) {
-dismissed.push(itemId);
-Storage.set(‘dismissed_banners’, dismissed);
-}
-this.render();
-},
-getBannerHTML(itemId) {
-const myItemsIcon = ‘<svg width="18" height="18" viewBox="0 0 24 24" fill="white" style="vertical-align:middle;margin:0 2px;"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm10 8h-8v-2h8v2zm0-4h-8v-2h8v2zm0-4h-8V7h8v2z"/></svg>’;
-return ‘<div class="submission-banner" data-item-id="'+itemId+'" style="background:linear-gradient(135deg,#059669 0%,#047857 100%);border-radius:16px;padding:18px 44px 18px 18px;margin-bottom:10px;position:relative;box-shadow:0 6px 20px rgba(5,150,105,0.4);color:white;">’+
-‘<button onclick="BannerModule.dismiss('+itemId+')" style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.25);border:2px solid white;color:white;border-radius:50%;width:32px;height:32px;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;">✕</button>’+
-‘<div style="font-size:16px;font-weight:700;line-height:1.5;">’+
-‘<span style="font-size:20px;">✅</span> Your request has been successfully submitted.<br><br>’+
-‘Kindly check the <b style="font-weight:900;">My Items</b> ‘+myItemsIcon+’ section to track its status.<br><br>’+
-‘<span style="font-size:14px;opacity:0.95;">The standard approval time is approximately 5 minutes.</span><br><br>’+
-‘<span style="font-size:14px;opacity:0.95;">Thank you.</span>’+
-‘</div>’+
-‘</div>’;
-},
-render() {
-const pendingIds = this.getPendingIds();
-const html = pendingIds.map(id => this.getBannerHTML(id)).join(’’);
-
-```
-// Render on My Items screen
-const listBanner = document.getElementById('list-banner-container');
-if (listBanner) listBanner.innerHTML = html;
-
-// Render on Give/Post screen
-const postBanner = document.getElementById('post-banner-container');
-if (postBanner) postBanner.innerHTML = html;
-```
-
-}
+  getPendingIds() {
+    const shown = Storage.get('shown_banners', []);
+    const dismissed = Storage.get('dismissed_banners', []);
+    return shown.filter(id => !dismissed.includes(id));
+  },
+  dismiss(itemId) {
+    const dismissed = Storage.get('dismissed_banners', []);
+    if (!dismissed.includes(itemId)) { dismissed.push(itemId); Storage.set('dismissed_banners', dismissed); }
+    this.render();
+  },
+  getBannerHTML(itemId) {
+    const myItemsIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="white" style="vertical-align:middle;margin:0 2px;"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm10 8h-8v-2h8v2zm0-4h-8v-2h8v2zm0-4h-8V7h8v2z"/></svg>';
+    return '<div class="submission-banner" data-item-id="' + itemId + '" style="background:linear-gradient(135deg,#059669 0%,#047857 100%);border-radius:16px;padding:18px 44px 18px 18px;margin-bottom:10px;position:relative;box-shadow:0 6px 20px rgba(5,150,105,0.4);color:white;">' +
+      '<button onclick="BannerModule.dismiss(' + itemId + ')" style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.25);border:2px solid white;color:white;border-radius:50%;width:32px;height:32px;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;">&#10005;</button>' +
+      '<div style="font-size:16px;font-weight:700;line-height:1.5;">' +
+      '<span style="font-size:20px;">&#9989;</span> Your request has been successfully submitted.<br><br>' +
+      'Kindly check the <b style="font-weight:900;">My Items</b> ' + myItemsIcon + ' section to track its status.<br><br>' +
+      '<span style="font-size:14px;opacity:0.95;">The standard approval time is approximately 5 minutes.</span><br><br>' +
+      '<span style="font-size:14px;opacity:0.95;">Thank you.</span>' +
+      '</div>' +
+      '</div>';
+  },
+  render() {
+    const pendingIds = this.getPendingIds();
+    const html = pendingIds.map(id => this.getBannerHTML(id)).join('');
+    const listBanner = document.getElementById('list-banner-container');
+    if (listBanner) listBanner.innerHTML = html;
+    const postBanner = document.getElementById('post-banner-container');
+    if (postBanner) postBanner.innerHTML = html;
+  }
 };
 
 const LocationModule = {
-map: null,
-circle: null,
-marker: null,
-data: null,
+  map: null,
+  circle: null,
+  marker: null,
+  data: null,
 
-initMap(lat, lng, zoom=13) {
-const container = document.getElementById(‘f-map-container’);
-container.style.display = ‘block’;
+  initMap(lat, lng, zoom = 13) {
+    const container = document.getElementById('f-map-container');
+    container.style.display = 'block';
 
-```
-if (!this.map) {
-  this.map = L.map('f-map').setView([lat, lng], zoom);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap',
-    maxZoom: 19
-  }).addTo(this.map);
-} else {
-  this.map.setView([lat, lng], zoom);
-}
+    if (!this.map) {
+      this.map = L.map('f-map').setView([lat, lng], zoom);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '\u00A9 OpenStreetMap',
+        maxZoom: 19
+      }).addTo(this.map);
+    } else {
+      this.map.setView([lat, lng], zoom);
+    }
 
-// Remove old markers/circles
-if (this.circle) this.map.removeLayer(this.circle);
-if (this.marker) this.map.removeLayer(this.marker);
+    if (this.circle) this.map.removeLayer(this.circle);
+    if (this.marker) this.map.removeLayer(this.marker);
 
-// Add 1 mile circle (1 mile = 1609 meters)
-this.circle = L.circle([lat, lng], {
-  color: '#059669',
-  fillColor: '#059669',
-  fillOpacity: 0.2,
-  radius: 1609 // 1 mile in meters
-}).addTo(this.map);
+    this.circle = L.circle([lat, lng], {
+      color: '#059669',
+      fillColor: '#059669',
+      fillOpacity: 0.2,
+      radius: 1609
+    }).addTo(this.map);
 
-// NO marker - just the circle for privacy
+    setTimeout(() => this.map.invalidateSize(), 100);
+  },
 
-// Force map to re-render
-setTimeout(() => this.map.invalidateSize(), 100);
-```
+  async onZipChange(zip) {
+    if (zip.length !== 5) return;
+    const info = document.getElementById('f-location-info');
+    info.textContent = 'Looking up ZIP...';
+    document.getElementById('f-map-container').style.display = 'block';
 
-},
-
-async onZipChange(zip) {
-if (zip.length !== 5) return;
-const info = document.getElementById(‘f-location-info’);
-info.textContent = ‘⏳ Looking up ZIP…’;
-document.getElementById(‘f-map-container’).style.display = ‘block’;
-
-```
-try {
-  const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
-  if (!res.ok) throw new Error('ZIP not found');
-  const data = await res.json();
-  const place = data.places[0];
-  const lat = parseFloat(place.latitude);
-  const lng = parseFloat(place.longitude);
-  
-  this.data = {
-    zip: zip,
-    city: place['place name'],
-    state: place['state abbreviation'],
-    lat: lat,
-    lng: lng,
-    method: 'zip'
-  };
-  
-  info.innerHTML = `📍 ${place['place name']}, ${place['state abbreviation']} ${zip} <span style="color:#6b7280;font-weight:500;">(1 mile radius)</span>`;
-  this.initMap(lat, lng);
-} catch(e) {
-  info.textContent = '❌ ZIP code not found';
-  info.style.color = '#dc2626';
-}
-```
-
-},
-
-useMyLocation() {
-const info = document.getElementById(‘f-location-info’);
-const container = document.getElementById(‘f-map-container’);
-container.style.display = ‘block’;
-info.textContent = ‘⏳ Getting your location…’;
-
-```
-if (!navigator.geolocation) {
-  info.textContent = '❌ GPS not supported by browser';
-  return;
-}
-
-navigator.geolocation.getCurrentPosition(
-  async (pos) => {
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
-    
-    // Reverse geocode to get ZIP
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`);
+      const res = await fetch('https://api.zippopotam.us/us/' + zip);
+      if (!res.ok) throw new Error('ZIP not found');
       const data = await res.json();
-      const zip = data.address?.postcode || '';
-      const city = data.address?.city || data.address?.town || data.address?.village || '';
-      const state = data.address?.state || '';
-      
+      const place = data.places[0];
+      const lat = parseFloat(place.latitude);
+      const lng = parseFloat(place.longitude);
+
       this.data = {
         zip: zip,
-        city: city,
-        state: state,
+        city: place['place name'],
+        state: place['state abbreviation'],
         lat: lat,
         lng: lng,
-        method: 'gps'
+        method: 'zip'
       };
-      
-      if (zip) {
-        document.getElementById('f-zip').value = zip;
-      }
-      
-      info.innerHTML = `📍 ${city}, ${state} ${zip} <span style="color:#6b7280;font-weight:500;">(1 mile radius - GPS)</span>`;
+
+      info.innerHTML = '&#128205; ' + place['place name'] + ', ' + place['state abbreviation'] + ' ' + zip + ' <span style="color:#6b7280;font-weight:500;">(1 mile radius)</span>';
       this.initMap(lat, lng);
     } catch(e) {
-      info.textContent = '📍 Your location (1 mile radius)';
-      this.data = { lat, lng, method: 'gps' };
-      this.initMap(lat, lng);
+      info.textContent = 'ZIP code not found';
+      info.style.color = '#dc2626';
     }
   },
-  (err) => {
-    info.textContent = '❌ Location denied or unavailable';
-    info.style.color = '#dc2626';
+
+  useMyLocation() {
+    const info = document.getElementById('f-location-info');
+    const container = document.getElementById('f-map-container');
+    container.style.display = 'block';
+    info.textContent = 'Getting your location...';
+
+    if (!navigator.geolocation) {
+      info.textContent = 'GPS not supported by browser';
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        try {
+          const res = await fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&zoom=10');
+          const data = await res.json();
+          const zip = (data.address && data.address.postcode) || '';
+          const city = (data.address && (data.address.city || data.address.town || data.address.village)) || '';
+          const state = (data.address && data.address.state) || '';
+
+          this.data = { zip: zip, city: city, state: state, lat: lat, lng: lng, method: 'gps' };
+
+          if (zip) document.getElementById('f-zip').value = zip;
+
+          info.innerHTML = '&#128205; ' + city + ', ' + state + ' ' + zip + ' <span style="color:#6b7280;font-weight:500;">(1 mile radius - GPS)</span>';
+          this.initMap(lat, lng);
+        } catch(e) {
+          info.textContent = 'Your location (1 mile radius)';
+          this.data = { lat: lat, lng: lng, method: 'gps' };
+          this.initMap(lat, lng);
+        }
+      },
+      (err) => {
+        info.textContent = 'Location denied or unavailable';
+        info.style.color = '#dc2626';
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   },
-  { enableHighAccuracy: true, timeout: 10000 }
-);
-```
 
-},
+  reset() {
+    this.data = null;
+    document.getElementById('f-map-container').style.display = 'none';
+    document.getElementById('f-zip').value = '';
+    const info = document.getElementById('f-location-info');
+    info.textContent = '';
+    info.style.color = '#065f46';
+  }
+};
 
-getMapImageUrl() {
-if (!this.data) return null;
-const { lat, lng } = this.data;
-// Static map image (5 mile ~ 0.072 degrees) for email
-return `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lng}&zoom=11&size=500x300&markers=${lat},${lng},red-pushpin`;
-},
+const Nav = {
+  current: 'home',
+  mainScreens: ['home', 'post', 'list', 'chat'],
+  go(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById('screen-' + id);
+    if (target) target.classList.add('active');
 
-reset() {
-this.data = null;
-document.getElementById(‘f-map-container’).style.display = ‘none’;
-document.getElementById(‘f-zip’).value = ‘’;
-document.getElementById(‘f-location-info’).textContent = ‘’;
-document.getElementById(‘f-location-info’).style.color = ‘#065f46’;
+    const hide = ['chatwindow'].includes(id);
+    document.getElementById('main-header').style.display = hide ? 'none' : 'block';
+    document.getElementById('bottom-nav').style.display = this.mainScreens.includes(id) ? 'flex' : 'none';
+
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    const nb = document.getElementById('nav-' + id);
+    if (nb) nb.classList.add('active');
+
+    this.current = id;
+    if (id === 'list') ListModule.render();
+    if (id === 'chat') ChatModule.renderList();
+    if (id === 'post' || id === 'home' || id === 'list') Nav.updatePostCard();
+    if (id === 'list' || id === 'post') BannerModule.render();
+  },
+  updatePostCard() {
+    const user = Storage.get('user');
+    const items = Storage.get('items', []);
+    const pickedCount = items.filter(i => (ListModule.statuses || {})[i.id] === 'picked_up').length;
+    const level = Levels.get(pickedCount);
+
+    const greeting = document.getElementById('post-greeting');
+    const itemsCount = document.getElementById('post-items-count');
+    const levelEl = document.getElementById('post-level');
+    const discountEl = document.getElementById('post-discount');
+
+    if (greeting) greeting.textContent = user ? 'Hi, ' + user.nickname + '!' : 'Welcome!';
+    if (itemsCount) itemsCount.textContent = pickedCount;
+    if (levelEl) {
+      levelEl.textContent = level.emoji + ' ' + level.name;
+      levelEl.style.color = level.color;
+    }
+    if (discountEl) discountEl.textContent = level.discount;
+  }
+};
+
+const Levels = {
+  get(c) {
+    if (c >= 7) return { name: 'Hero Giver', discount: '30%', emoji: '\uD83E\uDDB8', color: '#10b981' };
+    if (c >= 4) return { name: 'Impact Giver', discount: '20%', emoji: '\uD83D\uDC8E', color: '#a78bfa' };
+    if (c >= 1) return { name: 'Active Giver', discount: '5%', emoji: '\u2B50', color: '#fbbf24' };
+    return { name: 'New', discount: '0%', emoji: '\uD83C\uDF31', color: '#6b7280' };
+  }
+};
+
+const PhotoModule = {
+  photos: [],
+  MAX: 10,
+  handleFiles(input) {
+    const files = Array.from(input.files);
+    const rem = this.MAX - this.photos.length;
+    files.slice(0, rem).forEach(f => {
+      const r = new FileReader();
+      r.onload = e => { this.photos.push({ dataUrl: e.target.result }); this.render(); };
+      r.readAsDataURL(f);
+    });
+    if (files.length > rem) alert('Max 10 photos. Only first ' + rem + ' added.');
+    input.value = '';
+  },
+  remove(i) { this.photos.splice(i, 1); this.render(); },
+  render() {
+    const g = document.getElementById('photo-preview-grid');
+    const c = document.getElementById('photo-count');
+    if (!g || !c) return;
+    c.textContent = this.photos.length + ' / ' + this.MAX + ' photos added';
+    g.innerHTML = this.photos.map((p, i) =>
+      '<div class="photo-thumb"><img src="' + p.dataUrl + '"><button class="remove-photo" onclick="PhotoModule.remove(' + i + ')">x</button></div>'
+    ).join('');
+    const a = document.querySelector('.photo-upload-area');
+    if (a) a.style.display = this.photos.length >= this.MAX ? 'none' : 'block';
+  },
+  reset() { this.photos = []; this.render(); }
+};
+
+const PostModule = {
+  sel: null,
+  selectCondition(el) {
+    document.querySelectorAll('.condition-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    this.sel = el.dataset.val;
+  },
+  err(id) { const el = document.getElementById(id); if (el) el.classList.add('error'); },
+  clearErrors() { document.querySelectorAll('.inp').forEach(i => i.classList.remove('error')); },
+  isEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); },
+
+  submit() {
+    this.clearErrors();
+    let ok = true;
+    const v = id => (document.getElementById(id) || { value: '' }).value.trim();
+
+    if (!v('f-title')) { this.err('f-title'); ok = false; }
+    if (!v('f-desc')) { this.err('f-desc'); ok = false; }
+    if (!this.sel) { alert('Please select item condition'); return; }
+    if (!LocationModule.data) { alert('Please enter ZIP code or use GPS location'); return; }
+    if (!v('f-date')) { this.err('f-date'); ok = false; }
+    if (!v('f-t1') || !v('f-t2')) { this.err('f-t1'); this.err('f-t2'); ok = false; }
+    if (!ok) { alert('Please fill all required fields'); return; }
+
+    const user = Storage.get('user');
+    const email = user ? user.email : '';
+    const labels = { new: 'New', like_new: 'Like New', very_good: 'Very Good', restorable: 'Restorable' };
+
+    const item = {
+      id: Date.now(),
+      title: v('f-title'),
+      desc: v('f-desc'),
+      condition: this.sel,
+      conditionLabel: labels[this.sel],
+      zip: v('f-zip'),
+      location: LocationModule.data,
+      date: v('f-date'),
+      time: v('f-t1') + ' - ' + v('f-t2'),
+      email: email,
+      phone: '',
+      photos: PhotoModule.photos.map(p => p.dataUrl),
+      createdAt: new Date().toISOString()
+    };
+
+    const items = Storage.get('items', []);
+    items.unshift(item);
+    Storage.set('items', items);
+    console.log('[PostModule.submit] Item saved locally. Total items:', items.length);
+
+    ChatModule.addThread(item);
+
+    const shownBanners = Storage.get('shown_banners', []);
+    if (!shownBanners.includes(item.id)) { shownBanners.push(item.id); Storage.set('shown_banners', shownBanners); }
+
+    const submitBtn = document.querySelector('#screen-post .btn:last-child');
+    if (submitBtn) { submitBtn.textContent = 'Uploading photos...'; submitBtn.disabled = true; }
+
+    sendToFormspree(item).then(() => {
+      if (submitBtn) { submitBtn.textContent = 'Submit Request'; submitBtn.disabled = false; }
+      if (Nav.current === 'list') ListModule.render();
+      Nav.updatePostCard();
+    });
+
+    ['f-title', 'f-desc', 'f-zip', 'f-date', 'f-t1', 'f-t2'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    document.querySelectorAll('.condition-btn').forEach(b => b.classList.remove('selected'));
+    this.sel = null;
+    PhotoModule.reset();
+    LocationModule.reset();
+
+    Nav.go('list');
+    ListModule.render();
+    BannerModule.render();
+  }
+};
+
+const ListModule = {
+  cond: { new: 'cond-new', like_new: 'cond-likenew', very_good: 'cond-verygood', restorable: 'cond-restorable' },
+  statuses: window.initialStatuses || {},
+
+  async fetchStatuses(items) {
+    try {
+      if (!window.firebaseDB) return;
+      const { doc, getDoc } = window.firebaseFunctions;
+      for (const i of items) {
+        if (!i.firestoreId) continue;
+        try {
+          const snap = await getDoc(doc(window.firebaseDB, 'orders', i.firestoreId));
+          if (snap.exists()) { this.statuses[i.id] = snap.data().status || 'pending'; }
+        } catch(e) {}
+      }
+    } catch(e) { console.log('fetchStatuses error', e); }
+  },
+
+  getStatusBadge(status) {
+    if (status === 'rejected') return '<div style="background:#fef3c7;color:#92400e;padding:12px 14px;border-radius:10px;font-size:13px;font-weight:700;margin-top:10px;border:2px solid #f59e0b;display:flex;align-items:flex-start;gap:10px;"><span style="font-size:28px;line-height:1;flex-shrink:0;">&#9888;&#65039;</span><span>We are very sorry, but we cannot accept your item. Please try another one.</span></div>';
+    if (status === 'confirmed_intent') return '<div style="background:#d1fae5;color:#065f46;padding:12px 14px;border-radius:10px;font-size:13px;font-weight:700;margin-top:10px;border:2px solid #059669;display:flex;align-items:flex-start;gap:10px;"><span style="font-size:28px;line-height:1;flex-shrink:0;">&#9989;</span><span>Your order is confirmed. We are ready to pick it up at your scheduled time. Please send your exact address and instructions about parking, gate codes, etc.</span></div>';
+    if (status === 'picked_up') return '<div style="background:#dbeafe;color:#1e40af;padding:12px 14px;border-radius:10px;font-size:13px;font-weight:700;margin-top:10px;border:2px solid #2563eb;display:flex;align-items:flex-start;gap:10px;"><span style="font-size:28px;line-height:1;flex-shrink:0;">&#128309;</span><span>Your order has been picked up and you have received the corresponding points. Thank you!</span></div>';
+    return '<div style="background:#fef9c3;color:#854d0e;padding:10px 14px;border-radius:10px;font-size:12px;font-weight:700;margin-top:10px;">Your level will grow after your item is picked up</div>';
+  },
+
+  buildItemCard(i) {
+    const status = this.statuses[i.id] || 'pending';
+    const statusBadge = this.getStatusBadge(status);
+    const loc = i.location || {};
+    const locText = loc.city ? (loc.city + ', ' + (loc.state || '') + ' ' + (loc.zip || '')) : (i.address || i.zip || '-');
+    const photosHtml = (i.photos && i.photos.length) ?
+      ('<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:10px;">' +
+        i.photos.slice(0, 8).map(p => '<img src="' + p + '" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;">').join('') +
+        (i.photos.length > 8 ? '<div style="aspect-ratio:1;background:#f1f5f9;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#111827;">+' + (i.photos.length - 8) + '</div>' : '') +
+      '</div>') : '';
+    const emailHtml = i.email ? '<div style="font-size:15px;color:#111827;font-weight:800;margin-bottom:3px;">&#128231; ' + i.email + '</div>' : '';
+    return '<div class="card">' +
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;">' +
+        '<div style="font-size:22px;font-weight:900;font-family:var(--font-h);color:#111827;">' + i.title + '</div>' +
+        '<span class="condition-badge ' + (this.cond[i.condition] || '') + '">' + i.conditionLabel + '</span>' +
+      '</div>' +
+      '<div style="font-size:16px;color:#374151;font-weight:700;margin-bottom:8px;">' + i.desc + '</div>' +
+      '<div style="font-size:15px;color:#111827;font-weight:800;margin-bottom:3px;">&#128205; ' + locText + '</div>' +
+      '<div style="font-size:15px;color:#111827;font-weight:800;margin-bottom:3px;">&#128197; ' + i.date + ' &#9200; ' + i.time + '</div>' +
+      emailHtml +
+      photosHtml +
+      statusBadge +
+      '<div style="margin-top:12px;"><button class="btn-sm" style="background:#059669;color:white;font-size:16px;font-weight:900;padding:12px 20px;" onclick="openTawkChat(\'' + i.id + '\')">&#128172; Chat</button></div>' +
+    '</div>';
+  },
+
+  renderHeader() {
+    const items = Storage.get('items', []);
+    const userHdr = document.getElementById('list-user-header');
+    const u = Storage.get('user');
+    if (userHdr && u) {
+      userHdr.innerHTML = '<div style="background:linear-gradient(135deg,#059669 0%,#047857 100%);border-radius:14px;padding:16px 18px;color:white;box-shadow:0 4px 16px rgba(5,150,105,0.4);">' +
+        '<div style="font-size:14px;font-weight:800;opacity:0.9;text-transform:uppercase;letter-spacing:1.5px;">Welcome back</div>' +
+        '<div style="font-size:28px;font-weight:900;font-family:var(--font-h);margin-top:4px;">&#128075; ' + u.nickname + '</div>' +
+        '<div style="font-size:13px;font-weight:700;opacity:0.85;margin-top:2px;">' + (u.email || '') + '</div>' +
+      '</div>';
+    }
+    const pickedCount = items.filter(i => this.statuses[i.id] === 'picked_up').length;
+    const level = Levels.get(pickedCount);
+    const lvc = document.getElementById('list-level-card');
+    if (lvc) {
+      lvc.innerHTML = '<div class="level-display">' +
+        '<div class="level-emoji">' + level.emoji + '</div>' +
+        '<div class="level-info">' +
+          '<div class="li-label">Your Level (' + pickedCount + ' items picked up)</div>' +
+          '<div class="li-name" style="color:' + level.color + ';">' + level.name + '</div>' +
+          '<div class="li-disc">Discount: <span style="color:' + level.color + ';">' + level.discount + '</span></div>' +
+        '</div>' +
+      '</div>';
+    }
+  },
+
+  render() {
+    const items = Storage.get('items', []);
+    console.log('[ListModule.render] rendering', items.length, 'items');
+    this.renderHeader();
+    const box = document.getElementById('list-items');
+    if (!box) return;
+    if (items.length === 0) {
+      box.innerHTML = '<div class="card" style="text-align:center;padding:32px 18px;">' +
+        '<div style="font-size:44px;margin-bottom:4px;">&#128229;</div>' +
+        '<div style="font-size:17px;font-weight:900;font-family:var(--font-h);">No items yet</div>' +
+        '<div style="font-size:13px;color:var(--sub);margin-top:6px;">Post your first item to start earning rewards</div>' +
+      '</div>';
+      return;
+    }
+    box.innerHTML = items.map(i => this.buildItemCard(i)).join('');
+    this.fetchStatuses(items).then(() => {
+      this.renderHeader();
+      const box2 = document.getElementById('list-items');
+      if (box2 && items.length > 0) box2.innerHTML = items.map(i => this.buildItemCard(i)).join('');
+    });
+  }
+};
+
+const ChatModule = {
+  active: null,
+  getThreads() { return Storage.get('chat_threads', []); },
+  saveThreads(t) { Storage.set('chat_threads', t); },
+  addThread(item) {
+    const t = this.getThreads();
+    if (t.find(x => x.itemId == item.id)) return;
+    t.unshift({
+      itemId: item.id,
+      itemTitle: item.title,
+      messages: [{ from: 'system', text: 'Chat opened for: ' + item.title, time: Date.now() }],
+      unread: 0
+    });
+    this.saveThreads(t);
+  },
+  openThread(itemId) {
+    const t = this.getThreads();
+    const th = t.find(x => x.itemId == itemId);
+    if (!th) return;
+    th.unread = 0;
+    this.saveThreads(t);
+    this.active = itemId;
+    document.getElementById('chat-window-name').textContent = th.itemTitle;
+    document.getElementById('chat-window-avatar').textContent = '\uD83D\uDCE6';
+    this.renderMessages(th);
+    Nav.go('chatwindow');
+  },
+  renderMessages(th) {
+    const box = document.getElementById('chat-messages');
+    box.innerHTML = th.messages.map(m => {
+      if (m.from === 'system') return '<div style="text-align:center;font-size:11px;color:#9ca3af;padding:8px;">' + m.text + '</div>';
+      const cls = m.from === 'me' ? 'msg-out' : 'msg-in';
+      const t = new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return '<div class="msg-bubble ' + cls + '">' + m.text + '<div class="msg-time">' + t + '</div></div>';
+    }).join('');
+    box.scrollTop = box.scrollHeight;
+  },
+  send() {
+    const input = document.getElementById('chat-msg-input');
+    const text = input.value.trim();
+    if (!text || !this.active) return;
+    const t = this.getThreads();
+    const th = t.find(x => x.itemId == this.active);
+    if (!th) return;
+    th.messages.push({ from: 'me', text: text, time: Date.now() });
+    input.value = '';
+    this.saveThreads(t);
+    this.renderMessages(th);
+    setTimeout(() => {
+      const replies = ['Thanks for reaching out!', 'When would be a good time for pickup?', 'Is the item still available?', 'Can you share more details?', 'Great, I will be there!'];
+      const t2 = this.getThreads();
+      const th2 = t2.find(x => x.itemId == this.active);
+      if (th2) {
+        th2.messages.push({ from: 'other', text: replies[Math.floor(Math.random() * replies.length)], time: Date.now() });
+        this.saveThreads(t2);
+        this.renderMessages(th2);
+      }
+    }, 1500);
+  },
+  renderList() {
+    const t = this.getThreads();
+    const box = document.getElementById('chat-list-container');
+    if (t.length === 0) {
+      box.innerHTML = '<div style="padding:32px;text-align:center;">' +
+        '<div style="font-size:40px;margin-bottom:4px;">&#128172;</div>' +
+        '<div style="font-size:15px;font-weight:700;color:var(--text);">No messages yet</div>' +
+        '<div style="font-size:13px;color:var(--sub);margin-top:4px;">Chat opens when you post an item</div>' +
+      '</div>';
+      return;
+    }
+    box.innerHTML = t.map(th => {
+      const last = th.messages[th.messages.length - 1];
+      const preview = last ? last.text : '';
+      const time = last ? new Date(last.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+      return '<div class="chat-list-item" onclick="ChatModule.openThread(\'' + th.itemId + '\')">' +
+        '<div class="chat-avatar">&#128230;</div>' +
+        '<div class="chat-meta">' +
+          '<div class="cm-name">' + th.itemTitle + '</div>' +
+          '<div class="cm-preview">' + preview + '</div>' +
+        '</div>' +
+        '<div style="text-align:right;flex-shrink:0;">' +
+          '<div class="cm-time">' + time + '</div>' +
+          (th.unread > 0 ? '<div class="chat-unread" style="margin-top:4px;">' + th.unread + '</div>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+};
+
+const PWA = {
+  dp: null,
+  init() {
+    const m = {
+      name: 'Givy Rewards',
+      short_name: 'GivyRewards',
+      description: 'Give away your stuff and get rewarded',
+      start_url: '/',
+      display: 'standalone',
+      background_color: '#ffffff',
+      theme_color: '#059669',
+      icons: []
+    };
+    const blob = new Blob([JSON.stringify(m)], { type: 'application/json' });
+    document.getElementById('pwa-manifest').href = URL.createObjectURL(blob);
+
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      this.dp = e;
+      document.getElementById('pwa-banner').style.display = 'flex';
+    });
+    window.addEventListener('appinstalled', () => {
+      document.getElementById('pwa-banner').style.display = 'none';
+      this.dp = null;
+    });
+
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (isIOS && !window.navigator.standalone) {
+      document.getElementById('pwa-banner').style.display = 'flex';
+      document.getElementById('pwa-sub-text').textContent = 'Tap Share then "Add to Home Screen"';
+      document.getElementById('pwa-install-btn').textContent = 'How?';
+      document.getElementById('pwa-install-btn').onclick = () => alert('To install on iPhone:\n1. Tap the Share button in Safari\n2. Tap "Add to Home Screen"\n3. Tap "Add"');
+    }
+  },
+  install() {
+    if (this.dp) {
+      this.dp.prompt();
+      this.dp.userChoice.then(() => {
+        this.dp = null;
+        document.getElementById('pwa-banner').style.display = 'none';
+      });
+    }
+  }
+};
+
+async function uploadToCloudinary(dataUrl) {
+  try {
+    const blob = await (await fetch(dataUrl)).blob();
+    const fd = new FormData();
+    fd.append('file', blob);
+    fd.append('upload_preset', 'givy_upload');
+    fd.append('cloud_name', 'dyxlwkgo7');
+    const res = await fetch('https://api.cloudinary.com/v1_1/dyxlwkgo7/image/upload', { method: 'POST', body: fd });
+    const data = await res.json();
+    return data.secure_url || null;
+  } catch(e) { console.log('Cloudinary error', e); return null; }
 }
-};
 
-const Nav={current:‘home’,mainScreens:[‘home’,‘post’,‘list’,‘chat’],go(id){document.querySelectorAll(’.screen’).forEach(s=>s.classList.remove(‘active’));document.getElementById(‘screen-’+id).classList.add(‘active’);const hide=[‘chatwindow’].includes(id);document.getElementById(‘main-header’).style.display=hide?‘none’:‘block’;document.getElementById(‘bottom-nav’).style.display=this.mainScreens.includes(id)?‘flex’:‘none’;document.querySelectorAll(’.nav-btn’).forEach(b=>b.classList.remove(‘active’));const nb=document.getElementById(‘nav-’+id);if(nb)nb.classList.add(‘active’);this.current=id;if(id===‘list’)ListModule.render();if(id===‘chat’)ChatModule.renderList();if(id===‘post’||id===‘home’||id===‘list’)Nav.updatePostCard();if(id===‘list’||id===‘post’)BannerModule.render();},updatePostCard(){const user=Storage.get(‘user’);const items=Storage.get(‘items’,[]);const pickedCount=items.filter(i=>(ListModule.statuses||{})[i.id]===‘picked_up’).length;const level=Levels.get(pickedCount);const greeting=document.getElementById(‘post-greeting’);const itemsCount=document.getElementById(‘post-items-count’);const levelEl=document.getElementById(‘post-level’);const discountEl=document.getElementById(‘post-discount’);if(greeting){greeting.textContent=user?‘Hi, ‘+user.nickname+’! 👋’:‘Welcome!’;}if(itemsCount)itemsCount.textContent=pickedCount;if(levelEl){levelEl.textContent=level.emoji+’ ’+level.name;levelEl.style.color=level.color;}if(discountEl)discountEl.textContent=level.discount;}};
-
-const Levels={get(c){if(c>=7)return{name:‘Hero Giver’,discount:‘30%’,emoji:‘🦸’,color:’#10b981’};if(c>=4)return{name:‘Impact Giver’,discount:‘20%’,emoji:‘💎’,color:’#a78bfa’};if(c>=1)return{name:‘Active Giver’,discount:‘5%’,emoji:‘⭐’,color:’#fbbf24’};return{name:‘New’,discount:‘0%’,emoji:‘🌱’,color:’#6b7280’};}};
-
-const PhotoModule={photos:[],MAX:10,handleFiles(input){const files=Array.from(input.files);const rem=this.MAX-this.photos.length;files.slice(0,rem).forEach(f=>{const r=new FileReader();r.onload=e=>{this.photos.push({dataUrl:e.target.result});this.render();};r.readAsDataURL(f);});if(files.length>rem)alert(‘Max 10 photos. Only first ‘+rem+’ added.’);input.value=’’;},remove(i){this.photos.splice(i,1);this.render();},render(){const g=document.getElementById(‘photo-preview-grid’);const c=document.getElementById(‘photo-count’);if(!g||!c)return;c.textContent=this.photos.length+’ / ‘+this.MAX+’ photos added’;g.innerHTML=this.photos.map((p,i)=>’<div class="photo-thumb"><img src="'+p.dataUrl+'"><button class="remove-photo" onclick="PhotoModule.remove('+i+')">x</button></div>’).join(’’);const a=document.querySelector(’.photo-upload-area’);if(a)a.style.display=this.photos.length>=this.MAX?‘none’:‘block’;},reset(){this.photos=[];this.render();}};
-
-const PostModule={sel:null,selectCondition(el){document.querySelectorAll(’.condition-btn’).forEach(b=>b.classList.remove(‘selected’));el.classList.add(‘selected’);this.sel=el.dataset.val;},err(id){const el=document.getElementById(id);if(el)el.classList.add(‘error’);},clearErrors(){document.querySelectorAll(’.inp’).forEach(i=>i.classList.remove(‘error’));},isEmail(e){return/^[^\s@]+@[^\s@]+.[^\s@]+$/.test(e);},
-submit(){
-this.clearErrors();
-let ok=true;
-const v=id=>(document.getElementById(id)||{value:’’}).value.trim();
-if(!v(‘f-title’)){this.err(‘f-title’);ok=false;}
-if(!v(‘f-desc’)){this.err(‘f-desc’);ok=false;}
-if(!this.sel){alert(‘Please select item condition’);return;}
-if(!LocationModule.data){alert(‘Please enter ZIP code or use GPS location’);return;}
-if(!v(‘f-date’)){this.err(‘f-date’);ok=false;}
-if(!v(‘f-t1’)||!v(‘f-t2’)){this.err(‘f-t1’);this.err(‘f-t2’);ok=false;}
-if(!ok){alert(‘Please fill all required fields’);return;}
-
-const user=Storage.get(‘user’);
-const email=user?user.email:’’;
-const labels={new:‘New’,like_new:‘Like New’,very_good:‘Very Good’,restorable:‘Restorable’};
-
-// Create the new item
-const item={
-id:Date.now(),
-title:v(‘f-title’),
-desc:v(‘f-desc’),
-condition:this.sel,
-conditionLabel:labels[this.sel],
-zip:v(‘f-zip’),
-location:LocationModule.data,
-date:v(‘f-date’),
-time:v(‘f-t1’)+’ - ‘+v(‘f-t2’),
-email:email,
-phone:’’,
-photos:PhotoModule.photos.map(p=>p.dataUrl),
-createdAt:new Date().toISOString()
-};
-
-// Save item to localStorage IMMEDIATELY (so it appears in My Items right away)
-const items=Storage.get(‘items’,[]);
-items.unshift(item);
-Storage.set(‘items’,items);
-console.log(’[PostModule.submit] Item saved locally. Total items:’,items.length);
-
-// Add chat thread
-ChatModule.addThread(item);
-
-// Mark banner as shown for this item
-const shownBanners=Storage.get(‘shown_banners’,[]);
-if(!shownBanners.includes(item.id)){shownBanners.push(item.id);Storage.set(‘shown_banners’,shownBanners);}
-
-// Update submit button and send to Firebase/Formspree in background
-const submitBtn=document.querySelector(’#screen-post .btn:last-child’);
-if(submitBtn){submitBtn.textContent=‘⏳ Uploading photos…’;submitBtn.disabled=true;}
-
-sendToFormspree(item).then(()=>{
-if(submitBtn){submitBtn.textContent=‘✅ Submit Request’;submitBtn.disabled=false;}
-// Re-render My Items to show updated photos from Cloudinary
-if(Nav.current===‘list’)ListModule.render();
-Nav.updatePostCard();
-});
-
-// Clear form
-[‘f-title’,‘f-desc’,‘f-zip’,‘f-date’,‘f-t1’,‘f-t2’].forEach(id=>{const el=document.getElementById(id);if(el)el.value=’’;});
-document.querySelectorAll(’.condition-btn’).forEach(b=>b.classList.remove(‘selected’));
-this.sel=null;
-PhotoModule.reset();
-LocationModule.reset();
-
-// Navigate to My Items and render
-Nav.go(‘list’);
-ListModule.render();
-BannerModule.render();
-}};
-
-const ListModule={cond:{new:‘cond-new’,like_new:‘cond-likenew’,very_good:‘cond-verygood’,restorable:‘cond-restorable’},statuses:window.initialStatuses||{},
-
-async fetchStatuses(items){try{if(!window.firebaseDB)return;const{doc,getDoc}=window.firebaseFunctions;for(const i of items){if(!i.firestoreId)continue;try{const snap=await getDoc(doc(window.firebaseDB,‘orders’,i.firestoreId));if(snap.exists()){this.statuses[i.id]=snap.data().status||‘pending’;}}catch(e){}}}catch(e){console.log(‘fetchStatuses error’,e);}},
-getStatusBadge(status){
-if(status===‘rejected’)return ‘<div style="background:#fef3c7;color:#92400e;padding:12px 14px;border-radius:10px;font-size:13px;font-weight:700;margin-top:10px;border:2px solid #f59e0b;display:flex;align-items:flex-start;gap:10px;"><span style="font-size:28px;line-height:1;flex-shrink:0;">⚠️</span><span>We are very sorry, but we cannot accept your item. Please try another one.</span></div>’;
-if(status===‘confirmed_intent’)return ‘<div style="background:#d1fae5;color:#065f46;padding:12px 14px;border-radius:10px;font-size:13px;font-weight:700;margin-top:10px;border:2px solid #059669;display:flex;align-items:flex-start;gap:10px;"><span style="font-size:28px;line-height:1;flex-shrink:0;">✅</span><span>Your order is confirmed. We are ready to pick it up at your scheduled time. Please send your exact address and instructions about parking, gate codes, etc.</span></div>’;
-if(status===‘picked_up’)return ‘<div style="background:#dbeafe;color:#1e40af;padding:12px 14px;border-radius:10px;font-size:13px;font-weight:700;margin-top:10px;border:2px solid #2563eb;display:flex;align-items:flex-start;gap:10px;"><span style="font-size:28px;line-height:1;flex-shrink:0;">🔵</span><span>Your order has been picked up and you have received the corresponding points. Thank you!</span></div>’;
-return ‘<div style="background:#fef9c3;color:#854d0e;padding:10px 14px;border-radius:10px;font-size:12px;font-weight:700;margin-top:10px;">⏳ Your level will grow after your item is picked up</div>’;
-},
-render(){const items=Storage.get(‘items’,[]);console.log(’[ListModule.render] rendering’,items.length,‘items’);const userHdr=document.getElementById(‘list-user-header’);const u=Storage.get(‘user’);if(userHdr&&u){userHdr.innerHTML=’<div style="background:linear-gradient(135deg,#059669 0%,#047857 100%);border-radius:14px;padding:16px 18px;color:white;box-shadow:0 4px 16px rgba(5,150,105,0.4);"><div style="font-size:14px;font-weight:800;opacity:0.9;text-transform:uppercase;letter-spacing:1.5px;">Welcome back</div><div style="font-size:28px;font-weight:900;font-family:var(--font-h);margin-top:4px;">👋 ‘+u.nickname+’</div><div style="font-size:13px;font-weight:700;opacity:0.85;margin-top:2px;">’+(u.email||’’)+’</div></div>’;}const pickedCount=items.filter(i=>this.statuses[i.id]===‘picked_up’).length;const level=Levels.get(pickedCount);const lvc=document.getElementById(‘list-level-card’);if(lvc)lvc.innerHTML=’<div class="level-display"><div class="level-emoji">’+level.emoji+’</div><div class="level-info"><div class="li-label">Your Level (’+pickedCount+’ items picked up)</div><div class="li-name" style="color:'+level.color+';">’+level.name+’</div><div class="li-disc">Discount: <span style="color:'+level.color+';">’+level.discount+’</span></div></div></div>’;const box=document.getElementById(‘list-items’);if(!box)return;if(items.length===0){box.innerHTML=’<div class="card" style="text-align:center;padding:32px 18px;"><div style="font-size:44px;margin-bottom:4px;">📭</div><div style="font-size:17px;font-weight:900;font-family:var(--font-h);">No items yet</div><div style="font-size:13px;color:var(--sub);margin-top:6px;">Post your first item to start earning rewards</div></div>’;return;}box.innerHTML=items.map(i=>{const status=this.statuses[i.id]||‘pending’;const statusBadge=this.getStatusBadge(status);const loc=i.location||{};const locText=loc.city?(loc.city+’, ‘+(loc.state||’’)+’ ‘+(loc.zip||’’)):(i.address||i.zip||’—’);return ‘<div class="card"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;"><div style="font-size:22px;font-weight:900;font-family:var(--font-h);color:#111827;">’+i.title+’</div><span class="condition-badge '+(this.cond[i.condition]||'')+'">’+i.conditionLabel+’</span></div><div style="font-size:16px;color:#374151;font-weight:700;margin-bottom:8px;">’+i.desc+’</div><div style="font-size:15px;color:#111827;font-weight:800;margin-bottom:3px;">📍 ‘+locText+’</div><div style="font-size:15px;color:#111827;font-weight:800;margin-bottom:3px;">📅 ‘+i.date+’ ⏰ ‘+i.time+’</div>’+(i.email?’<div style="font-size:15px;color:#111827;font-weight:800;margin-bottom:3px;">📧 ‘+i.email+’</div>’:’’)+(i.photos&&i.photos.length?’<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:10px;">’+i.photos.slice(0,8).map(p=>’<img src="'+p+'" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;">’).join(’’)+(i.photos.length>8?’<div style="aspect-ratio:1;background:#f1f5f9;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#111827;">+’+(i.photos.length-8)+’</div>’:’’)+’</div>’:’’)+statusBadge+’<div style="margin-top:12px;"><button class="btn-sm" style="background:#059669;color:white;font-size:16px;font-weight:900;padding:12px 20px;" onclick="openTawkChat(\''+i.id+'\')">💬 Chat</button></div></div>’;}).join(’’);this.fetchStatuses(items).then(()=>{this.render2()});},
-render2(){const items=Storage.get(‘items’,[]);const userHdr=document.getElementById(‘list-user-header’);const u=Storage.get(‘user’);if(userHdr&&u){userHdr.innerHTML=’<div style="background:linear-gradient(135deg,#059669 0%,#047857 100%);border-radius:14px;padding:16px 18px;color:white;box-shadow:0 4px 16px rgba(5,150,105,0.4);"><div style="font-size:14px;font-weight:800;opacity:0.9;text-transform:uppercase;letter-spacing:1.5px;">Welcome back</div><div style="font-size:28px;font-weight:900;font-family:var(--font-h);margin-top:4px;">👋 ‘+u.nickname+’</div><div style="font-size:13px;font-weight:700;opacity:0.85;margin-top:2px;">’+(u.email||’’)+’</div></div>’;}const pickedCount=items.filter(i=>this.statuses[i.id]===‘picked_up’).length;const level=Levels.get(pickedCount);const lvc=document.getElementById(‘list-level-card’);if(lvc)lvc.innerHTML=’<div class="level-display"><div class="level-emoji">’+level.emoji+’</div><div class="level-info"><div class="li-label">Your Level (’+pickedCount+’ items picked up)</div><div class="li-name" style="color:'+level.color+';">’+level.name+’</div><div class="li-disc">Discount: <span style="color:'+level.color+';">’+level.discount+’</span></div></div></div>’;const box=document.getElementById(‘list-items’);if(!box||items.length===0)return;box.innerHTML=items.map(i=>{const status=this.statuses[i.id]||‘pending’;const statusBadge=this.getStatusBadge(status);const loc=i.location||{};const locText=loc.city?(loc.city+’, ‘+(loc.state||’’)+’ ‘+(loc.zip||’’)):(i.address||i.zip||’—’);return ‘<div class="card"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;"><div style="font-size:22px;font-weight:900;font-family:var(--font-h);color:#111827;">’+i.title+’</div><span class="condition-badge '+(this.cond[i.condition]||'')+'">’+i.conditionLabel+’</span></div><div style="font-size:16px;color:#374151;font-weight:700;margin-bottom:8px;">’+i.desc+’</div><div style="font-size:15px;color:#111827;font-weight:800;margin-bottom:3px;">📍 ‘+locText+’</div><div style="font-size:15px;color:#111827;font-weight:800;margin-bottom:3px;">📅 ‘+i.date+’ ⏰ ‘+i.time+’</div>’+(i.email?’<div style="font-size:15px;color:#111827;font-weight:800;margin-bottom:3px;">📧 ‘+i.email+’</div>’:’’)+(i.photos&&i.photos.length?’<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:10px;">’+i.photos.slice(0,8).map(p=>’<img src="'+p+'" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;">’).join(’’)+(i.photos.length>8?’<div style="aspect-ratio:1;background:#f1f5f9;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#111827;">+’+(i.photos.length-8)+’</div>’:’’)+’</div>’:’’)+statusBadge+’<div style="margin-top:12px;"><button class="btn-sm" style="background:#059669;color:white;font-size:16px;font-weight:900;padding:12px 20px;" onclick="openTawkChat(\''+i.id+'\')">💬 Chat</button></div></div>’;}).join(’’);}};
-
-const ChatModule={active:null,getThreads(){return Storage.get(‘chat_threads’,[]);},saveThreads(t){Storage.set(‘chat_threads’,t);},addThread(item){const t=this.getThreads();if(t.find(x=>x.itemId==item.id))return;t.unshift({itemId:item.id,itemTitle:item.title,messages:[{from:‘system’,text:‘Chat opened for: ‘+item.title,time:Date.now()}],unread:0});this.saveThreads(t);},openThread(itemId){const t=this.getThreads();const th=t.find(x=>x.itemId==itemId);if(!th)return;th.unread=0;this.saveThreads(t);this.active=itemId;document.getElementById(‘chat-window-name’).textContent=th.itemTitle;document.getElementById(‘chat-window-avatar’).textContent=‘📦’;this.renderMessages(th);Nav.go(‘chatwindow’);},renderMessages(th){const box=document.getElementById(‘chat-messages’);box.innerHTML=th.messages.map(m=>{if(m.from===‘system’)return’<div style="text-align:center;font-size:11px;color:#9ca3af;padding:8px;">’+m.text+’</div>’;const cls=m.from===‘me’?‘msg-out’:‘msg-in’;const t=new Date(m.time).toLocaleTimeString([],{hour:‘2-digit’,minute:‘2-digit’});return’<div class="msg-bubble '+cls+'">’+m.text+’<div class="msg-time">’+t+’</div></div>’;}).join(’’);box.scrollTop=box.scrollHeight;},send(){const input=document.getElementById(‘chat-msg-input’);const text=input.value.trim();if(!text||!this.active)return;const t=this.getThreads();const th=t.find(x=>x.itemId==this.active);if(!th)return;th.messages.push({from:‘me’,text,time:Date.now()});input.value=’’;this.saveThreads(t);this.renderMessages(th);setTimeout(()=>{const replies=[‘Thanks for reaching out! 😊’,‘When would be a good time for pickup?’,‘Is the item still available?’,‘Can you share more details?’,‘Great, I will be there! 👍’];const t2=this.getThreads();const th2=t2.find(x=>x.itemId==this.active);if(th2){th2.messages.push({from:‘other’,text:replies[Math.floor(Math.random()*replies.length)],time:Date.now()});this.saveThreads(t2);this.renderMessages(th2);}},1500);},renderList(){const t=this.getThreads();const box=document.getElementById(‘chat-list-container’);if(t.length===0){box.innerHTML=’<div style="padding:32px;text-align:center;"><div style="font-size:40px;margin-bottom:4px;">💬</div><div style="font-size:15px;font-weight:700;color:var(--text);">No messages yet</div><div style="font-size:13px;color:var(--sub);margin-top:4px;">Chat opens when you post an item</div></div>’;return;}box.innerHTML=t.map(th=>{const last=th.messages[th.messages.length-1];const preview=last?last.text:’’;const time=last?new Date(last.time).toLocaleTimeString([],{hour:‘2-digit’,minute:‘2-digit’}):’’;return’<div class="chat-list-item" onclick="ChatModule.openThread(\''+th.itemId+'\')"><div class="chat-avatar">📦</div><div class="chat-meta"><div class="cm-name">’+th.itemTitle+’</div><div class="cm-preview">’+preview+’</div></div><div style="text-align:right;flex-shrink:0;"><div class="cm-time">’+time+’</div>’+(th.unread>0?’<div class="chat-unread" style="margin-top:4px;">’+th.unread+’</div>’:’’)+’</div></div>’;}).join(’’);}};
-
-const PWA={dp:null,init(){const svgIcon=‘data:image/png;base64,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’;const m={name:‘Givy Rewards’,short_name:‘GivyRewards’,description:‘Give away your stuff and get rewarded’,start_url:’/’,display:‘standalone’,background_color:’#ffffff’,theme_color:’#059669’,icons:[{src:svgIcon,sizes:‘192x192’,type:‘image/svg+xml’},{src:svgIcon,sizes:‘512x512’,type:‘image/svg+xml’}]};const blob=new Blob([JSON.stringify(m)],{type:‘application/json’});document.getElementById(‘pwa-manifest’).href=URL.createObjectURL(blob);window.addEventListener(‘beforeinstallprompt’,e=>{e.preventDefault();this.dp=e;document.getElementById(‘pwa-banner’).style.display=‘flex’;});window.addEventListener(‘appinstalled’,()=>{document.getElementById(‘pwa-banner’).style.display=‘none’;this.dp=null;});const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);if(isIOS&&!window.navigator.standalone){document.getElementById(‘pwa-banner’).style.display=‘flex’;document.getElementById(‘pwa-sub-text’).textContent=‘Tap Share then “Add to Home Screen”’;document.getElementById(‘pwa-install-btn’).textContent=‘How?’;document.getElementById(‘pwa-install-btn’).onclick=()=>alert(‘To install on iPhone:\n1. Tap the Share button in Safari\n2. Tap “Add to Home Screen”\n3. Tap “Add”’);}},install(){if(this.dp){this.dp.prompt();this.dp.userChoice.then(()=>{this.dp=null;document.getElementById(‘pwa-banner’).style.display=‘none’;});}}};
-
-async function uploadToCloudinary(dataUrl){try{const blob=await(await fetch(dataUrl)).blob();const fd=new FormData();fd.append(‘file’,blob);fd.append(‘upload_preset’,‘givy_upload’);fd.append(‘cloud_name’,‘dyxlwkgo7’);const res=await fetch(‘https://api.cloudinary.com/v1_1/dyxlwkgo7/image/upload’,{method:‘POST’,body:fd});const data=await res.json();return data.secure_url||null;}catch(e){console.log(‘Cloudinary error’,e);return null;}}
-
-async function saveOrderToFirestore(item){try{if(!window.firebaseDB){await new Promise(r=>window.addEventListener(‘firebase-ready’,r,{once:true}));}const{collection,addDoc}=window.firebaseFunctions;const user=Storage.get(‘user’)||{nickname:‘Guest’};const authUser=window.firebaseAuth&&window.firebaseAuth.currentUser;const orderData={userId:authUser?authUser.uid:‘guest_’+item.id,title:item.title,desc:item.desc,condition:item.conditionLabel,zip:item.zip||’’,location:item.location||null,date:item.date,time:item.time,email:item.email||user.email||’’,phone:item.phone||’’,photos:item.photoUrls||[],nickname:user.nickname,userEmail:authUser?authUser.email:(user.email||’’),status:‘pending’,createdAt:new Date().toISOString(),localId:item.id};const docRef=await addDoc(collection(window.firebaseDB,‘orders’),orderData);console.log(‘Saved to Firestore:’,docRef.id);return docRef.id;}catch(e){console.log(‘Firestore error:’,e);return null;}}
-
-async function sendToFormspree(item){try{let photoUrls=[];if(item.photos&&item.photos.length>0){const uploads=item.photos.map(p=>uploadToCloudinary(p));photoUrls=await Promise.all(uploads);photoUrls=photoUrls.filter(Boolean);}item.photoUrls=photoUrls;const firestoreId=await saveOrderToFirestore(item);if(firestoreId){const items=Storage.get(‘items’,[]);const idx=items.findIndex(i=>i.id===item.id);if(idx>=0){items[idx].firestoreId=firestoreId;Storage.set(‘items’,items);}}const baseUrl=‘https://edb2026.github.io/Givypro/action.html’;const rejectLink=baseUrl+’?id=’+firestoreId+’&action=reject’;const intentLink=baseUrl+’?id=’+firestoreId+’&action=intent’;const pickupLink=baseUrl+’?id=’+firestoreId+’&action=pickup’;const user=Storage.get(‘user’)||{nickname:‘Guest’};
-
-```
-// Location info
-const loc=item.location||{};
-const locationText=loc.lat?`${loc.city||''}, ${loc.state||''} ${loc.zip||''} (${loc.method==='gps'?'GPS':'ZIP'})`:'Not provided';
-const mapImageUrl=loc.lat?`https://staticmap.openstreetmap.de/staticmap.php?center=${loc.lat},${loc.lng}&zoom=12&size=600x350&markers=${loc.lat},${loc.lng},lightgreen1`:'';
-const googleMapsLink=loc.lat?`https://www.google.com/maps?q=${loc.lat},${loc.lng}`:'';
-
-// Build photos section
-let photosText = '';
-if (photoUrls.length > 0) {
-  photosText = '\n\n📷 PHOTOS (' + photoUrls.length + '):\n';
-  photoUrls.forEach((url, i) => {
-    photosText += '\nPhoto ' + (i+1) + ': ' + url;
-  });
-} else {
-  photosText = '\n\n📷 PHOTOS: None uploaded';
+async function saveOrderToFirestore(item) {
+  try {
+    if (!window.firebaseDB) {
+      await new Promise(r => window.addEventListener('firebase-ready', r, { once: true }));
+    }
+    const { collection, addDoc } = window.firebaseFunctions;
+    const user = Storage.get('user') || { nickname: 'Guest' };
+    const authUser = window.firebaseAuth && window.firebaseAuth.currentUser;
+    const orderData = {
+      userId: authUser ? authUser.uid : 'guest_' + item.id,
+      title: item.title,
+      desc: item.desc,
+      condition: item.conditionLabel,
+      zip: item.zip || '',
+      location: item.location || null,
+      date: item.date,
+      time: item.time,
+      email: item.email || user.email || '',
+      phone: item.phone || '',
+      photos: item.photoUrls || [],
+      nickname: user.nickname,
+      userEmail: authUser ? authUser.email : (user.email || ''),
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      localId: item.id
+    };
+    const docRef = await addDoc(collection(window.firebaseDB, 'orders'), orderData);
+    console.log('Saved to Firestore:', docRef.id);
+    return docRef.id;
+  } catch(e) { console.log('Firestore error:', e); return null; }
 }
 
-// Build one comprehensive message
-const fullMessage = 
-  '🎁 NEW GIVY ORDER\n' +
-  '════════════════════\n\n' +
-  '👤 Customer: ' + user.nickname + '\n' +
-  '📧 Email: ' + (item.email || '—') + '\n\n' +
-  '📦 ITEM DETAILS:\n' +
-  'Title: ' + item.title + '\n' +
-  'Description: ' + item.desc + '\n' +
-  'Condition: ' + item.conditionLabel + '\n\n' +
-  '📍 PICKUP LOCATION:\n' +
-  locationText + '\n' +
-  (loc.lat ? 'Coordinates: ' + loc.lat + ', ' + loc.lng + '\n' : '') +
-  (googleMapsLink ? 'View on map: ' + googleMapsLink + '\n' : '') +
-  (mapImageUrl ? 'Map image: ' + mapImageUrl + '\n' : '') +
-  '\n📅 Pickup Date: ' + item.date + '\n' +
-  '⏰ Time Window: ' + item.time + '\n' +
-  photosText +
-  '\n\n════════════════════\n' +
-  '⚡ ADMIN ACTIONS:\n\n' +
-  '🔴 REJECT ORDER:\n' + rejectLink + '\n\n' +
-  '🟢 CONFIRM INTENT (ready to pickup):\n' + intentLink + '\n\n' +
-  '🔵 CONFIRM PICKUP (items received):\n' + pickupLink + '\n\n' +
-  '════════════════════\n' +
-  'Order ID: ' + (firestoreId || 'n/a');
+async function sendToFormspree(item) {
+  try {
+    let photoUrls = [];
+    if (item.photos && item.photos.length > 0) {
+      const uploads = item.photos.map(p => uploadToCloudinary(p));
+      photoUrls = await Promise.all(uploads);
+      photoUrls = photoUrls.filter(Boolean);
+    }
+    item.photoUrls = photoUrls;
 
-const body = {
-  _subject: '🎁 New Givy Order: ' + item.title + ' from ' + user.nickname,
-  _replyto: item.email || 'noreply@givyrewards.com',
-  name: user.nickname,
-  email: item.email || 'noreply@givyrewards.com',
-  message: fullMessage
-};
+    const firestoreId = await saveOrderToFirestore(item);
+    if (firestoreId) {
+      const items = Storage.get('items', []);
+      const idx = items.findIndex(i => i.id === item.id);
+      if (idx >= 0) { items[idx].firestoreId = firestoreId; Storage.set('items', items); }
+    }
 
-const res=await fetch('https://formspree.io/f/xaqaolor',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(body)});const data=await res.json();console.log('Formspree response:',data);}catch(e){console.log('Formspree error',e);}}
-```
+    const baseUrl = 'https://edb2026.github.io/Givypro/action.html';
+    const rejectLink = baseUrl + '?id=' + firestoreId + '&action=reject';
+    const intentLink = baseUrl + '?id=' + firestoreId + '&action=intent';
+    const pickupLink = baseUrl + '?id=' + firestoreId + '&action=pickup';
+    const user = Storage.get('user') || { nickname: 'Guest' };
+
+    const loc = item.location || {};
+    const locationText = loc.lat ? ((loc.city || '') + ', ' + (loc.state || '') + ' ' + (loc.zip || '') + ' (' + (loc.method === 'gps' ? 'GPS' : 'ZIP') + ')') : 'Not provided';
+    const mapImageUrl = loc.lat ? ('https://staticmap.openstreetmap.de/staticmap.php?center=' + loc.lat + ',' + loc.lng + '&zoom=12&size=600x350&markers=' + loc.lat + ',' + loc.lng + ',lightgreen1') : '';
+    const googleMapsLink = loc.lat ? ('https://www.google.com/maps?q=' + loc.lat + ',' + loc.lng) : '';
+
+    let photosText = '';
+    if (photoUrls.length > 0) {
+      photosText = '\n\nPHOTOS (' + photoUrls.length + '):\n';
+      photoUrls.forEach((url, i) => { photosText += '\nPhoto ' + (i + 1) + ': ' + url; });
+    } else {
+      photosText = '\n\nPHOTOS: None uploaded';
+    }
+
+    const fullMessage =
+      'NEW GIVY ORDER\n' +
+      '====================\n\n' +
+      'Customer: ' + user.nickname + '\n' +
+      'Email: ' + (item.email || '-') + '\n\n' +
+      'ITEM DETAILS:\n' +
+      'Title: ' + item.title + '\n' +
+      'Description: ' + item.desc + '\n' +
+      'Condition: ' + item.conditionLabel + '\n\n' +
+      'PICKUP LOCATION:\n' +
+      locationText + '\n' +
+      (loc.lat ? 'Coordinates: ' + loc.lat + ', ' + loc.lng + '\n' : '') +
+      (googleMapsLink ? 'View on map: ' + googleMapsLink + '\n' : '') +
+      (mapImageUrl ? 'Map image: ' + mapImageUrl + '\n' : '') +
+      '\nPickup Date: ' + item.date + '\n' +
+      'Time Window: ' + item.time + '\n' +
+      photosText +
+      '\n\n====================\n' +
+      'ADMIN ACTIONS:\n\n' +
+      'REJECT ORDER:\n' + rejectLink + '\n\n' +
+      'CONFIRM INTENT (ready to pickup):\n' + intentLink + '\n\n' +
+      'CONFIRM PICKUP (items received):\n' + pickupLink + '\n\n' +
+      '====================\n' +
+      'Order ID: ' + (firestoreId || 'n/a');
+
+    const body = {
+      _subject: 'New Givy Order: ' + item.title + ' from ' + user.nickname,
+      _replyto: item.email || 'noreply@givyrewards.com',
+      name: user.nickname,
+      email: item.email || 'noreply@givyrewards.com',
+      message: fullMessage
+    };
+
+    const res = await fetch('https://formspree.io/f/xaqaolor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    console.log('Formspree response:', data);
+  } catch(e) { console.log('Formspree error', e); }
+}
 
 window.Nav = Nav;
 window.ListModule = ListModule;
+window.BannerModule = BannerModule;
+window.LocationModule = LocationModule;
+window.PostModule = PostModule;
+window.PhotoModule = PhotoModule;
+window.ChatModule = ChatModule;
+window.PWA = PWA;
+window.Storage = Storage;
 window.handleGiveClick = handleGiveClick;
 window.handleMyItemsClick = handleMyItemsClick;
 window.handleQuickPickupClick = handleQuickPickupClick;
 window.logoutUser = logoutUser;
 window.openTawkChat = openTawkChat;
+
 PWA.init();
-Nav.go(‘home’);
+Nav.go('home');
 </script>
 
-<!-- Floating Raccoon Sticker -->
-
-<div id="floating-sticker" style="position:fixed;top:calc(env(safe-area-inset-top, 0px) + 20px);left:10px;z-index:9999;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;">
-  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAYAAAA4qEECAAA86klEQVR4nOW9d5hV1dU//ll7n3LL9BmGgaH3jgiCgghiQYOiKAP23qOxxJYYHcZYY0l87bHFrqCIWLAgiCJFBBGk9870uXP7OWfv9fvj3DuA0cS8MS95vr/1POe5U+7dZ+/PWXv1tS9wEIkZxAyx7y8CAiGct+R3E/u/d8JXvWaM3Tz8/XPvY+YiILDvc5UQzJXiR4b8/yURKisFM9OP/ZMrswALMHOgfvFRR+ya2+aa2Kqu09Zt7BVdva0zr9vUib9Z05sj6w9b3rB80F93Lxl3HvPqNoAFAKishAD+fnhm/of3/n+ZRGXlPg5k9tFhZqr7ZvD5e2bnLdj1qeXobaXMjR2Yazow7+mseW9HzdXtmBvaMde15eZv83j7x0Vb9iwY81CSm7oCRmbEDJ7+uD/k9P+3wZ67ZUvgogdvGLRi06bWJmUByW55ifi22wdXz2s1c+cs0o1fEjtbOjDv7aK83Z08d1cn7e7qzO6uTuzu7sTero5K7e7oqT0ddfOyENd+DN4zr/Ouhk1/upKZiRmEDPdKSHy8/KvSSVUXHPbyrLfbHDwEDqRf9mkzE4iYmY0el4x4pL656aL8YHhb26LSmddMuPyN8485fVnacxHddH3/2NbnZ+SakS5NMXBB5zYcLswl5TkkJGWGYn+CRJmfNRgaxELXra9mnUpLsgphtL382pLeD/8Ps0PPfvZa6VMznj2nrrnpssZoc+cepZ3XLnnqk4lEtJ6ZiYj4F13vv0C/rEKZMoUA4Hev3DuoMdp8rkY6sLupsefK3Ztu+t0zlZ+dWnXplcxNXZo2PfOUTZEukRh5Vl4Qofyw0J5HJPzpZEEG9oENAMQASRK5ZfnSg9DwGpHc9tQ9e7c/N6HvFDbvfu3BF7Y01D5Y2xTpQfDMbU17+j/21jPHCSLQFDqoIuQX1txVAIDN21aXNSac8FVjUvzcxZ5iL60akrGCmYvn/M/rzw+el2fFhiddyRBsBIvDlN1XLT/A5+ADSQJkgjXBzg3BDhrCUcQ5sim8aGHl85vWHTkqHU/eS4nYzpcvTehrTzS8upijt9duH2SbNlCFg8bNwC8OtE8NkUYFMPdvLejscSReuUhL19NcZMWNPvmb2rmKWBDIMCXsUADMGhAaIAWGxj6gNZiV/38m/+/MEKaAFQ5AgslhUgPydxT0L6q+dc/a5rw3rojap/3KFOWtwsTEoq6p/r/C9DD++Vv+BaoCJATC4fw2DJakBFSDpvEjCHfWM329NMI9WxOaUkQCGsK0IE0LAEEzwBoAPBAxQJT9AwBAswKxBIEgABi2BSLABck2AY+HlUZHnXa1GHzs4YF8Va+hM5JCkTqonJylXxboSkBXaaS8ZC1r6EYPQhqCnWiarj2+BJvbOBRNNUOQBLMHIQ1oFjBIQQQ0YGampBjwMiALAEJkgCfAY0BrMBEAgiRCwtV0aveEHDCsJF8nPciAgOO4AAhhOyR/0TX+L+mXBRr+ps/JCbqAwM4GAAQwFBS3RnGoHl4CEBJQiiCEgpHDUMkgVmySWLIDWFUvsDcpkUqnwQDMgES+HUDn3AS6FjEOKVXoU66QE/SQFAxHM1gAhYaLHbWSS/M1ARa211sk4KC0oCSu9A/l/f89/cJAVwKoQp+OffCB+a1es0sLeAJSGnB0DjynCVISlGbkmIyIl4PXPyvAi0sZa2OMdH4AdpEJO9eCLJIgImjNUK6CFwlD7/YQiCfRO6gxvoQxtiCJjoUpJD0gaHnYFXEz8gK8Zo8WQSHZNKx5ac8BKisJVVUHTYz8okDzlClMVVWYNPL47596f/qW5bvj3SPNzPm5NqUTOSCdgoLk/ADzF3Vt+XeftRIrBVHRoYUoL7ZhyKxXzgABRAIkCL64JWgCPK2wpdnDlJ35eHpHDibmVuOSHvUoz3GwLqLALNAQk1i1w0FRbtg9st/QZiDLAgeP/iNWR7/yw/aWFeav3dZgYMFmFxy04WkFz1U6RB69v6O1OP3tIrkm6lHvY8t0aZscZg14LkM7gI4yVLWL9JYEEhsSiH4fRXRFBMk1zVA70iiAgW4980DDOuDJcB+Mn98Vs7YUwzAYZHhYuM3iHfUK5YVFG0YNGrUCAKZMmXJQleIvytEZz0sYJN2zHrpsztpd1Sc//2WSTjy8kEnbFDYhammkWpca+cGEAemGhRsXnLV30W7LbhWCJINFRLFqSAsv6kKlXChPQWsGMyCEHz9i0qCAiWBxEIHyENp1zUGsfQ9cOT8fI7bVY+xo4PVFBGiF/p36fBkOhKr9qR08rxD4DwRcsq5uXV1d+aE3/urjuqbtfT+77VB9eJfTdPWuLUvDPe/6c5vCgjdJu3hlzoxJL8+ZesOa7ev7MiOnrrkBnnYhDNkyMQ2GEAKxZBzKVSgM5iJshZF2HETjMaRNF6E+BcgpzkPjskYc2Vnw8s1pMkXYe/Wmx848auCItyorK0VVVdVB1Yj/LtCEykrC6ipCn0rGvsUIUxh60p8uu/3Nr96/8+RBQzD99rfvBHAvEaUy9xUAFDOHl29e1Vco1e21L9475YU5b07y2IGE9F1xIjhOGmP6HImzjp6Afp16IS8nH8l0CjVNtdi8axs++fYLzFu9AA6nkUxDp72omDj0xIUv3/rkCUTUfLDjHP85ysSar3v+jvNzK7ryRQ9e/zUzFwPAN988bSKjGwwcaOIyc97p91yyMndSVy49q68qPasfh07rzMOvO5k9pfkf0Y7q3bx6y1p+b9GHyhxfzhMqz/2GmVsDoP+GuPS/JaOZ2TplynlHrdu+pWBIp37Vr9zx5CIiclEFZua8juccck6pUZS+8+zf3klE9Zc9fZk5ZMjlbtAMoHLqI8PnfTvv5L211bn54Rx5ZN9hdQBeOKLfkIWfr1rQjzUgpUAincBR/YdBCsLCDcuwcM0y7G3Yi4JwLo4fdBSGdBsEAGhX2gZAG/Tu1FNMOvIUfmvh+4Mfmvb4hZLEfVOmTBHAwY11/G+fNDGzPOTqY+/bXbfnBqUVhWA3Pnhe5dFnnHz6dxICZz5w1cWzvv702XNHnD7zz9fefVomAqcaONFxwm3n3r5h+8bJjvZyHDeNpJNGYTgPA9v32XXEoGH82Ixn2wkSECTQFI3g8nHnQQvGix+9gVhzBGSYMA2JkBXAhJEn4d4Lf4/W+aVIOSnYpo3t9bv10GuOF0Whgg1rnvvqBCLafLDFx78OdCUEqqAn3XvZUXO//fIjSAqk3TTa57bZvfCBD4/LK8lby8wlZWf0+7Asr6Tn8r/OHk9kfmEKqR//5I2Rf5nx2ON7m2r6CwU4jqvaFrRGz7ZdMff7rwgEEbAtgASy3hyBwMSIJxMwQTiq9+GoSUawcc9mGMJAbaQeAzr2xDPXPoShPQcj5aQRsGw89s4z+vpn7hDnHj3x2edvevTyTFybDxbY/5IdzcyEKoCZxZY9W89m0kECPBKCxhwyclFuce56AnjMrRNPdrU35LQjTnobMOZJCP2bv90x7N5XH3h9T/3e/kLBkyTZVa584OLb5Yw7X5TdyjuLTMSZmRlEBEF+xE6AELQCaJtfhulVL+Ghy6qQdh0wGGWFrbClZgfG/eFsTJ//AQKWDc/zcPG4c+iw7gP5g0Wzz/noqzknAdBTMvHyg0E/H+hKCJpEAoAOWgHdFGtuD0HsKo+KQgUYd9iYeUSkFm9Y2X75+hU39SjpXH3HhTc+bAjJE+69sOK1T6a+1ZxqLjcgFBiGZk22NNG1TScAQFmrMjjKIdMwyZASUggI4b8a0kDaSaG8pDUs00THsnKEgyGw1vCUh5AdgpbABQ9dg4ffeQKGYSBoBelPl07hpmRT4KF3Hr+DmVtVVVXpg6UYfy7QhCpoOU0oZraSTqqjNGS+ZiYNNgoC4erhPQZ9ZkoDNz1deaNpGL3OGTv57Q2JnY0DrznmrgUrv35ZMbeTEJrZNzUEEZJuCq/Om46v1n+D7zZ9j6Btoz7SiOrGWtQ1NaA+0oDqhjrUNtbDMAys3r0JC9ctxYxFHyEWj8GQBogISiuY0kAgGMQtL9yNifdchC9WLcSgHgPFOWMn66/WLxl816sPXhu0gy3Zmv9r+jl3JVMYPO6u845YuX7NJEc5Q23T7tiYaGoD1pRWDg3rNDA6+4Hpxz634N3AlMenzEo7yWBBYVFNPBmHy15reAwQaRYQYACZVBUzw1MKhpRoijahOFyMUX0Px7GDj0LPdl0hhcTGXVsw57uv8PnqBdhZvwfF+YUgJmhoEGi/nCIgSIAIiMSjMA0T5SWtIYTB2/buQOeC9o3v3//6cZ1Ky5cdDAfmnwFNhpA88tbTz1uzfc3/OJ6THxYB5OXkQpJEdVMdaqL1OKbPEfj0gemrTv7jxfYXy+d2s6UJBxqGNCAgNIPpAFZiBjNDEIEJaI424/Shv8JtZ9+Avl16oSEZxfKN38FzPfTq1AMditpiW/VO/Pmdp/D8x69DmgYClgVPq0wagPcbmiGF7+wknRQIgG3aOplOiYohJ93/6h1P3uooV+Dvc2X/Ufpp0eHXSPB9Hz7TfsPODZVpL53fvayLe8aJk/S4I0/g00eNw28mXITubbpg3a5NANB3ZM9B3aLxGAvTgCkMZs3sKFdIKUkK6XMcCEwEKQ14WiEeS+Dhi6rw2u1/Rd8uvfD+0s/Q4+IjMO72MzF+yrnofeERuPf1P6Nj63b4yxV34c3bnkbYDCKeSsKUpj9RIggSkFLCNE04ngPHcxEwbQSsACecJHUuLK+/8sRz5rnaQ2Vl5f8RvPvop4Ge4kcnFyybP9rx3M4Gm3p73R7zhQ9eE49Of47ue+MxvPDRGzh20FGoiTRg6twZ+uZJV+uK0ROovrkJUhpkWza1KWiNuuYmNMSakEgn4SoXDEYsFYfwPLx0/V/w6wkXI+2koVljybpvUV+/B2VFZWhVWIKUdvD+gk/AzHBcBycOORbv3vkyWuWWoCHWBM2MtOsglk6iMRpBTUMdCoJ5aJ1fDE97nHJTXJZbTLdOvu6O4UOGz+I77jgocY+fBjoTvG2ORgMAiASR46QRj0XBnoLBEhu3rEN9shEFBfl4dc50wYB45tqHMbLv4WiKReC5Ls4YPR5v3fIsKo44CX3bdUdxsBA2bPRq3RUzKl/BxKNPheu5MAwTzIwrTjwPxw4+BjtqdqOmsR6FZgFuP/dGf7JCwvU8DO7aHx/d/RpG9DoMUgNFgTz0L++OimEn4rlrHsYjV98DrcFKKYQNW1w19ryHzzr+tOc87Qk+SOHSfySjJQFqbOU5ly3dsPxpaGZBgg7vfSh6lHWGbVoAEZZvXY3ZS+ehV1kXfPXoLITsAPY21WDClAuwdOMK5NohPHnNg5g0ejwSbgqxWBSJVAqti0sRtGx4SkFm6jmyYjyWimPK3x7C+m2bcfclN6N/1z4tk2JmaK0hpYRijZ17dyBoB5Cbk4egFURTKorjb67gFZtXc2Fuvrj46Ml/veuyP1xNRO7B9A5/GuiMB3jRo9ef8d6CT15mZmkZJnUp74B4PA5HeygMF2Jw536YOn8mAsLC0sdnIy+cCyklqhtrcdY9V2HuivmwpcQfL/o9bpx41QG3UEpBCIGsg7J25yZ0K+8EU/x9CCaajsOERMAO+GCzhiR5wApW7dyIij9ewht3rKO2xWW4dMxZr9524U0XE1H6YLvg/8CO9hVGm9w2SwSomiSR4zm8bN0KrNi6Bmu2b8D8RR+htqkObVuVwZYGCvMKIKVEOp1Gq/xivFX5DE4ddgJSroPbnr8bv32mEo7yAACO5/rBfACaNYgIa7avx1G/PQ1vfPkuVm5dg00127B08/e4563HcPOTf2zhZsA35RQruK4DAJi7djFOnXI+r9uxgdrkt3YvO+ase2+78KbL/htABv4BR2cnt7Wmps3oW8Z9Fk3HegsmHZCm6NWmG8pKWoMVI5ATwgdLPoWbSGLymAn49fiL0btdjwPGuvPFB/Hkh39DU7QJxx46Cn+5+l50LesApRRAPmg6Y+5V3Hkp3p7zOorLOsIybdRGGiAcD3Mfmo7h/Ya17AKlFQzpc/6zn72KW5+7G9F4FP3b9cH1J1967WWnnvc/iXQS/w0gAz/DjmZm9Ltq1KvVsYYzleuqHu26yCN7D0XSTSCddlHTVI9vNiyHk3YQT8ZRkFPIRw04nI8cOJw7lrajkoJC5Afz8NcPXsSbn06naDpGrfNb4Y8X3oqzx1QAALTWYDAECTiegz+8eB+mzpkJ13HRq3133HPx73B4vyFQSrWYciCgOlKLKS/fj1dmT+OAHaTDuw5e98Q1D17Xvk2bT8kvtjxoQaQf0j8DWhgkdcWfLrvqk2+/eMwg0o7niXgyTiANp7EWV0y6DgvWfYNtu7cjZAcBEJrjCSQ5BUkSlrTArBE0LHieh4BloTGehNOcwOTjxuGWM6/FoK79AfiAZ8VJbWM9kskkOrRtBwBQWmU8P0LCTeHNL9/FA28+gTUb1yE3nM+GRTSoU591t0++ceKYoSO+Z78mGwc7hZWlfwy0X4YLZg71v/Lo6Tuadh9vk+kJIQ1TCAzvfRhaFZfildlTEZA2J70knTz4uOV92/Z8be6qRYcl3NSAhkiToTyPSQoOWGbO+urdZScPSFKhDTz1SRz9uvTGTZOuwglDj0GrwhJwxmuUUmam4Mtlv9KUsWnnFrz2+buY8fXHWLVlDarGAQM6Kkz5MI9XbHeovKiwZkzfEde/Wfnca7FkPLvGg87V/zjD4m8/IqL4u4tn3XD3y488ty2ye1g6lea+3foSS8Ibc6bDIAkNrUlIGU+mvr77ktseYMGIpRKF8BdKADzAaR+eePi7HUtiXe7/dUAnvQIxe5WLQd17IS+cB095LYEiX5z4wacslyut0bqwFX47+XLMXvsdju76DX43OQSELcxYI2jFjgDXNzeUTps/82/H3TjhlOl3vlxJRGsrKirktGnT1H8azH9E/zR6R0QMZjpl2ImrFj86a/yoHke8oplpybqVeub8j1oCO5o1EQidStulo05cxtNJQUSNRNRARPVEFAlZud+HAuEvlm4j6LoYHj6PkWNtwfl/uh3RVBNMw4TSGkorcDYGwAyVCYca0kBeTh6uefpOLF48A385NwDPBVTURf92Llhruvm0q7h9SQfz3SWzJ4254ZTXk8ydMiAf1OaiA2+eabJBZaVARYXMXpVTplBlZaVBRDVv/uGpS3q07vShMIXIz8lV7Fd+sqM85Nk57oQjf/UhEamKqRXktz34V0VFhUw4acoPBTbubSKkYgaKclJ4/9YcNDR9g0FXTMDs5XNhSAlDGpBCQggBIQQMKWEaJrY37MS4qkvw0vTn8dZ1YfTuRnDTDCkYh7SXcJMR9O7Ugz65/00e1uUQNfe7+YcMvWzkjA8WfDDCEFKj8mCCzaDMBP75JEbBACC+37q+T68LR6zNr+jBrSb3Vnmnd1VFk3vzzU9UvcHMNn488ywskjju9nOntD2jI+9ZU6707vbMNeW8Y10XHnV1GePYTjz+zst42vz3eP3eTVwXq+XdkT38+eqFfMNzd3NowhDOO7GQZ33cjrmxHad3lLO7qx1zdVvetb4750wo58sfvJGZmSPxZp581yUKxxXxIVccVfvOlzNPJhBQUXFQqksNkB8htoSJxfXrC16Y+lReJOl297QuhlI6L7cgnR8qWHPvuTdEQlagNok0+nXqsfqvH7x21b1TH55aE60vbldQxreefvXMC3511o1E5GQ8vb9TQAygVWEhe0oinvRAxQwnxWhXmMRnt5n46xyFB2e9hYrP34UZKkJOOAzH9RBvqkHAjODMoRbuOD2ITh0BJ8YwMv0u2mO0ylXoWGJh5baN0FohL5SLV3//lCjMK1JPvf98yR/+du9Tb30+I3X66FM+raiokFOnTtU0ZQpVrF5NANCnTx/+T1ooBjOHjrl18jE7GneeOu7a04a6ymklwMUkDENpDdIEMOqmfT6tue9loz87tHv/z5++9oG5Bsk51z76+4te+2rGi3GdLvh+94b1ucGcnQAwadIkSURqXy/KPkolk5z2gKgDQABCEDyHIEjhyl8JXDQyH4s2aCzfHkVjpA7SEOhdbuCI7vkob0uAR3D3AxkAFBNMS6FH6wC+XLMd9c0NKM4vBivGE9fcLw0h9WPvPt228uUHn/n0m7nnHDfk6PmZuApPO3B6VFlZSf8JwKnDOUOmN6ejp5JJBO1reWKNjK/i9wSSr5SY/KKXNnklK44bMvqul256bNo591wzaeqC6Y81JZtbHdPryJdm3vPKTURU8yOTFpYw9JDrxv5x2aZVf/jsJlcP7y2EmyRIATAYWjNMASAgMoJMAqT8reAw3LQGkf9wMtMHwFCKYeYI/P71XNz3TgILHnkDh/cedsBCr3/6Dv30By+JrmUdN957+R+uHtAq+PWL8+Z2aPKSpeRpNXHk6M3HDDhla8J36X9xk5Am33nRU7O/X3A5CB78duFsKoS4pRONIUAsBFgrJld7IicYwnGHjHzlo7vfOvfCP1173FtfvTt1V2N1QYei8gVXjr/kvjvOve69SKwZAMSoylFiXtU8xczhnhcf8enW2urDP7vR1Uf2h3ATElJk18Vg1lCas/1Y/pMmQJA/sX2JGvIfBDwoDcgg4+X5hbjgz7V44baHcMGxZ2NL7XbsrN2NzdXb8P22tXjlw7c44XkUsPPcWNrb6imnlAXnQzOD5O6e7Xp8tOSxV+4LUXAjZ1r5fjGgmbl1/ytHz9zZtHeowUKDMnk9cCa9xzAEIeUKxFMKxC5MyTqtBeUETTq+/+HPTLvjhStf+PD1MY/P/Ntj66o39sizghjcbeALl5520WNnDD95WdJJImSHMOZ3E29ZsGrxPcm0Rx//Nk1H9gPcpGgJk/qU6SnMzGH/XGo2yueTRNY89xTDygfmft8K4+6NoXen9rDtAqzevhmR5ggQjwOkEcrNQ66tuCjsUesCRkk+o3UOoTjkISfEWLLbxvqGvqtfvOHZyYd06PD9LxknIQmB0+678MrZy+c/QRpMPmWfAjQBjTGNzvlpnDIohcO7EVoVGNhaA777A0PXNNvy1ydMeuCRax68OZ5OdDv1tvOuXrj2mysc6doFVl59SUHxJ+VlpfPqo7F263du/K1SKphKOfzpjWk6og/9AGi975Wl//qT6/SNB601jCDwyfoS/OZvGht2paDdFIoDSRzSgdCrXKJHKVBeQigKMzoUMcpyBIeDLsMkgjSyjUkMgn7tC208+Fn/j5c9+skkIor+lGL/V8lQ0HTcwGO+WLBySW1Cp1oRgzVAUgBpRUinUrh+dAo3nmygrNTyGc4DMIhpSGeIUfck9dQFn1z/5ar5S4nozZAdvO7BV578+IXPX79xY83WMdH65JlbG3adydAZqUcQQpNt+Bx54BqyPd2GD/BPLs8XNZoBaSmsqW6FMx/RiMebcdrABE4bbGJkjxDaFSrAZv+ZCAk4hFR9DIFQmFhJ0ilAZe5PTARmcdbRQi/ZuWPsRY88droEXqAp9IvU7QkAfOkJZ24wTPNbkgIAsSBG0gUCHMOrF6fx4MUBlOULOFHAiQFumpFsYPTroejW8RY27dljPDztiVuZuSyRTsqrKi6Ydcox434npRETQigCFDFp8mvKYQkgbBDAWfOdMxf5tUrZdVG2ulfsewj7EbMGWRb+MkugoSaCiYco/P6UAM4ca6BdMUOzgJMQSEclnGaG8iTSDqG5Lg4yJEgQpJSQ0oBhWIA0AA+YPCyBmvplYz1mE1U/kF//BtAA4BUXlCiPNQQBrhIwOYk3r9A4/eggnGaG62lICUgJMDEMQwPpNK4f64ie7W3+ZPnSga/NnnY8AMWVLL7fsHYEsw6DWSDDUwBIaYZtCoQC0pcMLcyyv6LPNnUStAaUBpRmKO1bJkpreFrDlBqphMQHy1KompDEE79RWLXRwfQ5BJh+o5GUvmcppQSxi7zCIFLRBLTjZZ6xAEGBdTOkYMAh9CkDbGNXDwBB/3nqfxtpAUAETFub0voazNAAJZJJPHW2wujDAkg3aRgGZSwDP0Bv2RpmKISNdSWYuykPRXlhbkhG6PV5My5k5gJRRToajxYxgcD7th2D4WlGjqWQE2IfwR92ypIGU/Z3D0ZQw8wFzFwJM9eEETZhhk1YAf+9DVEXQrk4e7hAnmCcc5zA99s8VNczpO0XshOlQBzxC21MDcOSSESTPlfDgRJdoXJug6YiOEpRXo5G51Z1Ha59dn53APhhzV7mQBeaOhVy6lRIroTwD2v58fNDAD96R47nwJS0zRISTTGNy4anMWmUDSfiwTQz3pcGDOlBBoP4Yn0If/lU4Ku1HpqiLoKmohzL4NU7No6ateSzkzT41eGx8TpruRD2VRMpJhQHGXmWhub9/YLsBDO1LaxAholPV+Vj+S5CwiU0xoBE0oWrNM4YKjB2YBIhi1AU9ntA2QXI1BjS3cT0bxSuPElCN6dBRk+w1RMy/R4AA3ZOAKlICjmtBJROA1ZHyILrwfobILYdIIHBHSLFU1cuGMjMy6ZNm0TMENOmgSomQdO+bagyEPq/Vbn4KXFuoALANKC8uMz8ftt65FkOrjveBCvfdgV8u9YMMJqcItz2cgAvfh5F2nORZwnkB6X/hGHoukSTeHn2tLFnBSa8UhodqDLdnC1MTUTwPEabEgEZANw0MhbHgY4YMyAloz5m4szHHNQ3ZtbjZXrCJfDGQsKH1wscPcRD57YWNtVK9OgKcIIxoqeJmSsk0jEBS0Tg2eMgCn8LrlkFUhth54SQaEhAuwwSYcBdADSeD3grIWSQoKAO6+bKd75fM8QW1vMOu2ofE1ggCeiah9o37HypH1J7e5NK9NIqRSLvvLmFA559HUSZlR/I0WAAZcWlHoFgEGAIA8Tat1I1wwoSvttdggue1VixKYLiMBC2TGgGNPvcKgQRtMY3m74b1Zhsbtf5kuE2CQJUhquJQALwwOhaqgGDwaksJ+/vhCDjpxACpotD23rYbCi0ztfICyvkhgk7ai0s2mri/vcJRw8Fjuyl8e1OiRMFkPY08gs9hAKErze5GNkvBKRmgKIJMDeA2YA0/WZR13FhBkyAk+D4+yARBgkDcDR1KVHoWLij2xrt5HepeSDYXP9FZ5XYfaj2IkeoZFNpzbc39pIFQ9uHAkWwxS6I/CI0bH/7osT2oflhmE8yu7Qf58NAH/8XIbBEMKqTHreOpF2GEOQqRiCXsGBbKU7/SxKNzUm0yrPgKoB0BpGsRQYmU0je1VDdfubCjx4c0LlX78++nYeQFSBwVoQApDW6l6ofAJy1PDL2OxhaAyHTxfTrCMk0kBckWBaBQhor15sYfi+waIPE7o1pnDQggLtmSMDxE7dgDyN6BDHrewcjD7EAtQVo/gtI5ACQIAlIW8JLp2GFLGglQDKvZWcpJiGZcGHvdWPkp63n1pjxfNZu+6DpmrZkaFMg7WmYrc+F0/CWFvYWtkOtdW7RRrNpz8vXMDvTiah6f4dHZMsKTDOnURqUTLNExJEMJgSCjMXbinHawynEog7yQxYclTkVhnw9x2CQYAgChDAokY7j89ULJxfk5g5w0g5EJjBB8C2HoOFhQDkAdWDd436CA9ldpxUQthit8hmmoaEUwW0m9GnvYkhHQqSRMG0poWcXRtwBdtUIWDYBKcbIbgprdwukmhmGYYNFIRgSmv0WaSMgodMpkOHAMD1Iclp0BgFgJdCjtSNzZM0gE/EuxK6ZcoSOpQyVdIRyPDCZ+QyOChKQ2nUMES5k7W3uFGta3ttfyz4lKrLlfoO69TQClikUJHZHAFga25sLccYTLpqjaQQDEq4CkNkPDICE32gZcQQaYgqum4ZphzB72TzetncbbNPad2QPANcDyvMVerYRgOcXPe6j7Jz2O3WGMgcdeL7cJgCaBaTt4vj+GiCJ978zAMHo1c7Egs0MWIS0C5QWKViGge+2eoCpIOBBmgpGWEGGGbkluUjpAKrjudjaEEREB2H4mw+ZPCk4EIAHUzuu0OyHfgQBkkhKQUScriYZ6AmVioOIiQyTc0KpYKp23lB/LfuaoltyhmMHjtV/DDygFSewrcEFjFxc8RJhZ20KxWHD52RkomwADEmIuwJO2sHh7RO4aISHXm0DOONZG9v2VlNdpAG2ZbcUvBABKZfRs8xDQYEBz2Hs4/UfJ6LMmTT7vUX4igNjBwjcXQB8vcVAzXaFXw0UePdrRsVRgNYElh4GdjKwdKeJYUNNNO62Ud0gsKdRY0utRt2eJJyGBII5DQjpJNbGAjjl6DDG9HHhpRiCNAxbwApbwo2mQS1hAv9gESKGav4aVulouDv/5kcZhYAddJFMrTyMma1MbJ6IiI2qTMd/YTC4F5qXQohOO+olnvk0iFnLkyjLM+F4fv6OMuLCMAQa4hq98ptx+5kuJg4lGLYB2IyTDhF4ag4jaLst3J+doOtpHNkdgMnQaZ0BOuv17Yvg7eNwxj757Y8hBaAdQv+2DgZ2tLDgO4H3vnNw3ijg0fcYyYiAbUqQC4wbJHDuswbmrhewUzEU22l0DMXQMS+JfsVFaN9/OETkY5R0yEd9XROemJfGIR3yUBgSgDZApGEHCG6TB84c3MIEgAIACbi1s6AbF/u2LzNAGjIooJo3dAcQBuDsz9EMgIKG7fS9enRjTqABs1ZaeGdFHAUhwGPDN88y8WgShLqIg7MOjeOR8wyUlASg4grJOGCTwqmDFZ77yvLlHTOYfK/FY0LIUDi2F4AW0xH7gftjylHu9zfd8n5PE6wchTG9CAu+I3z4HXDxSQp5OSa+3QYM7yPgRFz0DEbxyNERSJVCl2KNAhOQQsJLKVCH88EyhKjzCVBWitLWcYytb8bWXQr5baNo3BXxgZUdwcVHwMjpDzPUE8JuC2l39N111uDkZsQ334NY9XLktmlPLAOAu6tTonlvDwCLM3KaW07oU6w5FMz/zmRCY1wSCH5Ann2Fp4khidAQSePmMTHcf34A0AJOs4YhCZYJCBc4tINGeaFGXSQTxId/gEw0zejXxkGf9gJei1m3P8jY7+csJ+8vVvZxu6+sNMb0UbgnSFi80UC6Lo1RfW0s/rYWw0IpNDR5INYY2sqXNymXEHcImiV0WiEv0A5e03xYNkMoD0wSPbvZ2LW9AY0ohc49G8HSk2EXHAojUPrTCdW8vrCLj0PD1/1hxyOwgmEOBJrzU7XvDARocVZO+5+vBFztoWtZ+3WSpCcFkaRMfjWjhKQkNMZc/HpUAvdfZMNzAM/RMI3sRiekHUZJkYfDuphIOv5nhL9OpF2Fc4czgqUCBjFExhHyFMPTgNIEzQTNIvOavQDN3BLz8HQmLp32cFRPD4d0IuyqFfhiDWF0b4mGmAEv7kDA5964S4infblNYMgsA2kNEewErTIwsEReAaN1q87IG7IMpQMeR27ZCbACpSDWYO2BtQPWaXDmxAUNQOsGCFoIu6gQqaYYQVick+vCjS4dBgq3BHMEAPAU3zS4+OSz1lmmudWPNYCzjTiGABrjjPF9E3j0fBtuikHsc6pvS/uxYztPYktDAZrTEobkFg2umRCygG/35GDW1wW8NZKrlQixGZKwcn0xYIYAwyYYFsMwAcNU+y5LwQgyzJCGlcuwcg0kkY+Ve4o5N2hrIolpSwXalSpoO4jGFGAaABFnCnDogM1BAvDiK2EWHAbPA1Tm/CbDDkKIJkClAFZg5YC1h0zgGBAWIGxApADvCyB6G9BwKlB/PgLmFihtAJohLAn2Ng5iHS32s4BMB1QqHdll8J6C3II1expT3QQIOmNTJZVAx5wonjjXj5mQEhktrKEZEEKBArl4dE4Yf3wngUTcRY5t+PpB+OMELQOvL2D87fNmKig0qEuJRM+2BdyvzNFtS0y0z5coCaRhByWZpkUZjwjMDNdLI5UQvDce5C31LpZtBxatd8SG3Y1ErMnOMTF3vYRyXLQtC2BTo4lD27mIpzNy39fkLWKJBOA2zkVOh6tAZh7cVBQyLxcgG5axHen6hbDaneJ/pqVWW4O95aD0bCD5IdhdC9YOBEIgMwxhAuAUlNYkTRNS7+ncnGzoAWAhMMUHev8DTcbfff7c6sbqk3UmZ0iSEEt4+MupCuXlAThRhin3OSuAB8/Ix1V/C+LZT5uQFwKCpsh2uGXMM4LWCoUhA4P7HrF7V31tsrq6sf2GrY71Dlky5aZgSAVLAtKwQEiC2fceNQFaKwhhUNqLQ3kEWxAK7AAOaVu+Z0jPQTXvfTun19Za1165KY2hPQ0sWRTAsPYudMuW3TcP9gMp0PEt8Jwo7LxB8GJfAfl5/mFZOUAyMhdodxpYaEB9B07NA6Xmgt1vARUFsQXIIISZCwJDuWk0VzfAL0EGgUwOhiIF6ep3egNYOG3a6n0cnam8xIVjJ8/6eu2yGxNuuo0kcDRNNKxDAmePNODF2Y9HZ9UTK8hQEJe/FMZzHzegVb6EYgGVyfdla+YySQytATFxxPhnLvjVGY9/9s3Hndds3dBx055tnesa63s2phIdahsbHeXqgpAV6OYoT2rNbJiGCNhWKplKrCvOL/DaFBTvLC9pvfawnoN3jBs5bhGAxiXXHzd1R03TcTO/0/rmU5V4c1YAcSfmZ/T3kxlEWUVrgFQabnQpjMLjkdwyD+G2GmANI5QPvfcT6NiDgLcQSH0HeBEANkjYEEYr/+m5DlKNTUg2xeClHH9YU0ArDWkYHLQjlIh8NYBECBUV03QL0JmyADpjxIS1/a4c9cH6vVsuJZD2Ui5dNVIjkCMzRSu+yFCaYeZIPPdFPp77JILSAgOe9sWEn7Xep6eztc9J5WD2d1/2vPr0i2vjqUQtgK8BIGQFYJomPKUQS8ZtAG2xT6oSABfArvxwrvI8Dwkntb/EwylVZ30iza3HfbxS0h2TNYyQje0NhE4lQNrjluy57zxRJmwAOPVfItzpN/AcQHsuhCBIKwTi7XCrK2GFcsEcgjCKQIIAreDG40g2NiMdS4AB2Pkh5JQVwJAG6jbvhZtMQeYGIC2CaNrSW6u4ICJ9gNVSWVlJiXQSpww/8VWbzOaUR9Qu3+GTBgI65TsLfkkAYBge9tTnoWp6Grm2nzYCCIIAx2NOuC6TrwmyaIOZsX73piGxZLxtRUWFrKysNFABmXBSFIlHEU8liIjSRLSFiDZnrk1EtJ2IVHMihoSTIlRAZj/PzHRU/8O/yLeNppU7JdXVuNy/i8Ty3RYC0s8rZifQUq7AGiQB1bwA0iqCYZfDTURBQkAIgmHZSMfDIKsIRBJeMononlpUr9+Ohm274CkHOW0KUdK9HPltW8G0LAhTwAwGkGiKAUL4pTE62hNAF+AHZbtZrv59xW++mLnwk3fX7t10bkPC0ou2Mf1qqIYb05BSQLOCDFh45mMbO+qiaJUjobVfpxBzBHq3TtCAziamfk3Isf0Hw2BhkuDNNdu6PPjm42dOf+vth/rc0Udgmu+JZF1VZqYDMhpT/GvKlCmcrS7CNKhpmLb/Z1b99cNXVq3b5YyY/b3DI/ra9OiKMCapFEAiszU4I+4y9jgZ0IkaqNReWPkj4ESmIZhfAmaNQDiEhl31gHKRjqXgpV0YAQOhwjAC+UEYQQtgAiuG9rwW8RjICaB+ZwNyS11m19Pa2VHqupsL/w7oLFcTkZ46f+aTtzxTNW5PMlZ4/WsGD+miqbTAhZMCTEMjGrPx5tcuwjZBtyyFwCqFql/FN9QYbY1XF6nOBGbtW4MgCE56KfH63Hcu9LR6JRNKFESks+HEzOs+z72qhQl+ONXseylsh+KHXXfs8nW7akfMXCZxxrGEBgpjd3MDCnM1VMYfyNaKcCYiRiB4jV/AKh6J+KapYBZgrWGGbEBpxJtiCBXnIi+3BFbQAgnybWhP7zdF36phIQFpAmmlGzdsE7m5FrTVsbm52a+G/zuHJ8vV542euHBkvyP+nBsUtKXe1Bc8KTjl2TBNDTaBrzaZ2LjbQ8DyI16CmCNpxin9E+rk8eKar9erpwtyNDzlVzpl5iQsaekNdVv6nn3v5VXMLIno3zraobKykhJOUhxz6Oivc8MBLNhExE4KHcoDWLLLQsj0nR0ge1Bh9qhTDWkynKbPIPP7Q2kJL5UCICEMCdMykFdajPy2pTBtE8wa2lMZdvJDvEQEMqQvnmIxGM31COXkCmWOaIgEr3sk1HvWKW9v7bsBFZA/6lkyM1KeQy/e+OgD3Uo7v5ifS/LTdaae/JhEk2tB5BA+X8dwXdUSU3YZnGe5OGsoFgO1s0f1keWG9BVQdlLZ5QoI/mTZvMtvf+7ePzCzmdn//3LtMjNTVVUVEUgXFhYEcgIGdkRMLN/iYkw/xvw9YYhMFihLWelDYJAkqOh3IDJhhHsjHa0HZRqRjJABN5kEPLXf/uKMeUggaUK7HtJ11dDVNdiyOclPLW2L1eYd77c5av4xbQb85br8/JLFlw8hF9OgfrS1gva1VKSZ+YaBV45px9h9zMcrDXXCfVo+dnk+Vu4ADJHxEAmIpUFHdErjxEEyhfrW5w9vlzjNJAsJJpL7xgWIyZAGpz1HvzDnjSlE0s4P5f2eiIAKSJ7KLWLkHwE8adIkQUQqYNjqnhmPnnL/S4/+znWTYNiYvjSN353u4L5ICNXNTQgEWixqAD5H+5tMgpwU3NhaWMXHIbH7e4SKCQwNK2Qh0ZjYh4kQvkupBJzmCBK11VBxgd1uZzy9gvHpxiBvrdN04p6dS0YdScsNAC5z/sR7Lh2QTCY7/mQPCxFxZWWlIKKGHZGaK0+747zXN9duHrxyl9Qn3qVgGCzCNkFpwBCAq5j6tdWw8sQYpHhM63xGboDQEGEys5lKblFJZBkWouk4P/bBszcffcuppe/c8eLDBsnVlD2ItAKisk/lAYBXrV5NmDaNiUjDPzPPuPDJG377yLSnb084ybAhJFsm6POVEn88M41gOAcLt1s4qW8azQ4gflgLk8ljOvWzEWxzBlKb/gzlJCEDEoZhQjkelPbAhoRw0kAsjkhtI5LpAJB7GooO+TXcSDH++szZCEtNuYaDxuj6c+5/94ltL340rUe3i4cf2xhrOIQ9OP9UNmYPEWHm8mNuOf3PK7avrkg5LkxpKPKNZTIEoTbq4fVLEph8AkHXOywsEyc/kkuzvlMoyiEozniL2XM6MgWLmjVYAO0LynYM6THw/uev/58ZOYHwrng68aPzMcmAo137+mfvHPLZ8s+v2du4d7LyNCRJzdDCVQyhHGy6L4EXludj9dI6PHVKI+qSBCNzDHX2WfpBMw/KaI2CQbMQXToWRrAZ+V3KkaiLo2l7NfKLbISDJuprPKzaE0Z59zNR1v1ShAoGtBj6x/zhdCxetQzhQNjnJhJIqTSU1gjJAPq27frlz1NCmb5wZrYu//NNt3y6bO5VDV60jAFYZCgCKJF2afwgprOOstClMI3u7Rh3vBnCfe87KM0TUHq/qPN+p8ZkDmvUnvaEYRgosHO3dW3X5etu5Z2/aF3cemnbklJHKym21W9TdZGmDjurd4zcsnvbsIZI4xCHXVuAeP88DEGjNqLx2qVRDO2Tg4oHE/jkjD0ZySFAtI+rfR1M8FwPOYfOgrvrb4hvexNF7XNgqjQScYFtsTBmbwngw3V5ePj6mejfuTsAQLGHr9d/ixmLP8Pb82ZyQ6SehWHA1Z6QQqDIykt1ad1x0eh+w6b+/vzfzvjZ2j7L2ZY08cWaxX3++NLDf1ixfc2JMSde4GkNCSCehAYRF+aA2hQLpBymPfVMZrY6/wfJWM5+8w0AArFmn7+FIWBKEwZJxzIMrTTDVR5rrYIK2lewTACzJvJd0JaTxcCoj2tMPDSGN24I4tA/aNw5ZA+O65JGc5p8D498D1EzwGyAXAehLtcip2w4ot+che3xHHyzO4SvdtqYtdnEnpgEuw7+cOblOHXECfhk2Zd4f8GnWLl1lY4lEhwM2lIYBsJmCO3yW287tMvA9yePOnna0YeNXEhELZXtP5syCpIA6JxAGC/Pmn7Im1++ffX3W9eOros1dXSlayhW8DQjlfJjB3kBi0lmsoP7iYz9Bm1p4vTbj0kzQfsZGkjNGlozDCFIkGBQBiX4DUnZsTgTaRQAUp5GQSCNLQ8yrn3LQmpXHZ49uQl7mgWk9MOnlmQELUAaEom0ge1OR6yVZ2Hu/BeQcjRG9HYw9rB2GPewwsY9cQQsgWgygaAdRDwRZykELNumgBVArhFOdW7dYcGxA4dPveWc6z4IGPbOtMpksbIK/l8BOksZ7mYAHLKCiKcTrf706hP9vt264vDaaNORNU01hUqpUkPK9tXROsvxHEgpD/gSm/2BPuBhgmEZAZhSQrHfASCEgKdcuJ4LQWK/72k5gAkOGCWSUPjy5hTYysHEh9JYcdkuFIcdKBZwtI3dcRtLdgUwf4uFVQ0BbG1mbN2bQNdWAhufsQHTxoyF7XDLaw3YWxuBbRoACSjPL44M22G0L2yzZUDHXjPPOuq0aSOHHLGYiLzMBERlZWXWm/Udsf8N0D8GOAAIEHLDOWiKNRsASgC0P+Lm8VWrtq490TZMnfECWzh7/1IEwC8qD0hb33Tar58Nmvai6ubGXKUUF+UUuDtqt3d/ad5bv2bBdktJH3DAWH6egVFgudhUb+GmsVH86Vwb3a63UCqTmHwoY1W1xMYGA7GUi6IcF6P7ePhyUw4++l6iIEywycFZo4vx+VqN7zYnELIBS1L220nYVR4N7thvwwXHnXHfeWMnzbINa4+jXH8BFRWy8ie6u/4toLOUjU9UVVURgANagU+685xTF61eNh3ZytKM5sp2ImXBIkAnlSMGtxu49POH3x5FRPEf3qPXZUfOrIs3nCQ0aYb/0FrGQkbZksYJfYG3lwr0L0viyylprN8OTJlJiCWAAWUehvZgHNZJoGO5AootzJhThIl/TqMwTPA8QiSpYFmEvKAB8L4ECBEp11PyzBETnn7xtw9fkfTFw99x74/RL9JJSkTZp6iYmVDhp68JwN0X/357yA426/1r/vbb5lluVFrDlhZOHDxqjm1a8VGVo4yKTOfu4MsGm5IED+jc7+PM86L9x8juEin84pnDujLatRL4frfEpl0e+vWz8OJVNt650cSffmNh4gmEjl1sbKlrhftfKcKUt4HcgAAgtBRCl+QZyA2IjLLcN342AhiJNJgJLy0z32inq6qq/qmT9Yt/PQgRsYRQHqvcsx+6etSkuy6/KOmkcoQffGkBKJvxyOLtKFd0yC1vvuTks9++1buWRmO0rprmb8GTKit5KZbiqvGXfbRozZKtcR3vJCAYyPToZUgIQtIB2uR5OKSjiQ3bBO77uAgNM4P4ak0KQQvoVurhyuNy8PXmEF7/Ko2aBkcHTGbTYOGAhJQC5H+bgw9tBj/hT53AzG2KWsWCZkClvPTPlgi/dG80MbMYc1vFxV0uGjzv02/mvFfbVDuB/c4faN5Xle77LlnQiTUYPco7ryzOK14NgPf/8oPsz6cMHb2xtKBkmc6G4fa/cebyPAYrB8f2BmBKTF1M+HhRPQpFM2rqkvhilYdzHvXwyAcxNEU95OawMAKeDNkhumTMGR8d2nnAUs1MhJZooj9fZtasyRYWdSvvNj/lpVFZWfmzgf4lOZokCR59y8RLVm1Z9VctGKTBUghmsNiv8B+ZFbSIbc0atjTRtbzrHEuaUX99+7ZiNqeZTCV1SVHp4s01204DmFpyChmvJ1sO0pBgHjvAQ8A2qDwYwZu/TWFwvwDemuvhitdsaCFhsIuO+Qk1ql+flZsbSuvaF3Wa/9CVd94DoNXAK8a8saV+x8iAaXkAyYzoUIl0yujXrsfOKydcsOIqXPgvgfPLcLTvYvGqyI6STbs2Xc5gJZjSRKQVNGtopZkVwIrBipkVs1YMrQjwQMy2tFRhqHBx5qTFv+eUCpCrPbRr1XGFIBHXfmTYH0uz1kprrbWGhmpOE3Vuw2QK5mvHpNC5cyH+/G4AE0dKTB4m0RQFF4UNPHXl4Y8/eO1nR336wPvHPX79n6qIyCOi3ReOveCWgkB+k0fKcLVLaeVQ3E0aHQrKnRvGX3GnIeW6TOTwZ7cy/yJAV2YyIvO++rIDOejneo50tWc7UNLVSjqspEdautDShZIuKemSlh609FgZaeVI27DlYT0H/eTEswGmoT0HrrZhJjRYep4nPaUkiAQDgsGCJMlYUqvGmNGUdJiO7GXgsQ8JN9yZwnfr0xjUWTJrJs8NRzc2Vb1NRNFYMiYUa2JmVFZWilsmXbLwivEXXtqzdbc5HYs6NHYr7tR0ZI/DFt1+5o3nTz5hwjNK63+50fMXMe+yxMzBC+669qxoKjIu5qbseDrFqVSy5Qg2pdQBnqElTUhBbFiWUVpQuuO1W/7n9tzc3AMKuPcbm4iI169fn3fjc/dMTHmpTqVFxT3S6XR0b2P1KmamgBlgMxCwRvdyV58z9jCj1zWvv/zw6bvCJww08MyHcao6P4jznivll+dF0at1yfbPHnrtqLaFXXZMAaiK6IcNNczMxp76aI9iO5esHGzIutP/NRQOhJATCCMcCCFshxC2ggj92GX7V04gjIBp/0v3MCAQsoMIGHaLIiTs26LMLPpcdsKM9ue04+XLuroc76JffO8QzpnY0w1O6Mwn/v7sWcwczLz37xnuxw5ROagHq/w97V+dSD/zAv6V3VWxr28RfuxatlyAHFU5yiAAD01/cmir0wfsCp/akbtf0IOtk7uxPb4jD7libGTOt4vGAb53+1O3YWaqrKwUlfzf/dXX/xmQfy4xyBAGKp9/YEznc4bNC/2qa027Sf1rj79x0pLZS76aaPmHzv6fgff/AethzDeQWBKnAAAAAElFTkSuQmCC" style="width:65px;height:65px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3));" alt="Givy Raccoon">
-</div>
-<script>
-(function(){
-  var el = document.getElementById('floating-sticker');
-  if(!el) return;
-
-var dragging = false;
-var offsetX = 0, offsetY = 0;
-var startX = 0, startY = 0;
-var moved = false;
-
-function lockPosition() {
-var rect = el.getBoundingClientRect();
-el.style.position = ‘fixed’;
-el.style.left = rect.left + ‘px’;
-el.style.top = rect.top + ‘px’;
-el.style.right = ‘auto’;
-el.style.bottom = ‘auto’;
-}
-
-function onDown(e) {
-var pt = e.touches ? e.touches[0] : e;
-lockPosition();
-dragging = true;
-moved = false;
-var rect = el.getBoundingClientRect();
-offsetX = pt.clientX - rect.left;
-offsetY = pt.clientY - rect.top;
-startX = pt.clientX;
-startY = pt.clientY;
-el.style.opacity = ‘0.85’;
-if (e.cancelable) e.preventDefault();
-}
-
-function onMove(e) {
-if (!dragging) return;
-var pt = e.touches ? e.touches[0] : e;
-if (!pt) return;
-if (Math.abs(pt.clientX - startX) > 3 || Math.abs(pt.clientY - startY) > 3) moved = true;
-var x = pt.clientX - offsetX;
-var y = pt.clientY - offsetY;
-x = Math.max(0, Math.min(window.innerWidth - el.offsetWidth, x));
-y = Math.max(0, Math.min(window.innerHeight - el.offsetHeight, y));
-el.style.left = x + ‘px’;
-el.style.top = y + ‘px’;
-if (e.cancelable) e.preventDefault();
-}
-
-function onUp(e) {
-if (!dragging) return;
-dragging = false;
-el.style.opacity = ‘1’;
-try {
-localStorage.setItem(‘raccoonX’, el.style.left);
-localStorage.setItem(‘raccoonY’, el.style.top);
-} catch(err) {}
-}
-
-// Attach listeners — touch events for mobile, mouse for desktop
-el.addEventListener(‘touchstart’, onDown, {passive: false});
-el.addEventListener(‘touchmove’, onMove, {passive: false});
-el.addEventListener(‘touchend’, onUp, {passive: true});
-el.addEventListener(‘touchcancel’, onUp, {passive: true});
-
-document.addEventListener(‘touchmove’, onMove, {passive: false});
-document.addEventListener(‘touchend’, onUp, {passive: true});
-
-el.addEventListener(‘mousedown’, onDown);
-document.addEventListener(‘mousemove’, onMove);
-document.addEventListener(‘mouseup’, onUp);
-
-// Restore saved position
-try {
-var sx = localStorage.getItem(‘raccoonX’);
-var sy = localStorage.getItem(‘raccoonY’);
-if (sx && sy) {
-el.style.left = sx;
-el.style.top = sy;
-el.style.right = ‘auto’;
-el.style.bottom = ‘auto’;
-}
-} catch(e) {}
-})();
-</script>
-
-<!-- ══ REGISTRATION MODAL ══ -->
-
-<style>
-.reg-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);z-index:10000;justify-content:center;align-items:center;}
-.reg-modal.open{display:flex;}
-.reg-box{background:white;padding:28px 24px;border-radius:16px;width:calc(100% - 32px);max-width:420px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.3);text-align:center;}
-.reg-box h2{margin:0 0 6px;color:#222;font-size:22px;font-family:var(--font-h);}
-.reg-box .reg-sub{color:#666;font-size:14px;margin-bottom:22px;}
-.reg-input-group{margin-bottom:16px;text-align:left;}
-.reg-input-group label{display:block;margin-bottom:6px;font-weight:700;color:#444;font-size:14px;}
-.reg-input-group input{width:100%;padding:13px;border:2px solid #ddd;border-radius:10px;font-size:16px;box-sizing:border-box;font-family:var(--font-b);}
-.reg-input-group input:focus{border-color:#4CAF50;outline:none;}
-.reg-social-btn{width:100%;padding:13px;margin:6px 0;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;}
-.reg-social-btn.google{background:#fff;border:2px solid #ccc;color:#333;}
-.reg-social-btn.facebook{background:#1877F2;border:none;color:white;}
-.reg-social-btn.apple{background:linear-gradient(135deg,#1a1f2e 0%,#0f1117 100%);border:2px solid #374151;color:white;}
-.reg-terms{display:flex;align-items:flex-start;gap:10px;margin:18px 0;text-align:left;font-size:14px;}
-.reg-terms input[type=checkbox]{width:22px;height:22px;accent-color:#4CAF50;margin-top:3px;flex-shrink:0;}
-.reg-terms a{color:#4CAF50;text-decoration:underline;cursor:pointer;}
-.reg-complete-btn{width:100%;padding:15px;border-radius:10px;font-size:17px;font-weight:900;border:none;cursor:pointer;margin-top:8px;font-family:var(--font-b);}
-.reg-complete-btn:not(:disabled){background:#4CAF50;color:white;}
-.reg-complete-btn:disabled{background:#aaa;color:white;cursor:not-allowed;}
-.reg-divider{color:#999;font-size:12px;margin:14px 0;display:flex;align-items:center;gap:8px;}
-.reg-divider::before,.reg-divider::after{content:'';flex:1;height:1px;background:#e5e7eb;}
-</style>
-
-<!-- Register Modal -->
+<!-- REGISTRATION MODAL -->
 
 <div id="registerModal" class="reg-modal">
   <div class="reg-box">
-    <div style="font-size:40px;margin-bottom:8px;">🎁</div>
+    <div style="font-size:40px;margin-bottom:8px;">&#127873;</div>
     <h2>Create Account</h2>
     <p class="reg-sub">To start earning points for your items</p>
 
 ```
 <div class="reg-input-group">
-  <label for="reg-nick">Nik Name / Account Name *</label>
+  <label for="reg-nick">Nick Name / Account Name *</label>
   <input type="text" id="reg-nick" placeholder="e.g. AlexGiver or John_Couch" oninput="RegModal.check()">
 </div>
 
@@ -1264,12 +1389,12 @@ el.style.bottom = ‘auto’;
 <div class="reg-terms">
   <input type="checkbox" id="reg-terms-check" onchange="RegModal.check()">
   <label for="reg-terms-check">
-    I agree to the <a onclick="RegModal.showTerms()">Terms & Conditions</a>
+    I agree to the <a onclick="RegModal.showTerms()">Terms &amp; Conditions</a>
   </label>
 </div>
 
 <button id="reg-complete-btn" class="reg-complete-btn" disabled onclick="RegModal.complete()">
-  ✅ Create Account
+  Create Account
 </button>
 
 <p style="margin-top:16px;font-size:13px;color:#777;">
@@ -1280,7 +1405,7 @@ el.style.bottom = ‘auto’;
   </div>
 </div>
 
-<!-- Login Modal -->
+<!-- LOGIN MODAL -->
 
 <div id="loginModal" class="reg-modal">
   <div class="reg-box">
@@ -1299,7 +1424,7 @@ el.style.bottom = ‘auto’;
 </div>
 
 <button class="reg-complete-btn" onclick="RegModal.login()" style="background:#4CAF50;">
-  🔓 Log In
+  Log In
 </button>
 
 <p style="margin-top:10px;font-size:13px;color:#777;">
@@ -1314,44 +1439,39 @@ el.style.bottom = ‘auto’;
   </div>
 </div>
 
-<!-- Terms Modal -->
+<!-- TERMS MODAL -->
 
 <div id="termsModal" class="reg-modal">
   <div class="reg-box" style="text-align:left;max-height:85vh;">
-    <h2 style="text-align:center;">📋 Terms & Conditions</h2>
+    <h2 style="text-align:center;">Terms &amp; Conditions</h2>
     <br>
-    <strong style="font-size:15px;color:#111;">Item Acceptance & Condition Policy</strong>
+    <strong style="font-size:15px;color:#111;">Item Acceptance &amp; Condition Policy</strong>
     <p style="font-size:14px;color:#374151;margin:10px 0;">We accept items in the following conditions: <strong>New, Like New,</strong> and, in some cases, <strong>Very Good Condition.</strong></p>
     <p style="font-size:14px;color:#374151;margin:10px 0;">Items in New or Like New condition may still require minor repairs or partial cleaning.</p>
     <p style="font-size:14px;color:#374151;margin:10px 0;">Items classified as Very Good Condition may also be accepted; however, each item is reviewed individually, and acceptance is determined at our sole discretion.</p>
-    <p style="font-size:14px;color:#374151;margin:10px 0;">By submitting or listing an item on our platform, you acknowledge and agree that we are not obligated to pick up or accept any item. We reserve the full right to decide whether or not to accept or collect any item.</p>
-    <p style="font-size:14px;color:#374151;margin:10px 0;">We appreciate and respect your contributions and opinions; however, the final decision remains solely with us.</p>
+    <p style="font-size:14px;color:#374151;margin:10px 0;">By submitting or listing an item on our platform, you acknowledge and agree that we are not obligated to pick up or accept any item.</p>
     <hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0;">
-    <strong style="font-size:15px;color:#111;">Rewards Points & Levels Policy</strong>
+    <strong style="font-size:15px;color:#111;">Rewards Points &amp; Levels Policy</strong>
     <p style="font-size:14px;color:#374151;margin:10px 0;">Points are awarded based on the type, size, and value of the items provided.</p>
-    <ul style="font-size:14px;color:#374151;padding-left:20px;line-height:1.8;">
-      <li>Large items such as sofas, couches, chairs, beds, mattresses, and similar items are typically awarded <strong>1 point per item.</strong></li>
-      <li>Smaller items may be grouped together to receive points. For example, 5, 10, or 20 items may collectively qualify for 1 point, depending on their size and estimated value.</li>
-    </ul>
     <p style="font-size:14px;color:#374151;margin:10px 0;">All point allocations are determined at our discretion.</p>
     <br>
     <button onclick="RegModal.closeTerms()" style="width:100%;padding:14px;background:#4CAF50;color:white;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;">Close</button>
   </div>
 </div>
 
-<!-- Success Modal -->
+<!-- SUCCESS MODAL -->
 
 <div id="successModal" class="reg-modal">
   <div class="reg-box">
-    <div style="font-size:60px;margin-bottom:12px;">🎉</div>
+    <div style="font-size:60px;margin-bottom:12px;">&#127881;</div>
     <h2 style="color:#4CAF50;">Welcome!</h2>
     <div id="success-name" style="font-size:18px;font-weight:700;color:#111;margin:8px 0;"></div>
     <p style="font-size:14px;color:#666;margin-bottom:20px;">Your account is ready. Start giving to earn points!</p>
     <div style="background:#f0fdf4;border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;">
-      <div style="font-size:13px;color:#374151;font-weight:600;">🌱 Current level: <strong style="color:#d97706;">New Member</strong></div>
-      <div style="font-size:12px;color:#6b7280;margin-top:4px;">Give 1 item to reach Gold — 20% discount!</div>
+      <div style="font-size:13px;color:#374151;font-weight:600;">Current level: <strong style="color:#d97706;">New Member</strong></div>
+      <div style="font-size:12px;color:#6b7280;margin-top:4px;">Give 1 item to reach Active Giver - 5% discount!</div>
     </div>
-    <button onclick="RegModal.goToPost()" style="width:100%;padding:15px;background:#4CAF50;color:white;border:none;border-radius:10px;font-size:16px;font-weight:900;cursor:pointer;">📦 Post Your First Item</button>
+    <button onclick="RegModal.goToPost()" style="width:100%;padding:15px;background:#4CAF50;color:white;border:none;border-radius:10px;font-size:16px;font-weight:900;cursor:pointer;">Post Your First Item</button>
   </div>
 </div>
 
@@ -1379,9 +1499,9 @@ const RegModal = {
     this.check();
   },
   check() {
-    const nick = (document.getElementById('reg-nick').value||'').trim();
-    const email = (document.getElementById('reg-email').value||'').trim();
-    const password = (document.getElementById('reg-password').value||'').trim();
+    const nick = (document.getElementById('reg-nick').value || '').trim();
+    const email = (document.getElementById('reg-email').value || '').trim();
+    const password = (document.getElementById('reg-password').value || '').trim();
     const terms = document.getElementById('reg-terms-check').checked;
     const btn = document.getElementById('reg-complete-btn');
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -1392,23 +1512,23 @@ const RegModal = {
     const email = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value;
     const terms = document.getElementById('reg-terms-check').checked;
-    
+
     if (nick.length < 3) { alert('Please enter at least 3 characters for nickname'); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('Please enter a valid email'); return; }
     if (password.length < 6) { alert('Password must be at least 6 characters'); return; }
     if (!terms) { alert('Please agree to Terms & Conditions'); return; }
-    
+
     const btn = document.getElementById('reg-complete-btn');
     btn.disabled = true;
-    btn.textContent = '⏳ Creating account...';
-    
+    btn.textContent = 'Creating account...';
+
     try {
       if (!window.firebaseAuth) {
         await new Promise(r => window.addEventListener('firebase-ready', r, { once: true }));
       }
       const { createUserWithEmailAndPassword } = window.firebaseAuthFunctions;
       const cred = await createUserWithEmailAndPassword(window.firebaseAuth, email, password);
-      
+
       const user = {
         uid: cred.user.uid,
         email: email,
@@ -1416,8 +1536,7 @@ const RegModal = {
         joinedAt: new Date().toISOString()
       };
       Storage.set('user', user);
-      
-      // Save nickname to Firestore so it persists across devices
+
       try {
         const { doc, setDoc } = window.firebaseFunctions;
         await setDoc(doc(window.firebaseDB, 'users', cred.user.uid), {
@@ -1426,11 +1545,9 @@ const RegModal = {
           joinedAt: new Date().toISOString()
         });
         console.log('User profile saved to Firestore');
-      } catch(err) {
-        console.log('Could not save profile to Firestore:', err);
-      }
-      
-      document.getElementById('success-name').textContent = 'Hi, ' + nick + '! 👋';
+      } catch(err) { console.log('Could not save profile to Firestore:', err); }
+
+      document.getElementById('success-name').textContent = 'Hi, ' + nick + '!';
       document.getElementById('registerModal').classList.remove('open');
       document.getElementById('successModal').classList.add('open');
     } catch(e) {
@@ -1442,23 +1559,22 @@ const RegModal = {
       else msg += e.message;
       alert(msg);
       btn.disabled = false;
-      btn.textContent = '✅ Create Account';
+      btn.textContent = 'Create Account';
     }
   },
   async login() {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
-    
+
     if (!email || !password) { alert('Please enter email and password'); return; }
-    
+
     try {
       if (!window.firebaseAuth) {
         await new Promise(r => window.addEventListener('firebase-ready', r, { once: true }));
       }
       const { signInWithEmailAndPassword } = window.firebaseAuthFunctions;
       const cred = await signInWithEmailAndPassword(window.firebaseAuth, email, password);
-      
-      // Load user profile from Firestore
+
       let savedNickname = null;
       let savedJoinedAt = null;
       try {
@@ -1467,13 +1583,9 @@ const RegModal = {
         if (snap.exists()) {
           savedNickname = snap.data().nickname;
           savedJoinedAt = snap.data().joinedAt;
-          console.log('Loaded nickname from Firestore:', savedNickname);
         }
-      } catch(err) {
-        console.log('Could not load profile from Firestore:', err);
-      }
-      
-      // For legacy users without profile - save their email prefix as nickname
+      } catch(err) { console.log('Could not load profile from Firestore:', err); }
+
       if (!savedNickname) {
         savedNickname = email.split('@')[0];
         try {
@@ -1483,12 +1595,9 @@ const RegModal = {
             nickname: savedNickname,
             joinedAt: new Date().toISOString()
           });
-          console.log('Created profile for legacy user');
-        } catch(err) {
-          console.log('Could not create profile:', err);
-        }
+        } catch(err) { console.log('Could not create profile:', err); }
       }
-      
+
       const user = {
         uid: cred.user.uid,
         email: email,
@@ -1496,26 +1605,22 @@ const RegModal = {
         joinedAt: savedJoinedAt || new Date().toISOString()
       };
       Storage.set('user', user);
-      
-      // Load all user's orders from Firestore
+
       try {
         const { collection, query, where, getDocs } = window.firebaseFunctions;
-        const q = query(
-          collection(window.firebaseDB, 'orders'),
-          where('userId', '==', cred.user.uid)
-        );
+        const q = query(collection(window.firebaseDB, 'orders'), where('userId', '==', cred.user.uid));
         const snapshot = await getDocs(q);
         const items = [];
         const statuses = {};
         snapshot.forEach(docSnap => {
           const data = docSnap.data();
-          const localId = data.localId || Date.now() + Math.random();
+          const localId = data.localId || (Date.now() + Math.random());
           items.push({
             id: localId,
             firestoreId: docSnap.id,
             title: data.title,
             desc: data.desc,
-            condition: data.condition?.toLowerCase().replace(' ', '_') || 'new',
+            condition: (data.condition || 'new').toLowerCase().replace(' ', '_'),
             conditionLabel: data.condition,
             zip: data.zip || '',
             location: data.location || null,
@@ -1529,15 +1634,12 @@ const RegModal = {
           });
           statuses[localId] = data.status || 'pending';
         });
-        // Sort by createdAt descending (newest first)
         items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         Storage.set('items', items);
         ListModule.statuses = statuses;
         console.log('Loaded ' + items.length + ' items from Firestore');
-      } catch(err) {
-        console.log('Could not load items:', err);
-      }
-      
+      } catch(err) { console.log('Could not load items:', err); }
+
       document.getElementById('loginModal').classList.remove('open');
       document.body.style.overflow = '';
       alert('Welcome back, ' + user.nickname + '!');
@@ -1556,32 +1658,15 @@ const RegModal = {
   async resetPassword() {
     const email = document.getElementById('login-email').value.trim();
     if (!email) { alert('Enter your email in the field above, then click Forgot password'); return; }
-    
+
     try {
       const { sendPasswordResetEmail } = window.firebaseAuthFunctions;
       await sendPasswordResetEmail(window.firebaseAuth, email);
       alert('Password reset email sent to ' + email + '. Check your inbox!');
-    } catch(e) {
-      alert('Error: ' + e.message);
-    }
+    } catch(e) { alert('Error: ' + e.message); }
   },
-  async logout() {
-    try {
-      const { signOut } = window.firebaseAuthFunctions;
-      await signOut(window.firebaseAuth);
-      Storage.remove('user');
-      alert('Logged out');
-      Nav.go('home');
-    } catch(e) {
-      console.log('Logout error:', e);
-    }
-  },
-  showTerms() {
-    document.getElementById('termsModal').classList.add('open');
-  },
-  closeTerms() {
-    document.getElementById('termsModal').classList.remove('open');
-  },
+  showTerms() { document.getElementById('termsModal').classList.add('open'); },
+  closeTerms() { document.getElementById('termsModal').classList.remove('open'); },
   goToPost() {
     document.getElementById('successModal').classList.remove('open');
     document.body.style.overflow = '';
@@ -1589,37 +1674,39 @@ const RegModal = {
   }
 };
 
-// Close on outside click
-['registerModal','loginModal','termsModal','successModal'].forEach(function(id){
+window.RegModal = RegModal;
+
+['registerModal', 'loginModal', 'termsModal', 'successModal'].forEach(function(id) {
   var el = document.getElementById(id);
-  if(el) el.addEventListener('click', function(e){ if(e.target===this) this.classList.remove('open'); });
+  if (el) el.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('open'); });
 });
 </script>
 
-<!--Start of Tawk.to Script-->
+<!-- Tawk.to Live Chat -->
 
 <script type="text/javascript">
-var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-Tawk_API.customStyle={visibility:{desktop:{position:"br",xOffset:16,yOffset:80},mobile:{position:"br",xOffset:16,yOffset:80}}};
+var Tawk_API = Tawk_API || {};
+var Tawk_LoadStart = new Date();
+Tawk_API.customStyle = {
+  visibility: {
+    desktop: { position: 'br', xOffset: 16, yOffset: 80 },
+    mobile: { position: 'br', xOffset: 16, yOffset: 80 }
+  }
+};
 
-// Auto-set visitor info from logged-in user
-(function(){
+(function() {
   try {
     var userStr = localStorage.getItem('user');
     if (userStr) {
       var user = JSON.parse(userStr);
       if (user && user.nickname) {
-        Tawk_API.visitor = {
-          name: user.nickname,
-          email: user.email || ''
-        };
+        Tawk_API.visitor = { name: user.nickname, email: user.email || '' };
       }
     }
   } catch(e) { console.log('Tawk visitor init error:', e); }
 })();
 
-// When Tawk loads, set attributes so admin sees the nickname
-Tawk_API.onLoad = function(){
+Tawk_API.onLoad = function() {
   try {
     var userStr = localStorage.getItem('user');
     if (userStr) {
@@ -1628,43 +1715,22 @@ Tawk_API.onLoad = function(){
         Tawk_API.setAttributes({
           'name': user.nickname,
           'email': user.email || ''
-        }, function(error){
-          if (error) console.log('Tawk onLoad setAttributes error:', error);
-        });
+        }, function(error) { if (error) console.log('Tawk onLoad setAttributes error:', error); });
       }
     }
   } catch(e) { console.log('Tawk onLoad error:', e); }
 };
 
-(function(){
-var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-s1.async=true;
-s1.src='https://embed.tawk.to/69e2eb20a7ff261c327a9ce5/1jmf6ctgi';
-s1.charset='UTF-8';
-s1.setAttribute('crossorigin','*');
-s0.parentNode.insertBefore(s1,s0);
+(function() {
+  var s1 = document.createElement('script');
+  var s0 = document.getElementsByTagName('script')[0];
+  s1.async = true;
+  s1.src = 'https://embed.tawk.to/69e2eb20a7ff261c327a9ce5/1jmf6ctgi';
+  s1.charset = 'UTF-8';
+  s1.setAttribute('crossorigin', '*');
+  s0.parentNode.insertBefore(s1, s0);
 })();
 </script>
-
-<!-- Tawk.to Custom Styles - bigger, bolder text in chat widget -->
-
-<style>
-#tawkchat-container iframe,
-.tawk-chat-panel,
-.tawk-messenger-panel {
-  font-size: 17px !important;
-  font-weight: 600 !important;
-}
-.tawk-chat-panel .tawk-message-body,
-.tawk-chat-panel .tawk-text,
-.tawk-messenger-panel .tawk-text {
-  font-size: 17px !important;
-  font-weight: 600 !important;
-  line-height: 1.5 !important;
-}
-</style>
-
-<!--End of Tawk.to Script-->
 
 </body>
 </html>
