@@ -36,10 +36,6 @@
   h1 { padding-top: 36px; }
 }
 
-.live-indicator { position: fixed; top: 16px; right: 16px; background: rgba(16,185,129,0.15); color: #10b981; padding: 6px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; z-index: 100; display: flex; align-items: center; gap: 6px; border: 1px solid rgba(16,185,129,0.3); }
-.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse 1.5s ease-in-out infinite; }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-
 .filters { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 30px; }
 .filter-btn { background: #1A1A1A; border: 1px solid #333; padding: 8px 20px; border-radius: 40px; color: white; cursor: pointer; }
 .filter-btn.active { background: #C5A267; color: black; }
@@ -81,7 +77,6 @@
 </head>
 <body>
   <a href="index.html" class="back-to-givy" title="Back to Givy Rewards">&#8592; Givy Rewards</a>
-  <div class="live-indicator" id="liveIndicator" style="display:none;"><span class="live-dot"></span><span>Live</span></div>
 
   <h1><span class="logo-float">&#128715;&#65039;</span> GivyRewards<span class="shop-accent">Shop</span></h1>
   <div id="filters" class="filters"></div>
@@ -121,7 +116,7 @@
     let lbImages = [];
     let lbIndex = 0;
 
-    // Real-time products subscription
+    // Real-time products subscription (PUBLIC READ — no auth needed per Firestore Rules)
     const productsRef = collection(db, 'products');
     const productsQuery = query(productsRef, orderBy('createdAt', 'desc'));
 
@@ -131,14 +126,13 @@
         products.push({ id: docSnap.id, ...docSnap.data() });
       });
       console.log('Products synced from Firebase:', products.length);
-      document.getElementById('liveIndicator').style.display = 'flex';
       renderProducts();
     }, (error) => {
       console.error('Firestore error:', error);
       document.getElementById('products').innerHTML = '<div class="empty">Connection error. Please refresh the page.</div>';
     });
 
-    // Settings subscription (categories + facebook username)
+    // Settings subscription (PUBLIC READ)
     const settingsRef = doc(db, 'shop_settings', 'main');
     onSnapshot(settingsRef, (snap) => {
       if (snap.exists()) {
@@ -155,24 +149,14 @@
       const allBtn = document.createElement('button');
       allBtn.className = 'filter-btn' + (activeFilter === 'all' ? ' active' : '');
       allBtn.textContent = 'All';
-      allBtn.onclick = () => {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        allBtn.classList.add('active');
-        activeFilter = 'all';
-        renderProducts();
-      };
+      allBtn.onclick = () => { setFilter('all', allBtn); };
       container.appendChild(allBtn);
 
       categories.forEach(cat => {
         const btn = document.createElement('button');
         btn.className = 'filter-btn' + (activeFilter === cat ? ' active' : '');
         btn.textContent = cat;
-        btn.onclick = () => {
-          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          activeFilter = cat;
-          renderProducts();
-        };
+        btn.onclick = () => { setFilter(cat, btn); };
         container.appendChild(btn);
       });
 
@@ -180,13 +164,15 @@
       soldBtn.className = 'filter-btn' + (activeFilter === '__sold' ? ' active' : '');
       soldBtn.textContent = '\uD83C\uDFF7\uFE0F Sold';
       soldBtn.style.borderColor = '#E41E3F';
-      soldBtn.onclick = () => {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        soldBtn.classList.add('active');
-        activeFilter = '__sold';
-        renderProducts();
-      };
+      soldBtn.onclick = () => { setFilter('__sold', soldBtn); };
       container.appendChild(soldBtn);
+    }
+
+    function setFilter(value, btn) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = value;
+      renderProducts();
     }
 
     function openLightbox(images, index) {
