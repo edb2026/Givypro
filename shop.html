@@ -8,7 +8,7 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #0A0A0A; font-family: Arial, sans-serif; color: #EDEDED; padding: 20px; }
-    h1 { text-align: center; margin-bottom: 20px; color: #FFFFFF; }
+    h1 { text-align: center; margin-bottom: 20px; color: #FFFFFF; padding-top: 8px; }
     h1 .shop-accent { color: #C5A267; }
     h1 .logo-float { display: inline-block; animation: floaty 3s ease-in-out infinite; transform-origin: center; }
     @keyframes floaty {
@@ -20,30 +20,25 @@
     }
 
 ```
-/* Back to Givy Rewards button */
 .back-to-givy {
-  position: fixed;
-  top: 16px;
-  left: 16px;
+  position: fixed; top: 16px; left: 16px;
   background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  color: white;
-  padding: 10px 16px;
-  border-radius: 999px;
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  color: white; padding: 10px 16px; border-radius: 999px;
+  text-decoration: none; font-size: 14px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 6px;
   box-shadow: 0 4px 14px rgba(5,150,105,0.4);
-  z-index: 100;
-  transition: transform 0.15s, box-shadow 0.15s;
+  z-index: 100; transition: transform 0.15s, box-shadow 0.15s;
 }
 .back-to-givy:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(5,150,105,0.5); }
 .back-to-givy:active { transform: scale(0.97); }
 @media (max-width: 480px) {
   .back-to-givy { padding: 8px 12px; font-size: 12px; }
+  h1 { padding-top: 36px; }
 }
+
+.live-indicator { position: fixed; top: 16px; right: 16px; background: rgba(16,185,129,0.15); color: #10b981; padding: 6px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; z-index: 100; display: flex; align-items: center; gap: 6px; border: 1px solid rgba(16,185,129,0.3); }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
 .filters { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 30px; }
 .filter-btn { background: #1A1A1A; border: 1px solid #333; padding: 8px 20px; border-radius: 40px; color: white; cursor: pointer; }
@@ -66,6 +61,7 @@
 .mp-btn { background: #2a7f4f; border: none; padding: 10px; border-radius: 30px; color: white; font-weight: bold; flex: 1; cursor: pointer; font-size: 13px; }
 .admin-icon { position: fixed; bottom: 20px; left: 20px; width: 40px; height: 40px; background: #C5A267; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0.3; cursor: pointer; z-index: 999; }
 .empty { text-align: center; padding: 50px; color: #666; }
+
 .lightbox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: 0.2s; }
 .lightbox.active { visibility: visible; opacity: 1; }
 .lightbox img { max-width: 90%; max-height: 85%; object-fit: contain; user-select: none; }
@@ -85,6 +81,7 @@
 </head>
 <body>
   <a href="index.html" class="back-to-givy" title="Back to Givy Rewards">&#8592; Givy Rewards</a>
+  <div class="live-indicator" id="liveIndicator" style="display:none;"><span class="live-dot"></span><span>Live</span></div>
 
   <h1><span class="logo-float">&#128715;&#65039;</span> GivyRewards<span class="shop-accent">Shop</span></h1>
   <div id="filters" class="filters"></div>
@@ -100,11 +97,21 @@
     <div class="lightbox-thumbs" id="lbThumbs"></div>
   </div>
 
-  <script>
-    const DB_NAME = 'GivyRewardsDB';
-    const DB_VERSION = 1;
-    const STORE_PRODUCTS = 'products';
-    const STORE_SETTINGS = 'settings';
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAzSh_wSb6hdZtq3HULcNnyZmT8HbA1CRU",
+      authDomain: "givy-rewards-7e086.firebaseapp.com",
+      projectId: "givy-rewards-7e086",
+      storageBucket: "givy-rewards-7e086.firebasestorage.app",
+      messagingSenderId: "279968070839",
+      appId: "1:279968070839:web:8761241835b0ee273da132"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
     let products = [];
     let categories = ['furniture', 'seating', 'beds', 'rugs', 'decor', 'office'];
@@ -113,65 +120,34 @@
     let clickCount = 0;
     let lbImages = [];
     let lbIndex = 0;
-    let db = null;
 
-    function openDB() {
-      return new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB_NAME, DB_VERSION);
-        req.onupgradeneeded = (e) => {
-          const database = e.target.result;
-          if (!database.objectStoreNames.contains(STORE_PRODUCTS)) {
-            database.createObjectStore(STORE_PRODUCTS, { keyPath: 'id' });
-          }
-          if (!database.objectStoreNames.contains(STORE_SETTINGS)) {
-            database.createObjectStore(STORE_SETTINGS, { keyPath: 'key' });
-          }
-        };
-        req.onsuccess = (e) => { db = e.target.result; resolve(db); };
-        req.onerror = (e) => reject(e.target.error);
+    // Real-time products subscription
+    const productsRef = collection(db, 'products');
+    const productsQuery = query(productsRef, orderBy('createdAt', 'desc'));
+
+    onSnapshot(productsQuery, (snapshot) => {
+      products = [];
+      snapshot.forEach(docSnap => {
+        products.push({ id: docSnap.id, ...docSnap.data() });
       });
-    }
-
-    function idbGetAll(storeName) {
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction(storeName, 'readonly');
-        const req = tx.objectStore(storeName).getAll();
-        req.onsuccess = () => resolve(req.result || []);
-        req.onerror = () => reject(req.error);
-      });
-    }
-
-    function idbGet(storeName, key) {
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction(storeName, 'readonly');
-        const req = tx.objectStore(storeName).get(key);
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-      });
-    }
-
-    async function loadData() {
-      try {
-        if (!db) await openDB();
-        products = await idbGetAll(STORE_PRODUCTS);
-        products.sort((a, b) => (a.id || 0) - (b.id || 0));
-
-        const catsRow = await idbGet(STORE_SETTINGS, 'categories');
-        if (catsRow && catsRow.value) categories = catsRow.value;
-
-        const fbRow = await idbGet(STORE_SETTINGS, 'globalFb');
-        globalFb = (fbRow && fbRow.value) || '';
-      } catch(err) {
-        console.error('Load error:', err);
-        const savedProducts = localStorage.getItem('givy_products');
-        products = savedProducts ? JSON.parse(savedProducts) : [];
-        const savedCats = localStorage.getItem('givy_categories');
-        if (savedCats) categories = JSON.parse(savedCats);
-        globalFb = localStorage.getItem('givy_global_fb') || '';
-      }
-      renderFilters();
+      console.log('Products synced from Firebase:', products.length);
+      document.getElementById('liveIndicator').style.display = 'flex';
       renderProducts();
-    }
+    }, (error) => {
+      console.error('Firestore error:', error);
+      document.getElementById('products').innerHTML = '<div class="empty">Connection error. Please refresh the page.</div>';
+    });
+
+    // Settings subscription (categories + facebook username)
+    const settingsRef = doc(db, 'shop_settings', 'main');
+    onSnapshot(settingsRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.categories && data.categories.length) categories = data.categories;
+        globalFb = data.globalFb || '';
+        renderFilters();
+      }
+    }, (err) => console.warn('Settings load error:', err));
 
     function renderFilters() {
       const container = document.getElementById('filters');
@@ -238,21 +214,19 @@
       }
     }
 
-    function navLightbox(e, dir) {
+    window.navLightbox = function(e, dir) {
       if (e) e.stopPropagation();
       lbIndex = (lbIndex + dir + lbImages.length) % lbImages.length;
       updateLightbox();
-    }
-
-    function jumpLightbox(e, i) {
+    };
+    window.jumpLightbox = function(e, i) {
       if (e) e.stopPropagation();
       lbIndex = i;
       updateLightbox();
-    }
-
-    function closeLightbox() {
+    };
+    window.closeLightbox = function() {
       document.getElementById('lightbox').classList.remove('active');
-    }
+    };
 
     document.getElementById('lightbox').addEventListener('click', (e) => {
       if (e.target.id === 'lightbox') closeLightbox();
@@ -271,7 +245,7 @@
       const encoded = encodeURIComponent(msg);
 
       if (!user) {
-        alert('No Facebook username set yet.\n\nContact the seller about: ' + product.name + '\n\n(Admin can add a username in the admin panel.)');
+        alert('No Facebook username set yet.\n\nContact the seller about: ' + product.name);
         return;
       }
       const url = 'https://m.me/' + user + '?text=' + encoded;
@@ -279,8 +253,8 @@
     }
 
     function openMarketplace(product) {
-      const query = encodeURIComponent((product.name + ' ' + (product.brand || '')).trim());
-      const url = 'https://www.facebook.com/marketplace/search/?query=' + query;
+      const q = encodeURIComponent((product.name + ' ' + (product.brand || '')).trim());
+      const url = 'https://www.facebook.com/marketplace/search/?query=' + q;
       window.open(url, '_blank');
     }
 
@@ -296,7 +270,7 @@
       }
 
       if(filtered.length === 0) {
-        const msg = activeFilter === '__sold' ? '\uD83D\uDCED No sold products yet' : '\u2728 No products';
+        const msg = activeFilter === '__sold' ? '\uD83D\uDCED No sold products yet' : '\u2728 No products yet';
         container.innerHTML = '<div class="empty">' + msg + '</div>';
         return;
       }
@@ -338,18 +312,9 @@
       if(clickCount >= 3) location.href = 'shop-admin.html';
     };
 
-    try {
-      const bc = new BroadcastChannel('givy_sync');
-      bc.onmessage = (e) => { if (e.data && e.data.type === 'update') loadData(); };
-    } catch(e) {}
-
-    window.addEventListener('storage', (e) => {
-      if (e.key === 'givy_updated') loadData();
-    });
-
     function escapeHtml(str) { return str ? String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])) : ''; }
 
-    loadData();
+    renderFilters();
   </script>
 
 </body>
