@@ -13,13 +13,11 @@
     h1 { color: #C5A267; margin-bottom: 20px; }
     .exit-btn { background: #333; padding: 10px 20px; border: none; border-radius: 30px; color: white; cursor: pointer; margin-bottom: 20px; }
     .exit-btn-givy { background: linear-gradient(135deg,#059669,#047857); padding: 10px 20px; border: none; border-radius: 30px; color: white; cursor: pointer; margin-bottom: 20px; font-weight: 700; }
-    .exit-btn-givy:hover { box-shadow: 0 4px 14px rgba(5,150,105,0.4); }
     .exit-btns-row { display: flex; gap: 8px; flex-wrap: wrap; }
     .card { background: #121212; border-radius: 20px; padding: 20px; margin-bottom: 30px; }
     input, textarea, select { width: 100%; padding: 10px; margin: 8px 0 15px 0; background: #1E1E1E; border: 1px solid #333; border-radius: 10px; color: white; }
     button { background: #C5A267; border: none; padding: 12px 20px; border-radius: 30px; font-weight: bold; cursor: pointer; margin: 5px; }
     .btn-del { background: #aa2e2e; color: white; }
-    .btn-fb { background: #1877F2; color: white; }
     .btn-export { background: #2a7f4f; color: white; }
     .product-item { background: #1A1A1A; padding: 15px; margin: 10px 0; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
     .login-box { text-align: center; padding: 50px; background: #121212; border-radius: 20px; max-width: 300px; margin: 50px auto; }
@@ -29,10 +27,11 @@
     .preview-grid { display: flex; flex-wrap: wrap; gap: 12px; margin: 15px 0; }
     .preview-img { position: relative; width: 80px; height: 80px; background: #0A0A0A; border-radius: 12px; overflow: hidden; border: 1px solid #444; }
     .preview-img img { width: 100%; height: 100%; object-fit: cover; }
+    .preview-img.uploading { opacity: 0.5; }
+    .preview-img.uploading::after { content: '\u23F3'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
     .remove-img { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); border-radius: 20px; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 10px; color: white; }
     .upload-btn { background: #2a2a2a; border: 1px solid #C5A267; padding: 10px 15px; border-radius: 30px; color: #C5A267; cursor: pointer; display: inline-flex; gap: 8px; margin-bottom: 10px; }
     .upload-info { color: #888; font-size: 12px; margin-top: 5px; }
-    .storage-info { color: #888; font-size: 11px; margin-top: 8px; }
     .progress-bar { height: 4px; background: #1E1E1E; border-radius: 2px; margin-top: 8px; overflow: hidden; display: none; }
     .progress-fill { height: 100%; background: #C5A267; width: 0%; transition: width 0.2s; }
     .info-box { background: #1A1A1A; border-left: 3px solid #C5A267; padding: 12px 15px; border-radius: 8px; margin: 10px 0; font-size: 13px; color: #ccc; line-height: 1.5; }
@@ -40,13 +39,14 @@
     .info-box ol { margin: 8px 0 0 20px; }
     .info-box li { margin: 4px 0; }
     .info-box code { background: #0A0A0A; padding: 2px 6px; border-radius: 4px; color: #C5A267; font-size: 12px; }
-    .settings-input-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
-    .settings-input-row input { margin: 0; flex: 1; }
     .tab-btn { background: #1A1A1A; border: 1px solid #333; padding: 6px 14px; border-radius: 30px; color: #ccc; cursor: pointer; font-size: 13px; font-weight: normal; margin: 0; }
     .tab-btn.active { background: #C5A267; color: #000; border-color: #C5A267; font-weight: bold; }
     .btn-sold { background: #8b2e2e; color: white; }
     .btn-unmark { background: #3a7f5f; color: white; }
     .sold-tag { display: inline-block; background: #aa2e2e; color: white; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-left: 8px; font-weight: bold; }
+    .live-badge { display: inline-block; background: rgba(16,185,129,0.15); color: #10b981; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid rgba(16,185,129,0.3); margin-left: 10px; }
+    .live-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; animation: pulse 1.5s ease-in-out infinite; margin-right: 4px; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
   </style>
 </head>
 <body>
@@ -62,7 +62,7 @@
 <div id="adminPanel" style="display: none;">
   <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-      <h1>&#128081; GivyRewardsAdmin</h1>
+      <h1>&#128081; GivyRewardsAdmin <span class="live-badge"><span class="live-dot"></span>Live sync</span></h1>
       <div class="exit-btns-row">
         <button class="exit-btn-givy" id="exitToGivyBtn">&#8592; Givy Rewards</button>
         <button class="exit-btn" id="exitBtn">&#128682; Exit to Shop</button>
@@ -82,7 +82,7 @@
 
   <div style="margin: 15px 0;">
     <label style="color:#C5A267;">&#128248; Product Images (up to 10 photos)</label>
-    <div class="upload-info">Images auto-compressed. Uses IndexedDB - huge capacity.</div>
+    <div class="upload-info">Images uploaded to cloud storage. Visible on all devices.</div>
     <div style="margin-top:8px;">
       <input type="file" id="imageInput" accept="image/*" multiple style="display:none">
       <button type="button" class="upload-btn" id="uploadBtn">&#128228; Select Images (Max 10)</button>
@@ -98,7 +98,6 @@
     <button id="cancelEditBtn" style="display:none;">&#10060; Cancel</button>
   </div>
   <input type="hidden" id="editId">
-  <div class="storage-info" id="storageInfo"></div>
 </div>
 
 <!-- CATEGORIES & FB SETTINGS -->
@@ -134,16 +133,14 @@
     <strong>How it works - one-time setup:</strong>
     <ol>
       <li>Go to <code>business.facebook.com</code> &rarr; create Commerce Manager catalog (type: E-commerce).</li>
-      <li>Click <strong>"Export Images ZIP"</strong> below &rarr; unpack the archive &rarr; upload the <code>images/</code> folder to your GitHub repo (next to <code>shop.html</code>).</li>
-      <li>Click <strong>"Export Catalog Feed"</strong> &rarr; upload <code>feed.csv</code> to the same repo.</li>
+      <li>Click <strong>"Export Catalog Feed"</strong> below &rarr; upload <code>feed.csv</code> to your GitHub repo.</li>
       <li>In Commerce Manager &rarr; Data Sources &rarr; Add Feed &rarr; paste URL <code>[your-site]/feed.csv</code> &rarr; set "Update daily".</li>
     </ol>
-    <strong style="display:block; margin-top:10px;">Every time you add/edit products:</strong> just re-export both files and upload them. Facebook re-reads the feed automatically.
+    <strong style="display:block; margin-top:10px;">Note:</strong> Images are now hosted in the cloud automatically. No need to export them manually anymore.
   </div>
 
   <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
     <button id="exportFeedBtn" class="btn-export">&#128196; Export Catalog Feed (CSV)</button>
-    <button id="exportImagesBtn" class="btn-export">&#128444;&#65039; Export Images ZIP</button>
   </div>
   <div id="exportStatus" style="margin-top: 12px; color:#C5A267; font-size:13px;"></div>
 </div>
@@ -167,121 +164,47 @@
 
 <div id="toast" class="toast">&#10024; Done</div>
 
-<script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAzSh_wSb6hdZtq3HULcNnyZmT8HbA1CRU",
+    authDomain: "givy-rewards-7e086.firebaseapp.com",
+    projectId: "givy-rewards-7e086",
+    storageBucket: "givy-rewards-7e086.firebasestorage.app",
+    messagingSenderId: "279968070839",
+    appId: "1:279968070839:web:8761241835b0ee273da132"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
   const PASSWORD = "admin123";
-  const MAX_IMAGE_DIMENSION = 900;
-  const JPEG_QUALITY = 0.70;
-  const DB_NAME = 'GivyRewardsDB';
-  const DB_VERSION = 1;
-  const STORE_PRODUCTS = 'products';
-  const STORE_SETTINGS = 'settings';
+  const MAX_IMAGE_DIMENSION = 1200;
+  const JPEG_QUALITY = 0.85;
+  const CLOUDINARY_CLOUD_NAME = "dyxlwkgo7";
+  const CLOUDINARY_UPLOAD_PRESET = "givy_upload";
 
   let products = [];
   let categories = ['furniture', 'seating', 'beds', 'rugs', 'decor', 'office'];
   let globalFb = '';
   let siteBaseUrl = '';
-  let currentImages = [];
-  let currentPreviewImages = [];
-  let db = null;
+  let currentImages = []; // URLs from Cloudinary
+  let db_ready = false;
 
-  function openDB() {
-    return new Promise((resolve, reject) => {
-      const req = indexedDB.open(DB_NAME, DB_VERSION);
-      req.onupgradeneeded = (e) => {
-        const database = e.target.result;
-        if (!database.objectStoreNames.contains(STORE_PRODUCTS)) {
-          database.createObjectStore(STORE_PRODUCTS, { keyPath: 'id' });
-        }
-        if (!database.objectStoreNames.contains(STORE_SETTINGS)) {
-          database.createObjectStore(STORE_SETTINGS, { keyPath: 'key' });
-        }
-      };
-      req.onsuccess = (e) => { db = e.target.result; resolve(db); };
-      req.onerror = (e) => reject(e.target.error);
-    });
-  }
-
-  function idbGetAll(storeName) {
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(storeName, 'readonly');
-      const req = tx.objectStore(storeName).getAll();
-      req.onsuccess = () => resolve(req.result || []);
-      req.onerror = () => reject(req.error);
-    });
-  }
-
-  function idbGet(storeName, key) {
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(storeName, 'readonly');
-      const req = tx.objectStore(storeName).get(key);
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-  }
-
-  function idbPut(storeName, value) {
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(storeName, 'readwrite');
-      tx.objectStore(storeName).put(value);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
-    });
-  }
-
-  function idbDelete(storeName, key) {
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(storeName, 'readwrite');
-      tx.objectStore(storeName).delete(key);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  }
-
-  async function migrateFromLocalStorage() {
-    const migratedFlag = await idbGet(STORE_SETTINGS, 'migrated_v1');
-    if (migratedFlag) return;
-
-    try {
-      const oldProducts = localStorage.getItem('givy_products');
-      if (oldProducts) {
-        const parsed = JSON.parse(oldProducts);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          for (const p of parsed) await idbPut(STORE_PRODUCTS, p);
-        }
-      }
-      const oldCats = localStorage.getItem('givy_categories');
-      if (oldCats) await idbPut(STORE_SETTINGS, { key: 'categories', value: JSON.parse(oldCats) });
-      const oldFb = localStorage.getItem('givy_global_fb');
-      if (oldFb) await idbPut(STORE_SETTINGS, { key: 'globalFb', value: oldFb });
-    } catch(e) { console.warn('Migration warning:', e); }
-
-    await idbPut(STORE_SETTINGS, { key: 'migrated_v1', value: true });
-    try { localStorage.removeItem('givy_products'); } catch(e) {}
-  }
-
-  document.getElementById('loginBtn').onclick = async () => {
+  // ===== AUTH =====
+  document.getElementById('loginBtn').onclick = () => {
     const pwd = document.getElementById('password').value;
     if(pwd === PASSWORD) {
       localStorage.setItem('admin_auth', 'true');
       document.getElementById('loginBox').style.display = 'none';
       document.getElementById('adminPanel').style.display = 'block';
-      await initApp();
+      initApp();
     } else {
       alert('Wrong password');
     }
   };
-
-  async function initApp() {
-    try {
-      await openDB();
-      await migrateFromLocalStorage();
-      await loadAll();
-    } catch(err) {
-      console.error('DB init failed:', err);
-      alert('Failed to open local database: ' + (err && err.message ? err.message : err));
-    }
-  }
 
   if(localStorage.getItem('admin_auth') === 'true') {
     document.getElementById('loginBox').style.display = 'none';
@@ -289,6 +212,56 @@
     initApp();
   }
 
+  function initApp() {
+    // Real-time products subscription
+    const productsRef = collection(db, 'products');
+    const productsQuery = query(productsRef, orderBy('createdAt', 'desc'));
+    onSnapshot(productsQuery, (snapshot) => {
+      products = [];
+      snapshot.forEach(docSnap => {
+        products.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      db_ready = true;
+      renderProductList();
+    }, (error) => {
+      console.error('Firestore error:', error);
+      alert('Failed to connect to Firebase: ' + error.message);
+    });
+
+    // Settings subscription
+    const settingsRef = doc(db, 'shop_settings', 'main');
+    onSnapshot(settingsRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.categories && data.categories.length) categories = data.categories;
+        globalFb = data.globalFb || '';
+        siteBaseUrl = data.siteBaseUrl || '';
+      }
+      const fbInput = document.getElementById('globalFb');
+      const urlInput = document.getElementById('siteBaseUrl');
+      if (fbInput) fbInput.value = globalFb;
+      if (urlInput) urlInput.value = siteBaseUrl;
+      renderCategorySelect();
+      renderCatList();
+    });
+  }
+
+  // ===== CLOUDINARY UPLOAD =====
+  async function uploadToCloudinary(file) {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+    fd.append('cloud_name', CLOUDINARY_CLOUD_NAME);
+    const res = await fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD_NAME + '/image/upload', {
+      method: 'POST',
+      body: fd
+    });
+    if (!res.ok) throw new Error('Upload failed: ' + res.status);
+    const data = await res.json();
+    return data.secure_url;
+  }
+
+  // ===== IMAGE COMPRESSION (before upload) =====
   function compressImage(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -314,9 +287,10 @@
           ctx.fillStyle = '#1E1E1E';
           ctx.fillRect(0, 0, width, height);
           ctx.drawImage(img, 0, 0, width, height);
-          try {
-            resolve(canvas.toDataURL('image/jpeg', JPEG_QUALITY));
-          } catch (err) { reject(err); }
+          canvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('Compression failed'));
+          }, 'image/jpeg', JPEG_QUALITY);
         };
         img.onerror = () => reject(new Error('Image load failed'));
         img.src = e.target.result;
@@ -330,11 +304,11 @@
     const grid = document.getElementById('previewGrid');
     if(!grid) return;
     grid.innerHTML = '';
-    if(currentPreviewImages.length === 0) {
+    if(currentImages.length === 0) {
       grid.innerHTML = '<div style="color:#777; font-size:12px; padding:10px 0;">No images selected. Upload up to 10 photos.</div>';
       return;
     }
-    currentPreviewImages.forEach((src, idx) => {
+    currentImages.forEach((src, idx) => {
       const div = document.createElement('div');
       div.className = 'preview-img';
       const img = document.createElement('img');
@@ -344,7 +318,6 @@
       rm.innerHTML = '\u2715';
       rm.onclick = (e) => {
         e.stopPropagation();
-        currentPreviewImages.splice(idx, 1);
         currentImages.splice(idx, 1);
         renderImagePreview();
       };
@@ -357,7 +330,7 @@
   document.getElementById('uploadBtn').onclick = () => document.getElementById('imageInput').click();
   document.getElementById('imageInput').onchange = async (e) => {
     const files = Array.from(e.target.files);
-    const remaining = 10 - currentPreviewImages.length;
+    const remaining = 10 - currentImages.length;
     const toAdd = files.slice(0, remaining);
     const statusEl = document.getElementById('compressStatus');
     const bar = document.getElementById('progressBar');
@@ -368,105 +341,45 @@
 
     for (const file of toAdd) {
       if (!file.type.startsWith('image/')) { done++; continue; }
-      statusEl.textContent = '\u23F3 ' + (done + 1) + '/' + toAdd.length + ' - compressing...';
+      statusEl.textContent = '\u23F3 ' + (done + 1) + '/' + toAdd.length + ' - uploading...';
       try {
         const compressed = await compressImage(file);
-        currentImages.push(compressed);
-        currentPreviewImages.push(compressed);
+        const url = await uploadToCloudinary(compressed);
+        currentImages.push(url);
         renderImagePreview();
-      } catch (err) { console.error('Compression failed:', err); }
+      } catch (err) {
+        console.error('Upload failed:', err);
+        showToast('Upload failed for ' + file.name);
+      }
       done++;
       fill.style.width = Math.round((done / toAdd.length) * 100) + '%';
     }
-    statusEl.textContent = '\u2705 ' + toAdd.length + ' image(s) ready';
+    statusEl.textContent = '\u2705 ' + currentImages.length + ' image(s) ready';
     setTimeout(() => { statusEl.textContent = ''; bar.style.display = 'none'; }, 2000);
     e.target.value = '';
     if(toAdd.length < files.length) showToast('Max 10 per product. Added ' + toAdd.length + ' of ' + files.length);
-    await updateStorageInfo();
   };
 
   function resetImages() {
     currentImages = [];
-    currentPreviewImages = [];
     renderImagePreview();
   }
 
-  async function updateStorageInfo() {
-    const el = document.getElementById('storageInfo');
+  // ===== SAVE SETTINGS =====
+  async function saveSettings(updates) {
     try {
-      if (navigator.storage && navigator.storage.estimate) {
-        const est = await navigator.storage.estimate();
-        const usedMB = (est.usage / 1048576).toFixed(1);
-        const quotaMB = (est.quota / 1048576).toFixed(0);
-        el.textContent = '\uD83D\uDCBE Used: ' + usedMB + ' MB of ~' + quotaMB + ' MB available (IndexedDB)';
-      } else {
-        el.textContent = '\uD83D\uDCBE Using IndexedDB (large capacity)';
-      }
-    } catch(e) {
-      el.textContent = '\uD83D\uDCBE Using IndexedDB (large capacity)';
-    }
-  }
-
-  async function loadAll() {
-    products = await idbGetAll(STORE_PRODUCTS);
-    products.sort((a, b) => (a.id || 0) - (b.id || 0));
-
-    const catsRow = await idbGet(STORE_SETTINGS, 'categories');
-    if (catsRow && catsRow.value) categories = catsRow.value;
-
-    const fbRow = await idbGet(STORE_SETTINGS, 'globalFb');
-    globalFb = (fbRow && fbRow.value) || '';
-    document.getElementById('globalFb').value = globalFb;
-
-    const urlRow = await idbGet(STORE_SETTINGS, 'siteBaseUrl');
-    siteBaseUrl = (urlRow && urlRow.value) || '';
-    document.getElementById('siteBaseUrl').value = siteBaseUrl;
-
-    renderCategorySelect();
-    renderCatList();
-    renderProductList();
-    document.getElementById('count').innerText = products.length;
-    await updateStorageInfo();
-  }
-
-  function notifyShop() {
-    try {
-      const bc = new BroadcastChannel('givy_sync');
-      bc.postMessage({ type: 'update', ts: Date.now() });
-      bc.close();
-    } catch(e) {}
-    try { localStorage.setItem('givy_updated', String(Date.now())); } catch(e) {}
-  }
-
-  async function saveCategories() {
-    try {
-      await idbPut(STORE_SETTINGS, { key: 'categories', value: categories });
-      renderCategorySelect();
-      renderCatList();
-      notifyShop();
-      showToast('\u2705 Saved');
+      const ref = doc(db, 'shop_settings', 'main');
+      await setDoc(ref, updates, { merge: true });
       return true;
-    } catch(err) {
-      alert('Save failed: ' + (err && err.message ? err.message : err));
-      return false;
-    }
-  }
-
-  async function saveProduct(product) {
-    try {
-      await idbPut(STORE_PRODUCTS, product);
-      notifyShop();
-      return true;
-    } catch(err) {
-      alert('\u26A0\uFE0F Save failed!\n\n' + (err && err.name === 'QuotaExceededError'
-        ? 'Device storage is full. Please delete some products or images.'
-        : (err && err.message ? err.message : err)));
+    } catch (err) {
+      alert('Save failed: ' + err.message);
       return false;
     }
   }
 
   function renderCategorySelect() {
     const select = document.getElementById('category');
+    if (!select) return;
     const prev = select.value;
     select.innerHTML = '';
     categories.forEach(cat => {
@@ -480,34 +393,41 @@
 
   function renderCatList() {
     const container = document.getElementById('catList');
+    if (!container) return;
     container.innerHTML = '';
     categories.forEach((cat, idx) => {
       const div = document.createElement('div');
       div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#1E1E1E; padding:10px; margin:5px 0; border-radius:10px;';
-      div.innerHTML = '<span>' + cat + '</span><button onclick="deleteCategory(' + idx + ')" style="background:#aa2e2e; padding:5px 12px;">Delete</button>';
+      div.innerHTML = '<span>' + cat + '</span><button data-idx="' + idx + '" class="del-cat-btn" style="background:#aa2e2e; padding:5px 12px;">Delete</button>';
       container.appendChild(div);
+    });
+    container.querySelectorAll('.del-cat-btn').forEach(b => {
+      b.onclick = () => deleteCategory(parseInt(b.dataset.idx));
     });
   }
 
-  window.deleteCategory = async (idx) => {
-    if(confirm('Delete this category?')) {
-      categories.splice(idx, 1);
-      if(categories.length === 0) categories = ['other'];
-      await saveCategories();
+  async function deleteCategory(idx) {
+    if(!confirm('Delete this category?')) return;
+    const newCats = categories.slice();
+    newCats.splice(idx, 1);
+    if(newCats.length === 0) newCats.push('other');
+    if (await saveSettings({ categories: newCats })) {
+      showToast('\u2705 Category deleted');
     }
-  };
+  }
 
   document.getElementById('addCatBtn').onclick = async () => {
     const newCat = document.getElementById('newCat').value.trim().toLowerCase();
     if(newCat && !categories.includes(newCat)) {
-      categories.push(newCat);
+      const newCats = [...categories, newCat];
       document.getElementById('newCat').value = '';
-      if (await saveCategories()) showToast('Category "' + newCat + '" added');
+      if (await saveSettings({ categories: newCats })) showToast('Category "' + newCat + '" added');
     } else {
       alert('Invalid or duplicate category');
     }
   };
 
+  // ===== PRODUCT CRUD =====
   function clearForm() {
     document.getElementById('name').value = '';
     document.getElementById('brand').value = 'GIVY STUDIO';
@@ -529,28 +449,35 @@
       return false;
     }
     const editId = document.getElementById('editId').value;
-    const existing = editId ? products.find(p => p.id == editId) : null;
-    const product = {
-      id: editId ? parseInt(editId) : Date.now(),
-      name, brand: document.getElementById('brand').value.trim(),
+    const existing = editId ? products.find(p => p.id === editId) : null;
+
+    const productData = {
+      name: name,
+      brand: document.getElementById('brand').value.trim() || 'GIVY STUDIO',
       category: document.getElementById('category').value,
       desc: document.getElementById('desc').value.trim(),
-      price,
+      price: price,
       fbUser: document.getElementById('fbUser').value.trim(),
       images: [...currentImages],
-      sold: existing ? !!existing.sold : false,
-      ...(existing && existing.soldDate ? { soldDate: existing.soldDate } : {})
+      sold: existing ? !!existing.sold : false
     };
-    const ok = await saveProduct(product);
-    if (!ok) return false;
-    const idx = products.findIndex(p => p.id == product.id);
-    if (idx !== -1) products[idx] = product; else products.push(product);
-    renderProductList();
-    document.getElementById('count').innerText = products.length;
-    await updateStorageInfo();
-    showToast(editId ? 'Product updated' : '"' + name + '" added');
-    clearForm();
-    return true;
+    if (existing && existing.soldDate) productData.soldDate = existing.soldDate;
+    if (!existing) productData.createdAt = Date.now();
+
+    try {
+      if (editId) {
+        await updateDoc(doc(db, 'products', editId), productData);
+        showToast('Product updated');
+      } else {
+        await addDoc(collection(db, 'products'), productData);
+        showToast('"' + name + '" added');
+      }
+      clearForm();
+      return true;
+    } catch (err) {
+      alert('Save failed: ' + err.message);
+      return false;
+    }
   }
 
   document.getElementById('saveBtn').onclick = doSaveProduct;
@@ -562,17 +489,16 @@
   document.getElementById('cancelEditBtn').onclick = () => clearForm();
 
   window.editProduct = (id) => {
-    const p = products.find(p => p.id == id);
+    const p = products.find(p => p.id === id);
     if(!p) return;
-    document.getElementById('name').value = p.name;
-    document.getElementById('brand').value = p.brand;
-    document.getElementById('category').value = p.category;
-    document.getElementById('desc').value = p.desc;
-    document.getElementById('price').value = p.price;
+    document.getElementById('name').value = p.name || '';
+    document.getElementById('brand').value = p.brand || 'GIVY STUDIO';
+    document.getElementById('category').value = p.category || categories[0];
+    document.getElementById('desc').value = p.desc || '';
+    document.getElementById('price').value = p.price || '';
     document.getElementById('fbUser').value = p.fbUser || '';
     document.getElementById('editId').value = p.id;
     currentImages = p.images ? [...p.images] : [];
-    currentPreviewImages = p.images ? [...p.images] : [];
     renderImagePreview();
     document.getElementById('saveBtn').innerHTML = '\u270F\uFE0F Update Product';
     document.getElementById('cancelEditBtn').style.display = 'inline-block';
@@ -581,24 +507,19 @@
   };
 
   window.deleteProduct = async (id) => {
-    if(confirm('Delete this product?')) {
-      try {
-        await idbDelete(STORE_PRODUCTS, parseInt(id));
-        products = products.filter(p => p.id != id);
-        renderProductList();
-        document.getElementById('count').innerText = products.length;
-        if(document.getElementById('editId').value == id) clearForm();
-        notifyShop();
-        await updateStorageInfo();
-        showToast('Product deleted');
-      } catch(err) { alert('Delete failed: ' + err.message); }
-    }
+    if(!confirm('Delete this product?\n\nThis will remove it from all devices.')) return;
+    try {
+      await deleteDoc(doc(db, 'products', id));
+      if(document.getElementById('editId').value === id) clearForm();
+      showToast('Product deleted');
+    } catch(err) { alert('Delete failed: ' + err.message); }
   };
 
   let productsTab = 'active';
 
   function renderProductList() {
     const container = document.getElementById('productList');
+    if (!container) return;
     let list = products;
     if (productsTab === 'active') list = products.filter(p => !p.sold);
     else if (productsTab === 'sold') list = products.filter(p => p.sold);
@@ -616,18 +537,18 @@
       return '<div class="product-item" ' + (p.sold ? 'style="opacity:0.7;"' : '') + '>' +
         '<div>' +
           '<strong style="color:#C5A267;">' + escapeHtml(p.name) + '</strong>' + (p.sold ? '<span class="sold-tag">SOLD</span>' : '') + '<br>' +
-          '<span style="color:#888;">' + escapeHtml(p.brand) + ' | ' + p.category + '</span><br>' +
+          '<span style="color:#888;">' + escapeHtml(p.brand) + ' | ' + escapeHtml(p.category) + '</span><br>' +
           '<span style="color:#C5A267;">$' + p.price + '</span>' +
           (p.fbUser ? '<div style="font-size:11px; color:#1877F2;">FB: ' + escapeHtml(p.fbUser) + '</div>' : '') +
           (p.images && p.images.length ? '<div style="font-size:11px; color:#C5A267;">\uD83D\uDCF7 ' + p.images.length + ' photo(s)</div>' : '') +
           (p.sold && soldDateStr ? '<div style="font-size:11px; color:#aa2e2e;">Sold on ' + soldDateStr + '</div>' : '') +
         '</div>' +
         '<div>' +
-          '<button onclick="editProduct(' + p.id + ')" style="background:#2a5f8a;">\u270F\uFE0F Edit</button>' +
+          '<button onclick="editProduct(\'' + p.id + '\')" style="background:#2a5f8a;">\u270F\uFE0F Edit</button>' +
           (p.sold
-            ? '<button onclick="unmarkSold(' + p.id + ')" class="btn-unmark">\u21A9 Unmark</button>'
-            : '<button onclick="markSold(' + p.id + ')" class="btn-sold">\u2713 Sold</button>') +
-          '<button onclick="deleteProduct(' + p.id + ')" class="btn-del">\uD83D\uDDD1\uFE0F Delete</button>' +
+            ? '<button onclick="unmarkSold(\'' + p.id + '\')" class="btn-unmark">\u21A9 Unmark</button>'
+            : '<button onclick="markSold(\'' + p.id + '\')" class="btn-sold">\u2713 Sold</button>') +
+          '<button onclick="deleteProduct(\'' + p.id + '\')" class="btn-del">\uD83D\uDDD1\uFE0F Delete</button>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -643,54 +564,38 @@
   });
 
   window.markSold = async (id) => {
-    const p = products.find(p => p.id == id);
+    const p = products.find(p => p.id === id);
     if (!p) return;
-    if (!confirm('Mark "' + p.name + '" as SOLD?\n\nIt will move to the Sold tab and will be hidden from the main shop view.')) return;
-    p.sold = true;
-    p.soldDate = Date.now();
-    const ok = await saveProduct(p);
-    if (ok) {
-      renderProductList();
+    if (!confirm('Mark "' + p.name + '" as SOLD?')) return;
+    try {
+      await updateDoc(doc(db, 'products', id), { sold: true, soldDate: Date.now() });
       showToast('"' + p.name + '" marked as sold');
-    }
+    } catch(err) { alert('Update failed: ' + err.message); }
   };
 
   window.unmarkSold = async (id) => {
-    const p = products.find(p => p.id == id);
+    const p = products.find(p => p.id === id);
     if (!p) return;
     if (!confirm('Mark "' + p.name + '" as available again?')) return;
-    p.sold = false;
-    delete p.soldDate;
-    const ok = await saveProduct(p);
-    if (ok) {
-      renderProductList();
+    try {
+      await updateDoc(doc(db, 'products', id), { sold: false, soldDate: null });
       showToast('"' + p.name + '" back in stock');
-    }
+    } catch(err) { alert('Update failed: ' + err.message); }
   };
 
+  // ===== FACEBOOK SETTINGS =====
   document.getElementById('saveGlobalFbBtn').onclick = async () => {
-    globalFb = document.getElementById('globalFb').value.trim();
-    try {
-      await idbPut(STORE_SETTINGS, { key: 'globalFb', value: globalFb });
-      notifyShop();
-      showToast('Messenger username saved');
-    } catch(err) { alert('Save failed: ' + err.message); }
+    const v = document.getElementById('globalFb').value.trim();
+    if (await saveSettings({ globalFb: v })) showToast('Messenger username saved');
   };
 
   document.getElementById('saveSiteUrlBtn').onclick = async () => {
     let v = document.getElementById('siteBaseUrl').value.trim();
     if (v.endsWith('/')) v = v.slice(0, -1);
-    siteBaseUrl = v;
-    try {
-      await idbPut(STORE_SETTINGS, { key: 'siteBaseUrl', value: siteBaseUrl });
-      showToast('Site URL saved');
-    } catch(err) { alert('Save failed: ' + err.message); }
+    if (await saveSettings({ siteBaseUrl: v })) showToast('Site URL saved');
   };
 
-  function imageFilename(productId, imgIndex) {
-    return 'img_' + productId + '_' + (imgIndex + 1) + '.jpg';
-  }
-
+  // ===== EXPORT FEED =====
   function csvField(v) {
     if (v === null || v === undefined) return '';
     const s = String(v);
@@ -700,10 +605,9 @@
 
   function buildFeedCSV() {
     if (!siteBaseUrl) {
-      alert('\u26A0\uFE0F Please set "Public site base URL" in Facebook Settings first (e.g. https://edb2026.github.io).\n\nFacebook needs public image URLs.');
+      alert('\u26A0\uFE0F Please set "Public site base URL" in Facebook Settings first.');
       return null;
     }
-    const base = siteBaseUrl;
     const headers = [
       'id','title','description','availability','condition',
       'price','link','image_link','brand','additional_image_link'
@@ -714,9 +618,6 @@
       const imgs = (p.images && p.images.length) ? p.images : [];
       if (imgs.length === 0) return;
 
-      const mainImg = base + '/images/' + imageFilename(p.id, 0);
-      const extraImgs = imgs.slice(1).map((_, i) => base + '/images/' + imageFilename(p.id, i + 1)).join(',');
-
       const row = [
         csvField(p.id),
         csvField(p.name || ''),
@@ -724,10 +625,10 @@
         csvField(p.sold ? 'out of stock' : 'in stock'),
         csvField('new'),
         csvField(Number(p.price).toFixed(2) + ' USD'),
-        csvField(base + '/shop.html'),
-        csvField(mainImg),
+        csvField(siteBaseUrl + '/shop.html'),
+        csvField(imgs[0]),
         csvField(p.brand || 'GIVY STUDIO'),
-        csvField(extraImgs)
+        csvField(imgs.slice(1).join(','))
       ];
       rows.push(row.join(','));
     });
@@ -758,60 +659,11 @@
     if (!csv) return;
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     downloadBlob(blob, 'feed.csv');
-    status.innerHTML = '\u2705 feed.csv downloaded (' + productsWithImages.length + ' products). Upload it to your GitHub repo next to shop.html.';
+    status.innerHTML = '\u2705 feed.csv downloaded (' + productsWithImages.length + ' products). Upload it to your GitHub repo.';
     setTimeout(() => { status.innerHTML = ''; }, 8000);
   };
 
-  function dataUrlToBlob(dataUrl) {
-    const [header, data] = dataUrl.split(',');
-    const mime = header.match(/:(.*?);/)[1];
-    const byteString = atob(data);
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
-    for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
-    return new Blob([ab], { type: mime });
-  }
-
-  document.getElementById('exportImagesBtn').onclick = async () => {
-    const status = document.getElementById('exportStatus');
-    if (products.length === 0) { alert('No products to export'); return; }
-    if (typeof JSZip === 'undefined') {
-      alert('\u26A0\uFE0F ZIP library not loaded. Check internet connection and reload page.');
-      return;
-    }
-
-    const zip = new JSZip();
-    const imagesFolder = zip.folder('images');
-    let fileCount = 0;
-
-    status.innerHTML = '\u23F3 Packing images...';
-    for (const p of products) {
-      if (!p.images || !p.images.length) continue;
-      p.images.forEach((dataUrl, idx) => {
-        try {
-          const blob = dataUrlToBlob(dataUrl);
-          imagesFolder.file(imageFilename(p.id, idx), blob);
-          fileCount++;
-        } catch(e) { console.warn('Skip image', p.id, idx, e); }
-      });
-    }
-
-    if (fileCount === 0) { alert('No images in any products'); status.innerHTML = ''; return; }
-
-    try {
-      const content = await zip.generateAsync({ type: 'blob' }, (meta) => {
-        status.innerHTML = '\u23F3 Packing: ' + Math.round(meta.percent) + '%';
-      });
-      downloadBlob(content, 'givy-images.zip');
-      status.innerHTML = '\u2705 givy-images.zip downloaded (' + fileCount + ' images). Unpack the ZIP and upload the <code>images/</code> folder to your GitHub repo (next to shop.html).';
-      setTimeout(() => { status.innerHTML = ''; }, 12000);
-    } catch(err) {
-      alert('ZIP failed: ' + err.message);
-      status.innerHTML = '';
-    }
-  };
-
-  // Exit buttons
+  // ===== EXIT BUTTONS =====
   document.getElementById('exitBtn').onclick = () => { window.location.href = 'shop.html'; };
   document.getElementById('exitToGivyBtn').onclick = () => { window.location.href = 'index.html'; };
 
