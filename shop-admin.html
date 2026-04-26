@@ -10,25 +10,28 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #0A0A0A; font-family: Arial, sans-serif; color: white; padding: 20px; }
     .container { max-width: 1000px; margin: 0 auto; }
-    h1 { color: #C5A267; margin-bottom: 20px; }
-    .exit-btn { background: #333; padding: 10px 20px; border: none; border-radius: 30px; color: white; cursor: pointer; margin-bottom: 20px; }
-    .exit-btn-givy { background: linear-gradient(135deg,#059669,#047857); padding: 10px 20px; border: none; border-radius: 30px; color: white; cursor: pointer; margin-bottom: 20px; font-weight: 700; }
-    .exit-btns-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    h1 { color: #C5A267; margin-bottom: 4px; display: inline-flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .exit-btn { background: #333; padding: 10px 20px; border: none; border-radius: 30px; color: white; cursor: pointer; }
+    .exit-btn-givy { background: linear-gradient(135deg,#059669,#047857); padding: 10px 20px; border: none; border-radius: 30px; color: white; cursor: pointer; font-weight: 700; }
+    .exit-btn-logout { background: #aa2e2e; padding: 10px 20px; border: none; border-radius: 30px; color: white; cursor: pointer; font-weight: 700; }
+    .exit-btns-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
     .card { background: #121212; border-radius: 20px; padding: 20px; margin-bottom: 30px; }
-    input, textarea, select { width: 100%; padding: 10px; margin: 8px 0 15px 0; background: #1E1E1E; border: 1px solid #333; border-radius: 10px; color: white; }
-    button { background: #C5A267; border: none; padding: 12px 20px; border-radius: 30px; font-weight: bold; cursor: pointer; margin: 5px; }
+    input, textarea, select { width: 100%; padding: 10px; margin: 8px 0 15px 0; background: #1E1E1E; border: 1px solid #333; border-radius: 10px; color: white; font-family: inherit; }
+    button { background: #C5A267; border: none; padding: 12px 20px; border-radius: 30px; font-weight: bold; cursor: pointer; margin: 5px; font-family: inherit; }
     .btn-del { background: #aa2e2e; color: white; }
     .btn-export { background: #2a7f4f; color: white; }
-    .product-item { background: #1A1A1A; padding: 15px; margin: 10px 0; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-    .login-box { text-align: center; padding: 50px; background: #121212; border-radius: 20px; max-width: 300px; margin: 50px auto; }
+    .product-item { background: #1A1A1A; padding: 15px; margin: 10px 0; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .login-box { text-align: center; padding: 40px 30px; background: #121212; border-radius: 20px; max-width: 360px; margin: 50px auto; }
+    .login-box h2 { color: #C5A267; margin-bottom: 8px; }
+    .login-box .sub { color: #888; font-size: 13px; margin-bottom: 20px; }
+    .login-error { background: rgba(170,46,46,0.15); color: #ff8585; border: 1px solid #aa2e2e; border-radius: 10px; padding: 10px 14px; margin: 10px 0; font-size: 13px; display: none; text-align: left; }
+    .login-error.show { display: block; }
     .toast { position: fixed; bottom: 20px; left: 20px; background: #C5A267; color: black; padding: 10px 20px; border-radius: 30px; opacity: 0; transition: 0.2s; z-index: 1000; }
     .toast.show { opacity: 1; }
     hr { margin: 20px 0; border-color: #333; }
     .preview-grid { display: flex; flex-wrap: wrap; gap: 12px; margin: 15px 0; }
     .preview-img { position: relative; width: 80px; height: 80px; background: #0A0A0A; border-radius: 12px; overflow: hidden; border: 1px solid #444; }
     .preview-img img { width: 100%; height: 100%; object-fit: cover; }
-    .preview-img.uploading { opacity: 0.5; }
-    .preview-img.uploading::after { content: '\u23F3'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
     .remove-img { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); border-radius: 20px; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 10px; color: white; }
     .upload-btn { background: #2a2a2a; border: 1px solid #C5A267; padding: 10px 15px; border-radius: 30px; color: #C5A267; cursor: pointer; display: inline-flex; gap: 8px; margin-bottom: 10px; }
     .upload-info { color: #888; font-size: 12px; margin-top: 5px; }
@@ -44,29 +47,45 @@
     .btn-sold { background: #8b2e2e; color: white; }
     .btn-unmark { background: #3a7f5f; color: white; }
     .sold-tag { display: inline-block; background: #aa2e2e; color: white; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-left: 8px; font-weight: bold; }
-    .live-badge { display: inline-block; background: rgba(16,185,129,0.15); color: #10b981; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid rgba(16,185,129,0.3); margin-left: 10px; }
+    .live-badge { display: inline-block; background: rgba(16,185,129,0.15); color: #10b981; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid rgba(16,185,129,0.3); }
     .live-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; animation: pulse 1.5s ease-in-out infinite; margin-right: 4px; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .admin-email { color: #888; font-size: 12px; margin-bottom: 16px; }
+    .header-row { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; }
   </style>
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
+
 <div id="loginBox" style="display: flex; justify-content: center; align-items: center; min-height: 100vh;">
   <div class="login-box">
     <h2>&#128274; Admin Login</h2>
-    <input type="password" id="password" placeholder="Password">
-    <button id="loginBtn">Login</button>
+    <div class="sub">Sign in with your admin Firebase account</div>
+    <input type="email" id="loginEmail" placeholder="Email" autocomplete="email">
+    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+    <div id="loginError" class="login-error"></div>
+    <button id="loginBtn" style="width:100%;">Login</button>
+    <div style="margin-top: 16px;">
+      <a id="forgotLink" style="color:#C5A267; cursor:pointer; font-size:13px; text-decoration:underline;">Forgot password?</a>
+    </div>
   </div>
 </div>
 
+<!-- ADMIN PANEL -->
+
 <div id="adminPanel" style="display: none;">
   <div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-      <h1>&#128081; GivyRewardsAdmin <span class="live-badge"><span class="live-dot"></span>Live sync</span></h1>
-      <div class="exit-btns-row">
-        <button class="exit-btn-givy" id="exitToGivyBtn">&#8592; Givy Rewards</button>
-        <button class="exit-btn" id="exitBtn">&#128682; Exit to Shop</button>
+    <div class="header-row">
+      <div>
+        <h1>&#128081; GivyRewardsAdmin <span class="live-badge"><span class="live-dot"></span>Live sync</span></h1>
+        <div class="admin-email" id="adminEmailDisplay"></div>
       </div>
+    </div>
+    <div class="exit-btns-row">
+      <button class="exit-btn-givy" id="exitToGivyBtn">&#8592; Givy Rewards</button>
+      <button class="exit-btn" id="exitBtn">&#128682; Exit to Shop</button>
+      <button class="exit-btn-logout" id="logoutBtn">&#128275; Logout</button>
     </div>
 
 ```
@@ -118,11 +137,11 @@
 
   <hr>
 
-  <label style="color:#888; font-size:12px;">Public site base URL (where feed.csv & images will live)</label>
-  <input type="text" id="siteBaseUrl" placeholder="e.g. https://edb2026.github.io">
+  <label style="color:#888; font-size:12px;">Public site base URL (where feed.csv will live)</label>
+  <input type="text" id="siteBaseUrl" placeholder="e.g. https://givyrewards.com">
   <button id="saveSiteUrlBtn">Save Site URL</button>
   <div class="info-box" style="margin-top:10px;">
-    <strong>&#8505;&#65039; Why this matters:</strong> Facebook Commerce needs public URLs for product images. This URL tells the exporter where your images will be hosted.
+    <strong>&#8505;&#65039; Why this matters:</strong> Facebook Commerce needs public URLs. This is your site's base address.
   </div>
 </div>
 
@@ -130,13 +149,13 @@
 <div class="card">
   <h3>&#128722; Facebook Commerce Export</h3>
   <div class="info-box">
-    <strong>How it works - one-time setup:</strong>
+    <strong>How it works:</strong>
     <ol>
-      <li>Go to <code>business.facebook.com</code> &rarr; create Commerce Manager catalog (type: E-commerce).</li>
+      <li>Set up Commerce Manager catalog at <code>business.facebook.com</code>.</li>
       <li>Click <strong>"Export Catalog Feed"</strong> below &rarr; upload <code>feed.csv</code> to your GitHub repo.</li>
-      <li>In Commerce Manager &rarr; Data Sources &rarr; Add Feed &rarr; paste URL <code>[your-site]/feed.csv</code> &rarr; set "Update daily".</li>
+      <li>In Commerce Manager &rarr; Data Sources &rarr; Add Feed &rarr; paste URL <code>[your-site]/feed.csv</code>.</li>
     </ol>
-    <strong style="display:block; margin-top:10px;">Note:</strong> Images are now hosted in the cloud automatically. No need to export them manually anymore.
+    <strong style="display:block; margin-top:10px;">Note:</strong> Images are hosted in cloud automatically. No need to export them.
   </div>
 
   <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
@@ -166,7 +185,8 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAzSh_wSb6hdZtq3HULcNnyZmT8HbA1CRU",
@@ -177,60 +197,131 @@
     appId: "1:279968070839:web:8761241835b0ee273da132"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  const PASSWORD = "admin123";
+  const ADMIN_EMAIL = "givyrewards@proton.me";
   const MAX_IMAGE_DIMENSION = 1200;
   const JPEG_QUALITY = 0.85;
   const CLOUDINARY_CLOUD_NAME = "dyxlwkgo7";
   const CLOUDINARY_UPLOAD_PRESET = "givy_upload";
 
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // Persist login across browser restarts
+  setPersistence(auth, browserLocalPersistence).catch(e => console.warn('Persistence error:', e));
+
   let products = [];
   let categories = ['furniture', 'seating', 'beds', 'rugs', 'decor', 'office'];
   let globalFb = '';
   let siteBaseUrl = '';
-  let currentImages = []; // URLs from Cloudinary
-  let db_ready = false;
+  let currentImages = [];
+  let unsubProducts = null;
+  let unsubSettings = null;
+  let productsTab = 'active';
 
-  // ===== AUTH =====
-  document.getElementById('loginBtn').onclick = () => {
-    const pwd = document.getElementById('password').value;
-    if(pwd === PASSWORD) {
-      localStorage.setItem('admin_auth', 'true');
+  // ===== AUTH STATE LISTENER =====
+  onAuthStateChanged(auth, (user) => {
+    if (user && user.email === ADMIN_EMAIL) {
       document.getElementById('loginBox').style.display = 'none';
       document.getElementById('adminPanel').style.display = 'block';
-      initApp();
+      document.getElementById('adminEmailDisplay').textContent = 'Signed in as ' + user.email;
+      attachListeners();
+    } else if (user && user.email !== ADMIN_EMAIL) {
+      showLoginError('This account has no admin access.');
+      signOut(auth);
     } else {
-      alert('Wrong password');
+      document.getElementById('loginBox').style.display = 'flex';
+      document.getElementById('adminPanel').style.display = 'none';
+      detachListeners();
+    }
+  });
+
+  // ===== LOGIN HANDLERS =====
+  document.getElementById('loginBtn').onclick = doLogin;
+  document.getElementById('loginPassword').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doLogin();
+  });
+  document.getElementById('loginEmail').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  async function doLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!email || !password) {
+      showLoginError('Please enter email and password.');
+      return;
+    }
+    if (email !== ADMIN_EMAIL) {
+      showLoginError('This email has no admin access.');
+      return;
+    }
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true;
+    btn.textContent = 'Signing in...';
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      hideLoginError();
+    } catch (err) {
+      console.error('Login error:', err);
+      let msg = 'Login failed.';
+      if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') msg = 'Wrong password.';
+      else if (err.code === 'auth/user-not-found') msg = 'Admin account not found. Create it in Firebase Console first.';
+      else if (err.code === 'auth/invalid-email') msg = 'Invalid email format.';
+      else if (err.code === 'auth/too-many-requests') msg = 'Too many attempts. Try again later.';
+      else msg = 'Login failed: ' + err.message;
+      showLoginError(msg);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Login';
+    }
+  }
+
+  document.getElementById('forgotLink').onclick = async () => {
+    const email = document.getElementById('loginEmail').value.trim() || ADMIN_EMAIL;
+    if (!confirm('Send password reset email to ' + email + '?')) return;
+    try {
+      await sendPasswordResetEmail(auth, email);
+      alert('Password reset email sent to ' + email + '. Check your inbox.');
+    } catch (err) {
+      alert('Reset failed: ' + err.message);
     }
   };
 
-  if(localStorage.getItem('admin_auth') === 'true') {
-    document.getElementById('loginBox').style.display = 'none';
-    document.getElementById('adminPanel').style.display = 'block';
-    initApp();
+  document.getElementById('logoutBtn').onclick = async () => {
+    if (!confirm('Log out?')) return;
+    await signOut(auth);
+  };
+
+  function showLoginError(msg) {
+    const el = document.getElementById('loginError');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+  function hideLoginError() {
+    document.getElementById('loginError').classList.remove('show');
   }
 
-  function initApp() {
-    // Real-time products subscription
+  // ===== FIRESTORE LISTENERS =====
+  function attachListeners() {
+    if (unsubProducts) unsubProducts();
+    if (unsubSettings) unsubSettings();
+
     const productsRef = collection(db, 'products');
     const productsQuery = query(productsRef, orderBy('createdAt', 'desc'));
-    onSnapshot(productsQuery, (snapshot) => {
+    unsubProducts = onSnapshot(productsQuery, (snapshot) => {
       products = [];
       snapshot.forEach(docSnap => {
         products.push({ id: docSnap.id, ...docSnap.data() });
       });
-      db_ready = true;
       renderProductList();
     }, (error) => {
-      console.error('Firestore error:', error);
-      alert('Failed to connect to Firebase: ' + error.message);
+      console.error('Products listener error:', error);
+      alert('Failed to load products: ' + error.message);
     });
 
-    // Settings subscription
     const settingsRef = doc(db, 'shop_settings', 'main');
-    onSnapshot(settingsRef, (snap) => {
+    unsubSettings = onSnapshot(settingsRef, (snap) => {
       if (snap.exists()) {
         const data = snap.data();
         if (data.categories && data.categories.length) categories = data.categories;
@@ -244,6 +335,11 @@
       renderCategorySelect();
       renderCatList();
     });
+  }
+
+  function detachListeners() {
+    if (unsubProducts) { unsubProducts(); unsubProducts = null; }
+    if (unsubSettings) { unsubSettings(); unsubSettings = null; }
   }
 
   // ===== CLOUDINARY UPLOAD =====
@@ -261,7 +357,6 @@
     return data.secure_url;
   }
 
-  // ===== IMAGE COMPRESSION (before upload) =====
   function compressImage(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -288,8 +383,7 @@
           ctx.fillRect(0, 0, width, height);
           ctx.drawImage(img, 0, 0, width, height);
           canvas.toBlob((blob) => {
-            if (blob) resolve(blob);
-            else reject(new Error('Compression failed'));
+            if (blob) resolve(blob); else reject(new Error('Compression failed'));
           }, 'image/jpeg', JPEG_QUALITY);
         };
         img.onerror = () => reject(new Error('Image load failed'));
@@ -365,7 +459,7 @@
     renderImagePreview();
   }
 
-  // ===== SAVE SETTINGS =====
+  // ===== SETTINGS =====
   async function saveSettings(updates) {
     try {
       const ref = doc(db, 'shop_settings', 'main');
@@ -398,7 +492,7 @@
     categories.forEach((cat, idx) => {
       const div = document.createElement('div');
       div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#1E1E1E; padding:10px; margin:5px 0; border-radius:10px;';
-      div.innerHTML = '<span>' + cat + '</span><button data-idx="' + idx + '" class="del-cat-btn" style="background:#aa2e2e; padding:5px 12px;">Delete</button>';
+      div.innerHTML = '<span>' + escapeHtml(cat) + '</span><button data-idx="' + idx + '" class="del-cat-btn" style="background:#aa2e2e; padding:5px 12px;">Delete</button>';
       container.appendChild(div);
     });
     container.querySelectorAll('.del-cat-btn').forEach(b => {
@@ -514,8 +608,6 @@
       showToast('Product deleted');
     } catch(err) { alert('Delete failed: ' + err.message); }
   };
-
-  let productsTab = 'active';
 
   function renderProductList() {
     const container = document.getElementById('productList');
