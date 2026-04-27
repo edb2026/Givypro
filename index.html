@@ -4,6 +4,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#059669">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -143,34 +146,43 @@ onAuthStateChanged(auth, async (user) => {
 
   if (user) {
     try {
-      // === LOAD/CREATE USER PROFILE ===
+      // === LOAD/CREATE USER PROFILE - Firestore is single source of truth ===
       const userRef = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userRef);
-      let nickname = user.email.split('@')[0];
+      let nickname;
       let joinedAt = new Date().toISOString();
 
       if (userSnap.exists()) {
         const data = userSnap.data();
-        nickname = data.nickname || nickname;
+        // Firestore wins. Only fallback if nickname missing/empty.
+        nickname = (data.nickname && data.nickname.trim()) ? data.nickname.trim() : user.email.split('@')[0];
         joinedAt = data.joinedAt || joinedAt;
+        // Heal missing nickname in Firestore
+        if (!data.nickname || !data.nickname.trim()) {
+          try {
+            await setDoc(userRef, { nickname: nickname }, { merge: true });
+            console.log('[v2] Healed nickname for', user.email);
+          } catch(e) { console.log('Heal nickname failed:', e); }
+        }
       } else {
-        // Profile doesn't exist - create it now (fixes legacy users)
+        // Profile doesn't exist - create it
+        nickname = user.email.split('@')[0];
         try {
           await setDoc(userRef, {
             email: user.email,
             nickname: nickname,
             joinedAt: joinedAt
           });
-          console.log('Created missing user profile for', user.email);
+          console.log('[v2] Created missing user profile for', user.email);
         } catch(e) { console.log('Could not create profile:', e); }
       }
 
+      // ALWAYS overwrite localStorage with Firestore truth (no merge with old)
       const userData = { uid: user.uid, email: user.email, nickname, joinedAt };
       try { localStorage.setItem('user', JSON.stringify(userData)); } catch(e) {}
+      console.log('[v2] User loaded:', nickname, '(' + user.email + ')');
 
       // === REAL-TIME ORDERS SUBSCRIPTION ===
-      // Replaces one-time getDocs with onSnapshot for live updates
-      // Cancel previous subscription if any (e.g., on user re-login)
       if (window._ordersUnsub) { try { window._ordersUnsub(); } catch(e) {} }
 
       const q = query(collection(db, 'orders'), where('userId', '==', user.uid));
@@ -209,14 +221,12 @@ onAuthStateChanged(auth, async (user) => {
         const mergedItems = [...localOnly, ...firestoreItems];
         mergedItems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-        if (firestoreItems.length > 0 || localItems.length === 0) {
-          try { localStorage.setItem('items', JSON.stringify(mergedItems)); } catch(e) {}
-        }
+        // Always overwrite localStorage with merged result
+        try { localStorage.setItem('items', JSON.stringify(mergedItems)); } catch(e) {}
         window.initialStatuses = statuses;
 
         // Refresh UI live
         if (window.ListModule) {
-          // Replace statuses (not merge) - Firestore is source of truth
           window.ListModule.statuses = statuses;
         }
         if (window.Nav) {
@@ -225,17 +235,23 @@ onAuthStateChanged(auth, async (user) => {
             window.ListModule.render();
           }
         }
-        console.log('Live sync: ' + mergedItems.length + ' items, user ' + nickname);
+
+        const pickedCount = firestoreItems.filter(i => statuses[i.id] === 'picked_up').length;
+        console.log('[v2] Live sync: ' + mergedItems.length + ' items total, ' + pickedCount + ' picked_up, user=' + nickname);
+        window._v2Loaded = true;
+        if (window.updateDebug) {
+          window.updateDebug('user=' + nickname + ' | items=' + firestoreItems.length + ' | picked=' + pickedCount);
+        }
 
         if (window.NotificationModule) {
           setTimeout(() => window.NotificationModule.checkStatusChanges(), 500);
         }
       }, (error) => {
-        console.log('Orders subscription error:', error);
+        console.log('[v2] Orders subscription error:', error);
       });
 
     } catch(err) {
-      console.log('Auto-load error:', err);
+      console.log('[v2] Auto-load error:', err);
     }
   } else {
     // User logged out - cancel orders subscription
@@ -249,6 +265,22 @@ console.log('Firebase initialized with Auth');
 
 </head>
 <body>
+
+<!-- DEBUG INDICATOR (temporary - shows real Firebase data) -->
+
+<div id="debug-indicator" style="position:fixed;top:0;left:0;right:0;background:#fbbf24;color:#000;padding:8px 12px;font-size:11px;font-weight:700;z-index:99999;text-align:center;border-bottom:2px solid #f59e0b;font-family:monospace;line-height:1.4;cursor:pointer;" onclick="this.style.display='none';">v2 LOADING... (tap to hide)</div>
+<script>
+window.updateDebug = function(text) {
+  var el = document.getElementById('debug-indicator');
+  if (el) el.innerHTML = 'v2 | ' + text + ' | tap to hide';
+};
+setTimeout(function() {
+  if (!window._v2Loaded) {
+    var el = document.getElementById('debug-indicator');
+    if (el) el.innerHTML = 'v2 | timeout - check console (F12) | tap to hide';
+  }
+}, 5000);
+</script>
 
 <div id="main-header" class="app-header">
   <div class="header-logo">Givy</div>
