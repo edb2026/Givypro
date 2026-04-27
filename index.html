@@ -41,8 +41,8 @@ body{font-family:var(--font-b);background:#0f1117;color:#111827;min-height:100vh
 .inp{background:#ffffff;border:3px solid #d1d5db;border-radius:14px;padding:16px 16px;font-size:16px;font-family:var(–font-b);font-weight:700;width:100%;color:#111827;margin-bottom:6px;display:block;transition:border-color 0.2s;box-shadow:0 2px 6px rgba(0,0,0,0.08);}
 .inp:focus{outline:none;border-color:var(–green);background:#fff;}.inp::placeholder{color:#6b7280;font-weight:600;}.inp.error{border-color:var(–red);}
 input[type=“date”].date-empty,input[type=“time”].time-empty{color:transparent;position:relative;}
-input[type=“date”].date-empty::before{content:“Select a date”;color:#6b7280;font-weight:600;position:absolute;left:18px;top:50%;transform:translateY(-50%);pointer-events:none;}
-input[type=“time”].time-empty::before{content:“Select a time”;color:#6b7280;font-weight:600;position:absolute;left:18px;top:50%;transform:translateY(-50%);pointer-events:none;}
+input[type=“date”].date-empty::before{content:“Pick up date”;color:#6b7280;font-weight:600;position:absolute;left:18px;top:50%;transform:translateY(-50%);pointer-events:none;}
+input[type=“time”].time-empty::before{content:“Pick up time”;color:#6b7280;font-weight:600;position:absolute;left:18px;top:50%;transform:translateY(-50%);pointer-events:none;}
 input[type=“date”]:not(.date-empty),input[type=“time”]:not(.time-empty){color:#111827;}
 .condition-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
 .condition-btn{border:3px solid #d1d5db;border-radius:14px;padding:14px 8px;background:#ffffff;cursor:pointer;text-align:center;transition:all 0.2s;font-family:var(–font-b);box-shadow:0 2px 6px rgba(0,0,0,0.08);}
