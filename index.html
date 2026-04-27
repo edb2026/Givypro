@@ -143,69 +143,103 @@ onAuthStateChanged(auth, async (user) => {
 
   if (user) {
     try {
-      const userSnap = await getDoc(doc(db, 'users', user.uid));
+      // === LOAD/CREATE USER PROFILE ===
+      const userRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
       let nickname = user.email.split('@')[0];
       let joinedAt = new Date().toISOString();
+
       if (userSnap.exists()) {
-        nickname = userSnap.data().nickname || nickname;
-        joinedAt = userSnap.data().joinedAt || joinedAt;
+        const data = userSnap.data();
+        nickname = data.nickname || nickname;
+        joinedAt = data.joinedAt || joinedAt;
+      } else {
+        // Profile doesn't exist - create it now (fixes legacy users)
+        try {
+          await setDoc(userRef, {
+            email: user.email,
+            nickname: nickname,
+            joinedAt: joinedAt
+          });
+          console.log('Created missing user profile for', user.email);
+        } catch(e) { console.log('Could not create profile:', e); }
       }
+
       const userData = { uid: user.uid, email: user.email, nickname, joinedAt };
       try { localStorage.setItem('user', JSON.stringify(userData)); } catch(e) {}
 
+      // === REAL-TIME ORDERS SUBSCRIPTION ===
+      // Replaces one-time getDocs with onSnapshot for live updates
+      // Cancel previous subscription if any (e.g., on user re-login)
+      if (window._ordersUnsub) { try { window._ordersUnsub(); } catch(e) {} }
+
       const q = query(collection(db, 'orders'), where('userId', '==', user.uid));
-      const snapshot = await getDocs(q);
-      const firestoreItems = [];
-      const statuses = {};
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        const localId = data.localId || (Date.now() + Math.random());
-        firestoreItems.push({
-          id: localId,
-          firestoreId: docSnap.id,
-          title: data.title,
-          desc: data.desc,
-          condition: (data.condition || 'new').toLowerCase().replace(' ', '_'),
-          conditionLabel: data.condition,
-          zip: data.zip || '',
-          location: data.location || null,
-          date: data.date,
-          time: data.time,
-          email: data.email,
-          phone: data.phone || '',
-          address: data.address || '',
-          photos: data.photos || [],
-          photoUrls: data.photos || [],
-          createdAt: data.createdAt
+      window._ordersUnsub = onSnapshot(q, (snapshot) => {
+        const firestoreItems = [];
+        const statuses = {};
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const localId = data.localId || (Date.now() + Math.random());
+          firestoreItems.push({
+            id: localId,
+            firestoreId: docSnap.id,
+            title: data.title,
+            desc: data.desc,
+            condition: (data.condition || 'new').toLowerCase().replace(' ', '_'),
+            conditionLabel: data.condition,
+            zip: data.zip || '',
+            location: data.location || null,
+            date: data.date,
+            time: data.time,
+            email: data.email,
+            phone: data.phone || '',
+            address: data.address || '',
+            photos: data.photos || [],
+            photoUrls: data.photos || [],
+            createdAt: data.createdAt
+          });
+          statuses[localId] = data.status || 'pending';
         });
-        statuses[localId] = data.status || 'pending';
+
+        // Merge with local items not yet synced
+        let localItems = [];
+        try { localItems = JSON.parse(localStorage.getItem('items') || '[]'); } catch(e) {}
+        const firestoreIds = new Set(firestoreItems.map(i => i.id));
+        const localOnly = localItems.filter(i => !firestoreIds.has(i.id));
+        const mergedItems = [...localOnly, ...firestoreItems];
+        mergedItems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        if (firestoreItems.length > 0 || localItems.length === 0) {
+          try { localStorage.setItem('items', JSON.stringify(mergedItems)); } catch(e) {}
+        }
+        window.initialStatuses = statuses;
+
+        // Refresh UI live
+        if (window.ListModule) {
+          // Replace statuses (not merge) - Firestore is source of truth
+          window.ListModule.statuses = statuses;
+        }
+        if (window.Nav) {
+          if (window.Nav.updatePostCard) window.Nav.updatePostCard();
+          if (window.Nav.current === 'list' && window.ListModule && window.ListModule.render) {
+            window.ListModule.render();
+          }
+        }
+        console.log('Live sync: ' + mergedItems.length + ' items, user ' + nickname);
+
+        if (window.NotificationModule) {
+          setTimeout(() => window.NotificationModule.checkStatusChanges(), 500);
+        }
+      }, (error) => {
+        console.log('Orders subscription error:', error);
       });
 
-      let localItems = [];
-      try { localItems = JSON.parse(localStorage.getItem('items') || '[]'); } catch(e) {}
-      const firestoreIds = new Set(firestoreItems.map(i => i.id));
-      const localOnly = localItems.filter(i => !firestoreIds.has(i.id));
-      const mergedItems = [...localOnly, ...firestoreItems];
-      mergedItems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-      if (firestoreItems.length > 0 || localItems.length === 0) {
-        try { localStorage.setItem('items', JSON.stringify(mergedItems)); } catch(e) {}
-      }
-      window.initialStatuses = statuses;
-
-      if (window.Nav && window.ListModule) {
-        Object.assign(window.ListModule.statuses, statuses);
-        if (window.Nav.current) window.Nav.updatePostCard && window.Nav.updatePostCard();
-        if (window.Nav.current === 'list' && window.ListModule.render) window.ListModule.render();
-      }
-      console.log('Auto-loaded user data:', nickname, mergedItems.length + ' items');
-
-      if (window.NotificationModule) {
-        setTimeout(() => window.NotificationModule.checkStatusChanges(), 1000);
-      }
     } catch(err) {
       console.log('Auto-load error:', err);
     }
+  } else {
+    // User logged out - cancel orders subscription
+    if (window._ordersUnsub) { try { window._ordersUnsub(); window._ordersUnsub = null; } catch(e) {} }
   }
 });
 
