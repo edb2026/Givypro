@@ -423,10 +423,17 @@ console.log('Firebase initialized with Auth');
 </div>
 
 <div class="section-label">Pickup Date &amp; Time</div>
+<label for="f-date" style="display:block;font-size:13px;color:#6b7280;font-weight:600;margin-bottom:6px;margin-top:2px;">Pick up date</label>
 <input type="date" id="f-date" class="inp date-empty" onchange="this.classList.toggle('date-empty', !this.value)">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-  <input type="time" id="f-t1" class="inp time-empty" style="margin-bottom:0;" onchange="this.classList.toggle('time-empty', !this.value)">
-  <input type="time" id="f-t2" class="inp time-empty" style="margin-bottom:0;" onchange="this.classList.toggle('time-empty', !this.value)">
+  <div>
+    <label for="f-t1" style="display:block;font-size:13px;color:#6b7280;font-weight:600;margin-bottom:6px;">Pick up time</label>
+    <input type="time" id="f-t1" class="inp time-empty" style="margin-bottom:0;" onchange="this.classList.toggle('time-empty', !this.value)">
+  </div>
+  <div>
+    <label for="f-t2" style="display:block;font-size:13px;color:#6b7280;font-weight:600;margin-bottom:6px;">Pick up time</label>
+    <input type="time" id="f-t2" class="inp time-empty" style="margin-bottom:0;" onchange="this.classList.toggle('time-empty', !this.value)">
+  </div>
 </div>
 
 <div style="height:14px;"></div>
