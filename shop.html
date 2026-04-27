@@ -22,14 +22,14 @@
 ```
 .back-to-givy {
   position: fixed; top: 16px; left: 16px;
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  color: white; padding: 10px 16px; border-radius: 999px;
-  text-decoration: none; font-size: 14px; font-weight: 700;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #1a1f2e; padding: 10px 16px; border-radius: 999px;
+  text-decoration: none; font-size: 14px; font-weight: 800;
   display: inline-flex; align-items: center; gap: 6px;
-  box-shadow: 0 4px 14px rgba(5,150,105,0.4);
+  box-shadow: 0 4px 14px rgba(251,191,36,0.5);
   z-index: 100; transition: transform 0.15s, box-shadow 0.15s;
 }
-.back-to-givy:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(5,150,105,0.5); }
+.back-to-givy:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(251,191,36,0.7); }
 .back-to-givy:active { transform: scale(0.97); }
 @media (max-width: 480px) {
   .back-to-givy { padding: 8px 12px; font-size: 12px; }
@@ -116,7 +116,7 @@
     let lbImages = [];
     let lbIndex = 0;
 
-    // Real-time products subscription (PUBLIC READ — no auth needed per Firestore Rules)
+    // Real-time products subscription (PUBLIC READ - no auth needed per Firestore Rules)
     const productsRef = collection(db, 'products');
     const productsQuery = query(productsRef, orderBy('createdAt', 'desc'));
 
