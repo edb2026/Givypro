@@ -110,7 +110,7 @@ input[type="date"]:not(.date-empty),input[type="time"]:not(.time-empty){color:#1
 
 .btn-orange {
   background: #f59e0b;
-  color: white;
+  color: black;
   padding: 1rem 2.8rem;
   width: auto;
   max-width: 380px;
@@ -125,10 +125,20 @@ input[type="date"]:not(.date-empty),input[type="time"]:not(.time-empty){color:#1
   box-shadow: 0 6px 14px rgba(245,158,11,0.3);
   display: inline-block;
   text-align: center;
-  -webkit-text-stroke: 1px black;
-  text-stroke: 1px black;
 }
 .btn-orange:active { transform: scale(0.98); background: #d97706; }
+
+.custom-image-area {
+  text-align: center;
+  margin: 20px auto;
+  max-width: 100%;
+}
+.custom-image-area img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
 
 .choice-capsule {
   display: flex;
@@ -314,6 +324,11 @@ input[type="date"]:not(.date-empty),input[type="time"]:not(.time-empty){color:#1
   </div>
   <div style="display: flex; justify-content: center; margin: 20px 0 8px;"><button class="btn-orange" id="mainScheduleBtn">📦 Schedule Free Pickup</button></div>
   <div style="text-align: center; font-size: 0.85rem; color: #cbd5e1; letter-spacing: 0.3px; margin-bottom: 20px;">It’s super simple — takes 3 seconds</div>
+  <!-- Место для фотографии между оранжевой кнопкой и блоком Service Value -->
+  <div class="custom-image-area" id="customImagePlaceholder">
+    <!-- Сюда можно вставить изображение, например: -->
+    <!-- <img src="your-image.jpg" alt="Custom photo"> -->
+  </div>
   <div style="background:linear-gradient(145deg,#1a1f2e 0%,#0f1117 100%);border:1px solid rgba(251,191,36,0.2);border-radius:20px;padding:24px 22px;margin-bottom:14px;box-shadow:0 8px 32px rgba(0,0,0,0.4);"><div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px;"><span style="font-size:39px;">📦</span><span style="font-family:'Playfair Display',Georgia,serif;font-size:29px;font-weight:900;color:#fbbf24;letter-spacing:3px;text-transform:uppercase;">Service Value</span></div><div style="font-size:18px;font-weight:800;color:#ffffff;line-height:1.4;margin-bottom:12px;">Free fast pickup at your location and convenient time.</div><div style="font-size:22px;color:#cbd5e1;font-weight:500;line-height:1.65;">We help you easily get rid of unwanted household items - furniture, decor, office items, and more - so you can focus on what matters most.</div></div>
   <div style="background:linear-gradient(145deg,#1a1f2e 0%,#0f1117 100%);border:1px solid rgba(251,191,36,0.2);border-radius:20px;padding:24px 22px;margin-bottom:14px;box-shadow:0 8px 32px rgba(0,0,0,0.4);"><div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px;"><span style="font-size:39px;">🔧</span><span style="font-family:'Playfair Display',Georgia,serif;font-size:29px;font-weight:900;color:#fbbf24;letter-spacing:3px;text-transform:uppercase;">Accepted Condition</span></div><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"><div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(251,191,36,0.08);border-left:3px solid #fbbf24;border-radius:8px;"><span style="color:#fbbf24;font-size:18px;">✨</span><span style="font-size:15px;color:#ffffff;font-weight:700;">New</span></div><div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(251,191,36,0.08);border-left:3px solid #fbbf24;border-radius:8px;"><span style="color:#fbbf24;font-size:18px;">✨</span><span style="font-size:15px;color:#ffffff;font-weight:700;">Like New</span></div><div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(251,191,36,0.08);border-left:3px solid #fbbf24;border-radius:8px;"><span style="color:#fbbf24;font-size:18px;">✨</span><span style="font-size:15px;color:#ffffff;font-weight:700;">Very Good</span> <span style="font-size:19px;color:#94a3b8;font-weight:500;">(considered)</span></div></div><div style="font-size:21px;color:#cbd5e1;font-weight:500;line-height:1.65;margin-bottom:8px;">We also accept gently broken items if they are still usable.</div><div style="font-size:21px;color:#cbd5e1;font-weight:500;line-height:1.65;margin-bottom:8px;">A fast, simple review will help us decide quickly.</div><div style="font-size:21px;color:#cbd5e1;font-weight:500;line-height:1.65;margin-bottom:8px;">Please include as many photos as possible, along with a detailed description, so we can make a quick decision. That keeps it polite and easygoing. We truly appreciate it!</div><div style="font-size:19px;color:#94a3b8;font-weight:500;font-style:italic;line-height:1.6;margin-top:12px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08);">We apologize in advance if we are unable to accept your item.</div></div>
   <div style="background:linear-gradient(145deg,#1a1f2e 0%,#0f1117 100%);border:1px solid rgba(5,150,105,0.25);border-radius:20px;padding:24px 22px;margin-bottom:14px;box-shadow:0 8px 32px rgba(0,0,0,0.4);"><div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px;"><span style="font-size:39px;">♻️</span><span style="font-family:'Playfair Display',Georgia,serif;font-size:29px;font-weight:900;color:#10b981;letter-spacing:3px;text-transform:uppercase;">Second Life</span></div><div style="font-size:18px;font-weight:800;color:#ffffff;line-height:1.4;margin-bottom:10px;">Good items are reused, not wasted.</div><div style="font-size:22px;color:#cbd5e1;font-weight:500;line-height:1.65;">We clean and prepare items for resale and reuse.</div></div>
