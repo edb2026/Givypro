@@ -111,19 +111,20 @@ input[type="date"]:not(.date-empty),input[type="time"]:not(.time-empty){color:#1
 .btn-orange {
   background: #f59e0b;
   color: white;
-  padding: 14px 16px;
-  width: 100%;
-  max-width: 280px;
+  padding: 1rem 2.8rem;
+  width: auto;
+  max-width: 380px;
   margin: 0 auto;
-  border-radius: 40px;
+  border-radius: 60px;
   font-weight: 800;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   border: none;
   cursor: pointer;
   transition: 0.2s;
   font-family: var(--font-b);
   box-shadow: 0 6px 14px rgba(245,158,11,0.3);
-  display: block;
+  display: inline-block;
+  text-align: center;
 }
 .btn-orange:active { transform: scale(0.98); background: #d97706; }
 
@@ -323,7 +324,7 @@ input[type="date"]:not(.date-empty),input[type="time"]:not(.time-empty){color:#1
 <div id="screen-list" class="screen"><div class="page"><div style="margin-bottom:10px;"><span style="color:white;font-size:32px;font-weight:900;font-family:var(--font-h);">My Requests</span></div><div id="list-user-header" style="margin-bottom:10px;"></div><div id="list-banner-container"></div><div id="list-level-card" class="card"></div><div id="list-items"></div><div style="display:flex;justify-content:flex-start;margin-top:20px;padding:0 4px;"><button onclick="logoutUser()" style="background:transparent;color:#94a3b8;border:2px solid #475569;border-radius:999px;padding:12px 28px;font-size:15px;font-weight:900;font-family:var(--font-b);cursor:pointer;display:flex;align-items:center;gap:8px;" onmouseover="this.style.borderColor='#94a3b8';this.style.color='#cbd5e1';" onmouseout="this.style.borderColor='#475569';this.style.color='#94a3b8';"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>Log out</button></div></div></div>
 <div id="screen-chat" class="screen"><div class="page" style="padding-left:0;padding-right:0;"><div style="padding:0 16px 12px;"><span style="color:white;font-size:22px;font-weight:900;font-family:var(--font-h);">Messages</span></div><div class="card" style="border-radius:20px;padding:0;overflow:hidden;margin:0 16px 14px;"><div id="chat-list-container"></div></div></div></div>
 <div id="screen-chatwindow" class="screen"><div style="background:white;min-height:calc(100vh - 56px);display:flex;flex-direction:column;"><div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:white;position:sticky;top:56px;z-index:10;"><button style="background:none;border:none;font-size:22px;cursor:pointer;" onclick="Nav.go('chat')">←</button><div id="chat-window-avatar" class="chat-avatar" style="width:36px;height:36px;font-size:16px;"></div><div><div id="chat-window-name" style="font-size:15px;font-weight:700;color:var(--text);"></div><div style="font-size:11px;color:var(--sub);">Online</div></div></div><div id="chat-messages" class="chat-messages" style="flex:1;min-height:300px;padding:14px;"></div><div class="chat-input-bar"><input id="chat-msg-input" type="text" placeholder="Type a message..." onkeydown="if(event.key==='Enter')ChatModule.send()"><button class="chat-send-btn" onclick="ChatModule.send()">➤</button></div></div></div>
-<nav class="bottom-nav" id="bottom-nav"><button class="nav-btn active" id="nav-home" onclick="Nav.go('home')"><span class="nav-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M12 3L2 12h3v8h5v-6h4v6h5v-8h3L12 3z"/></svg></span>Home</button><button class="nav-btn" id="nav-post" onclick="handleGiveClick()"><span class="nav-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M20 6h-3V4c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM9 4h6v2H9V4zm3 13l-5-5h3v-2h4v2h3l-5 5z"/></svg></span>Give</button><a class="nav-btn" href="shop.html" style="text-decoration:none;"><span class="nav-icon" style="color:#ffffff;">🛒</span><span style="color:#4da6ff;font-size:11px;font-weight:800;">Shop</span></a><button class="nav-btn" id="nav-list" onclick="handleMyItemsClick()"><span class="nav-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm10 8h-8v-2h8v2zm0-4h-8v-2h8v2zm0-4h-8V7h8v2z"/></svg></span>My Items</button><button class="nav-btn" id="nav-chat" onclick="Nav.go('chat')"><span class="nav-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg></span>Messages</button></nav>
+<nav class="bottom-nav" id="bottom-nav"><button class="nav-btn active" id="nav-home" onclick="Nav.go('home')"><span class="nav-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M12 3L2 12h3v8h5v-6h4v6h5v-8h3L12 3z"/></svg></span>Home</button><button class="nav-btn" id="nav-post" onclick="Nav.go('post')"><span class="nav-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M20 6h-3V4c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM9 4h6v2H9V4zm3 13l-5-5h3v-2h4v2h3l-5 5z"/></svg></span>Give</button><a class="nav-btn" href="shop.html" style="text-decoration:none;"><span class="nav-icon" style="color:#ffffff;">🛒</span><span style="color:#4da6ff;font-size:11px;font-weight:800;">Shop</span></a><button class="nav-btn" id="nav-list" onclick="Nav.go('list')"><span class="nav-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm10 8h-8v-2h8v2zm0-4h-8v-2h8v2zm0-4h-8V7h8v2z"/></svg></span>My Items</button><button class="nav-btn" id="nav-chat" onclick="Nav.go('chat')"><span class="nav-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg></span>Messages</button></nav>
 <div id="choiceModal" class="reg-modal"><div class="reg-box" style="max-width: 360px; padding: 20px;"><div style="font-size:24px; margin-bottom:12px;">📦 How would you like to give?</div><div class="choice-capsule"><div class="choice-half choice-half-left" id="choiceNoRewards">just donate without registration or rewards</div><div class="choice-half choice-half-right" id="choiceWithRewards">Get rewards → registration</div></div></div></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -344,9 +345,79 @@ let guestSessionId = localStorage.getItem(GUEST_SESSION_KEY);
 if (!guestSessionId) { guestSessionId = 'guest_' + Date.now() + '_' + Math.random().toString(36).substr(2,8); localStorage.setItem(GUEST_SESSION_KEY, guestSessionId); }
 window.guestSessionId = guestSessionId;
 window.isGuestMode = false;
-window.guestSubmitOrder = async function(item) { try { let guestItems = JSON.parse(localStorage.getItem('guest_items') || '[]'); item.id = Date.now(); item.isGuest = true; guestItems.unshift(item); localStorage.setItem('guest_items', JSON.stringify(guestItems)); await sendGuestFormspree(item); const shownBanners = JSON.parse(localStorage.getItem('guest_shown_banners') || '[]'); if (!shownBanners.includes(item.id)) { shownBanners.push(item.id); localStorage.setItem('guest_shown_banners', JSON.stringify(shownBanners)); } Nav.go('list'); if (window.ListModule) window.ListModule.render(); if (window.BannerModule) window.BannerModule.render(); } catch(e) { console.log('Guest submit error', e); } };
-async function sendGuestFormspree(item) { try { let photoUrls = []; if (item.photos && item.photos.length) { const uploads = item.photos.map(p => uploadToCloudinary(p)); photoUrls = await Promise.all(uploads); photoUrls = photoUrls.filter(Boolean); } const fullMessage = buildGuestMessage(item, photoUrls); const body = { _subject: 'New Givy Order (GUEST) : ' + item.title, _replyto: item.email || 'noreply@givyrewards.com', name: 'Guest', email: item.email || 'noreply@givyrewards.com', message: fullMessage }; await fetch('https://formspree.io/f/xaqaolor', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(body) }); } catch(e) { console.log('Guest formspree error', e); } }
-function buildGuestMessage(item, photoUrls) { const loc = item.location || {}; const locationText = loc.lat ? ((loc.city || '') + ', ' + (loc.state || '') + ' ' + (loc.zip || '') + ' (' + (loc.method === 'gps' ? 'GPS' : 'ZIP') + ')') : 'Not provided'; const googleMapsLink = loc.lat ? ('https://www.google.com/maps?q=' + loc.lat + ',' + loc.lng) : ''; let photosText = ''; if (photoUrls.length) photosText = '\n\nPHOTOS (' + photoUrls.length + '):\n' + photoUrls.map((url,i)=>`\nPhoto ${i+1}: ${url}`).join(''); else photosText = '\n\nPHOTOS: None uploaded'; return `NEW GIVY ORDER (GUEST)\n====================\n\nCustomer: Guest\nEmail: ${item.email || '-'}\n\nITEM DETAILS:\nTitle: ${item.title}\nDescription: ${item.desc}\nCondition: ${item.conditionLabel}\n\nPICKUP LOCATION:\n${locationText}\n${loc.lat ? `Coordinates: ${loc.lat}, ${loc.lng}\n` : ''}${googleMapsLink ? `View on map: ${googleMapsLink}\n` : ''}\nPickup Date: ${item.date}\nTime Window: ${item.time}\n${photosText}\n\n====================\nOrder ID: guest_${item.id}`; }
+
+async function saveGuestOrderToFirestore(item) {
+  try {
+    if (!window.firebaseDB) await new Promise(r => window.addEventListener('firebase-ready', r, { once: true }));
+    const { collection, addDoc } = window.firebaseFunctions;
+    const orderData = {
+      userId: 'guest_' + guestSessionId,
+      title: item.title,
+      desc: item.desc,
+      condition: item.conditionLabel,
+      zip: item.zip || '',
+      location: item.location || null,
+      date: item.date,
+      time: item.time,
+      email: item.email || '',
+      phone: item.phone || '',
+      photos: item.photoUrls || [],
+      nickname: 'Guest',
+      userEmail: '',
+      status: 'pending',
+      isGuest: true,
+      createdAt: new Date().toISOString(),
+      localId: item.id
+    };
+    const docRef = await addDoc(collection(window.firebaseDB, 'orders'), orderData);
+    console.log('Guest order saved to Firestore:', docRef.id);
+    return docRef.id;
+  } catch(e) { console.log('Firestore guest error:', e); return null; }
+}
+
+window.guestSubmitOrder = async function(item) {
+  try {
+    let guestItems = JSON.parse(localStorage.getItem('guest_items') || '[]');
+    item.id = Date.now();
+    item.isGuest = true;
+    let photoUrls = [];
+    if (item.photos && item.photos.length) {
+      const uploads = item.photos.map(p => uploadToCloudinary(p));
+      photoUrls = await Promise.all(uploads);
+      photoUrls = photoUrls.filter(Boolean);
+    }
+    item.photoUrls = photoUrls;
+    const firestoreId = await saveGuestOrderToFirestore(item);
+    item.firestoreId = firestoreId;
+    guestItems.unshift(item);
+    localStorage.setItem('guest_items', JSON.stringify(guestItems));
+    await sendGuestFormspree(item);
+    const shownBanners = JSON.parse(localStorage.getItem('guest_shown_banners') || '[]');
+    if (!shownBanners.includes(item.id)) { shownBanners.push(item.id); localStorage.setItem('guest_shown_banners', JSON.stringify(shownBanners)); }
+    Nav.go('list');
+    if (window.ListModule) window.ListModule.render();
+    if (window.BannerModule) window.BannerModule.render();
+  } catch(e) { console.log('Guest submit error', e); alert('Error submitting order. Please try again.'); }
+};
+
+async function sendGuestFormspree(item) {
+  try {
+    const fullMessage = buildGuestMessage(item, item.photoUrls || []);
+    const body = { _subject: 'New Givy Order (GUEST) : ' + item.title, _replyto: item.email || 'noreply@givyrewards.com', name: 'Guest', email: item.email || 'noreply@givyrewards.com', message: fullMessage };
+    await fetch('https://formspree.io/f/xaqaolor', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(body) });
+  } catch(e) { console.log('Guest formspree error', e); }
+}
+
+function buildGuestMessage(item, photoUrls) {
+  const loc = item.location || {};
+  const locationText = loc.lat ? ((loc.city || '') + ', ' + (loc.state || '') + ' ' + (loc.zip || '') + ' (' + (loc.method === 'gps' ? 'GPS' : 'ZIP') + ')') : 'Not provided';
+  const googleMapsLink = loc.lat ? ('https://www.google.com/maps?q=' + loc.lat + ',' + loc.lng) : '';
+  let photosText = '';
+  if (photoUrls.length) photosText = '\n\nPHOTOS (' + photoUrls.length + '):\n' + photoUrls.map((url,i)=>`\nPhoto ${i+1}: ${url}`).join('');
+  else photosText = '\n\nPHOTOS: None uploaded';
+  return `NEW GIVY ORDER (GUEST)\n====================\n\nCustomer: Guest\nEmail: ${item.email || '-'}\n\nITEM DETAILS:\nTitle: ${item.title}\nDescription: ${item.desc}\nCondition: ${item.conditionLabel}\n\nPICKUP LOCATION:\n${locationText}\n${loc.lat ? `Coordinates: ${loc.lat}, ${loc.lng}\n` : ''}${googleMapsLink ? `View on map: ${googleMapsLink}\n` : ''}\nPickup Date: ${item.date}\nTime Window: ${item.time}\n${photosText}\n\n====================\nOrder ID: guest_${item.id}`;
+}
+
 function openChoiceModal() { const modal = document.getElementById('choiceModal'); if (modal) { modal.classList.add('open'); document.body.style.overflow = 'hidden'; } }
 function closeChoiceModal() { const modal = document.getElementById('choiceModal'); if (modal) { modal.classList.remove('open'); document.body.style.overflow = ''; } }
 document.getElementById('choiceNoRewards').onclick = () => { closeChoiceModal(); window.isGuestMode = true; Nav.go('post'); if (window.PostModule) PostModule.clearForm?.(); };
@@ -355,7 +426,12 @@ window.handleGiveClick = function() { const user = Storage.get('user'); if (user
 window.handleMyItemsClick = function() { const user = Storage.get('user'); if (user && user.email) Nav.go('list'); else Nav.go('list'); };
 window.handleQuickPickupClick = function() { alert('Quick Schedule Pickup - coming soon!\n\nThis option will allow you to schedule a pickup without registration.\nNo rewards will be earned.'); };
 document.getElementById('mainScheduleBtn')?.addEventListener('click', () => { const user = Storage.get('user'); if (user && user.email) { Nav.go('post'); } else { openChoiceModal(); } });
-const NotificationModule = { async checkStatusChanges() { const items = Storage.get('items', []); if (items.length === 0) return; const seenStatuses = Storage.get('seen_statuses', {}); const newPopups = []; for (const item of items) { const currentStatus = ListModule.statuses[item.id] || 'pending'; const lastSeenStatus = seenStatuses[item.id] || 'pending'; if (currentStatus !== lastSeenStatus && currentStatus !== 'pending') { newPopups.push({ item, status: currentStatus }); seenStatuses[item.id] = currentStatus; } } Storage.set('seen_statuses', seenStatuses); for (const popup of newPopups) { this.showPopup(popup.item, popup.status); } }, showPopup(item, status) { const messages = { 'confirmed_intent': { emoji: '✅', title: 'Order Confirmed!', color: '#059669', bg: 'linear-gradient(135deg,#059669 0%,#047857 100%)', text: 'Great news! Your order "' + item.title + '" has been confirmed!\n\nWe are ready to pick it up at your scheduled time.\n\nPlease send us through chat:\n- Your exact street address\n- Parking instructions\n- Gate codes (if any)\n\nThis helps us pick up smoothly!' }, 'rejected': { emoji: '⚠️', title: 'Order Update', color: '#f59e0b', bg: 'linear-gradient(135deg,#f59e0b 0%,#d97706 100%)', text: 'We received your donation request for "' + item.title + '".\n\nUnfortunately, we cannot accept this item at this time.\n\nWe are very sorry for the inconvenience. Please try another item - we would love to help you earn rewards!' }, 'picked_up': { emoji: '🎉', title: 'Item Picked Up!', color: '#2563eb', bg: 'linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%)', text: 'Your item "' + item.title + '" has been successfully picked up!\n\nReward points have been added to your account.\n\nCheck your updated level and discount in the My Items section.\n\nThank you so much!' } }; const msg = messages[status]; if (!msg) return; const existing = document.getElementById('notification-popup'); if (existing) existing.remove(); const popup = document.createElement('div'); popup.id = 'notification-popup'; popup.innerHTML = '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;"><div style="background:' + msg.bg + ';color:white;border-radius:24px;padding:28px 24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.5);position:relative;"><button onclick="document.getElementById(\'notification-popup\').remove()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.25);border:2px solid white;color:white;border-radius:50%;width:36px;height:36px;font-size:20px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;">✕</button><div style="font-size:64px;text-align:center;margin-bottom:14px;">' + msg.emoji + '</div><div style="font-size:24px;font-weight:900;text-align:center;margin-bottom:14px;">' + msg.title + '</div><div style="font-size:15px;line-height:1.6;font-weight:600;white-space:pre-wrap;">' + msg.text + '</div><button onclick="document.getElementById(\'notification-popup\').remove();Nav.go(\'list\');" style="background:white;color:' + msg.color + ';border:none;border-radius:14px;padding:14px 24px;width:100%;font-size:16px;font-weight:900;margin-top:18px;cursor:pointer;">Go to My Items</button></div></div>'; document.body.appendChild(popup); }, startPolling() { setTimeout(() => this.checkStatusChanges(), 3000); setInterval(() => this.checkStatusChanges(), 30000); } };
+
+const NotificationModule = {
+  async checkStatusChanges() { const items = Storage.get('items', []); if (items.length === 0) return; const seenStatuses = Storage.get('seen_statuses', {}); const newPopups = []; for (const item of items) { const currentStatus = ListModule.statuses[item.id] || 'pending'; const lastSeenStatus = seenStatuses[item.id] || 'pending'; if (currentStatus !== lastSeenStatus && currentStatus !== 'pending') { newPopups.push({ item, status: currentStatus }); seenStatuses[item.id] = currentStatus; } } Storage.set('seen_statuses', seenStatuses); for (const popup of newPopups) { this.showPopup(popup.item, popup.status); } },
+  showPopup(item, status) { const messages = { 'confirmed_intent': { emoji: '✅', title: 'Order Confirmed!', color: '#059669', bg: 'linear-gradient(135deg,#059669 0%,#047857 100%)', text: 'Great news! Your order "' + item.title + '" has been confirmed!\n\nWe are ready to pick it up at your scheduled time.\n\nPlease send us through chat:\n- Your exact street address\n- Parking instructions\n- Gate codes (if any)\n\nThis helps us pick up smoothly!' }, 'rejected': { emoji: '⚠️', title: 'Order Update', color: '#f59e0b', bg: 'linear-gradient(135deg,#f59e0b 0%,#d97706 100%)', text: 'We received your donation request for "' + item.title + '".\n\nUnfortunately, we cannot accept this item at this time.\n\nWe are very sorry for the inconvenience. Please try another item - we would love to help you earn rewards!' }, 'picked_up': { emoji: '🎉', title: 'Item Picked Up!', color: '#2563eb', bg: 'linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%)', text: 'Your item "' + item.title + '" has been successfully picked up!\n\nReward points have been added to your account.\n\nCheck your updated level and discount in the My Items section.\n\nThank you so much!' } }; const msg = messages[status]; if (!msg) return; const existing = document.getElementById('notification-popup'); if (existing) existing.remove(); const popup = document.createElement('div'); popup.id = 'notification-popup'; popup.innerHTML = '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;"><div style="background:' + msg.bg + ';color:white;border-radius:24px;padding:28px 24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.5);position:relative;"><button onclick="document.getElementById(\'notification-popup\').remove()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.25);border:2px solid white;color:white;border-radius:50%;width:36px;height:36px;font-size:20px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;">✕</button><div style="font-size:64px;text-align:center;margin-bottom:14px;">' + msg.emoji + '</div><div style="font-size:24px;font-weight:900;text-align:center;margin-bottom:14px;">' + msg.title + '</div><div style="font-size:15px;line-height:1.6;font-weight:600;white-space:pre-wrap;">' + msg.text + '</div><button onclick="document.getElementById(\'notification-popup\').remove();Nav.go(\'list\');" style="background:white;color:' + msg.color + ';border:none;border-radius:14px;padding:14px 24px;width:100%;font-size:16px;font-weight:900;margin-top:18px;cursor:pointer;">Go to My Items</button></div></div>'; document.body.appendChild(popup); },
+  startPolling() { setTimeout(() => this.checkStatusChanges(), 3000); setInterval(() => this.checkStatusChanges(), 30000); }
+};
 window.NotificationModule = NotificationModule; setTimeout(() => NotificationModule.startPolling(), 5000);
 async function logoutUser() { if (!confirm('Are you sure you want to log out?')) return; try { if (window.firebaseAuth && window.firebaseAuthFunctions) { const { signOut } = window.firebaseAuthFunctions; await signOut(window.firebaseAuth); } } catch(e) { console.log('Firebase signOut error:', e); } Storage.remove('user'); Storage.remove('items'); Storage.remove('shown_banners'); Storage.remove('dismissed_banners'); Storage.remove('chat_threads'); try { if (typeof Tawk_API !== 'undefined' && Tawk_API.endChat) { Tawk_API.endChat(); } } catch(e) {} alert('You have been logged out.'); location.reload(); }
 window.logoutUser = logoutUser;
