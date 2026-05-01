@@ -1,5 +1,5 @@
-```html
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -13,7 +13,8 @@
 <meta name="apple-mobile-web-app-title" content="GivyRewards">
 <link rel="manifest" id="pwa-manifest">
 <title>Givy Rewards</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@900&family=Cormorant+Garamond:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
@@ -110,88 +111,88 @@ input[type="date"]:not(.date-empty),input[type="time"]:not(.time-empty){color:#1
 .reg-complete-btn:disabled{background:#aaa;color:white;cursor:not-allowed;}
 
 .btn-orange {
-  background: #f59e0b;
-  color: black;
-  padding: 1rem 2.8rem;
-  width: auto;
-  max-width: 380px;
-  margin: 0 auto;
-  border-radius: 60px;
-  font-weight: 800;
-  font-size: 1.2rem;
-  border: none;
-  cursor: pointer;
-  transition: 0.2s;
-  font-family: var(--font-b);
-  box-shadow: 0 6px 14px rgba(245,158,11,0.3);
-  display: inline-block;
-  text-align: center;
+background: #f59e0b;
+color: black;
+padding: 1rem 2.8rem;
+width: auto;
+max-width: 380px;
+margin: 0 auto;
+border-radius: 60px;
+font-weight: 800;
+font-size: 1.2rem;
+border: none;
+cursor: pointer;
+transition: 0.2s;
+font-family: var(–font-b);
+box-shadow: 0 6px 14px rgba(245,158,11,0.3);
+display: inline-block;
+text-align: center;
 }
 .btn-orange:active { transform: scale(0.98); background: #d97706; }
 
 .custom-image-area {
-  text-align: center;
-  margin: 20px auto;
-  max-width: 100%;
+text-align: center;
+margin: 20px auto;
+max-width: 100%;
 }
 .custom-image-area img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+max-width: 100%;
+height: auto;
+border-radius: 12px;
+box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
 .choice-capsule {
-  display: flex;
-  width: 100%;
-  border-radius: 60px;
-  overflow: hidden;
-  margin: 20px 0;
-  cursor: pointer;
+display: flex;
+width: 100%;
+border-radius: 60px;
+overflow: hidden;
+margin: 20px 0;
+cursor: pointer;
 }
 .choice-half {
-  flex: 1;
-  text-align: center;
-  padding: 16px 8px;
-  font-weight: 800;
-  font-size: 1rem;
-  transition: 0.2s;
-  font-family: var(--font-b);
-  letter-spacing: 0.3px;
+flex: 1;
+text-align: center;
+padding: 16px 8px;
+font-weight: 800;
+font-size: 1rem;
+transition: 0.2s;
+font-family: var(–font-b);
+letter-spacing: 0.3px;
 }
 .choice-half-left {
-  background: #2563eb;
-  color: white;
-  border: none;
+background: #2563eb;
+color: white;
+border: none;
 }
 .choice-half-right {
-  background: #059669;
-  color: white;
-  border: none;
+background: #059669;
+color: white;
+border: none;
 }
 .choice-half-left:active { transform: scale(0.97); background: #1d4ed8; }
 .choice-half-right:active { transform: scale(0.97); background: #047857; }
 
 .quick-contacts {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin-top: 15px;
-  flex-wrap: wrap;
+display: flex;
+gap: 12px;
+justify-content: center;
+margin-top: 15px;
+flex-wrap: wrap;
 }
 .quick-contacts a {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #1a1f2e;
-  color: white;
-  padding: 8px 14px;
-  border-radius: 40px;
-  text-decoration: none;
-  font-size: 0.8rem;
-  font-weight: 600;
-  transition: 0.2s;
-  border: 1px solid rgba(251,191,36,0.3);
+display: inline-flex;
+align-items: center;
+gap: 6px;
+background: #1a1f2e;
+color: white;
+padding: 8px 14px;
+border-radius: 40px;
+text-decoration: none;
+font-size: 0.8rem;
+font-weight: 600;
+transition: 0.2s;
+border: 1px solid rgba(251,191,36,0.3);
 }
 .quick-contacts a i { font-size: 1.2rem; }
 .quick-contacts a.email { background: #ea4335; }
@@ -200,194 +201,573 @@ input[type="date"]:not(.date-empty),input[type="time"]:not(.time-empty){color:#1
 .quick-contacts a.messenger { background: #0084ff; }
 .quick-contacts a:hover { transform: translateY(-2px); filter: brightness(1.05); }
 
+/* === NEW HOME PAGE STYLES === */
+.hero-tagline {
+text-align: center;
+padding: 28px 12px 18px;
+}
+.hero-tagline h1 {
+font-family: ‘Playfair Display’, Georgia, serif;
+font-size: 30px;
+font-weight: 900;
+color: #ffffff;
+line-height: 1.3;
+letter-spacing: -0.3px;
+margin-bottom: 10px;
+}
+.hero-tagline h1 .accent {
+color: #fbbf24;
+font-style: italic;
+}
+.hero-tagline p {
+color: #cbd5e1;
+font-size: 17px;
+font-weight: 600;
+line-height: 1.5;
+max-width: 480px;
+margin: 0 auto;
+}
+.hero-divider {
+width: 60px; height: 3px;
+background: linear-gradient(90deg, #fbbf24, #059669);
+margin: 14px auto 0;
+border-radius: 99px;
+}
+
+.steps-section {
+background: linear-gradient(145deg, #1a1f2e 0%, #0f1117 100%);
+border: 1px solid rgba(251,191,36,0.25);
+border-radius: 22px;
+padding: 24px 20px;
+margin-bottom: 14px;
+box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.steps-title {
+font-family: ‘Playfair Display’, Georgia, serif;
+font-size: 30px;
+font-weight: 900;
+color: #fbbf24;
+text-align: center;
+letter-spacing: 2px;
+text-transform: uppercase;
+margin-bottom: 22px;
+}
+.step-row {
+display: flex;
+align-items: flex-start;
+gap: 16px;
+padding: 18px 0;
+border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.step-row:last-child { border-bottom: none; }
+.step-num {
+flex-shrink: 0;
+width: 56px;
+height: 56px;
+border-radius: 50%;
+background: linear-gradient(135deg, #fbbf24, #f59e0b);
+display: flex;
+align-items: center;
+justify-content: center;
+font-family: ‘Playfair Display’, Georgia, serif;
+font-size: 32px;
+font-weight: 900;
+color: #1a1f2e;
+box-shadow: 0 4px 14px rgba(251,191,36,0.4);
+}
+.step-content { flex: 1; min-width: 0; }
+.step-content h3 {
+font-family: var(–font-h);
+font-size: 19px;
+font-weight: 900;
+color: #ffffff;
+line-height: 1.3;
+margin-bottom: 6px;
+}
+.step-content p {
+font-size: 15px;
+color: #cbd5e1;
+font-weight: 500;
+line-height: 1.55;
+}
+
+.info-block {
+background: linear-gradient(145deg, #1a1f2e 0%, #0f1117 100%);
+border: 1px solid rgba(255,255,255,0.08);
+border-radius: 20px;
+padding: 22px 20px;
+margin-bottom: 14px;
+box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+}
+.info-block .ib-header {
+display: flex; align-items: center; gap: 12px;
+margin-bottom: 14px;
+}
+.info-block .ib-icon { font-size: 32px; }
+.info-block .ib-title {
+font-family: ‘Playfair Display’, Georgia, serif;
+font-size: 22px;
+font-weight: 900;
+letter-spacing: 1.5px;
+text-transform: uppercase;
+}
+.info-block.gold { border-color: rgba(251,191,36,0.3); }
+.info-block.gold .ib-title { color: #fbbf24; }
+.info-block.green { border-color: rgba(16,185,129,0.3); }
+.info-block.green .ib-title { color: #10b981; }
+.info-block.purple { border-color: rgba(139,92,246,0.3); }
+.info-block.purple .ib-title { color: #a78bfa; }
+.info-block.blue {
+background: linear-gradient(145deg, #1e3a8a 0%, #1e40af 100%);
+border-color: rgba(251,191,36,0.3);
+}
+.info-block.blue .ib-title { color: #fbbf24; }
+.info-block p {
+font-size: 16px;
+color: #cbd5e1;
+font-weight: 500;
+line-height: 1.6;
+margin-bottom: 8px;
+}
+.info-block p:last-child { margin-bottom: 0; }
+.info-block .lead {
+font-size: 17px;
+font-weight: 800;
+color: #ffffff;
+}
+.info-block ul {
+list-style: none;
+padding: 0;
+margin: 8px 0 0;
+}
+.info-block ul li {
+font-size: 16px;
+color: #cbd5e1;
+font-weight: 500;
+line-height: 1.6;
+padding: 6px 0 6px 22px;
+position: relative;
+}
+.info-block ul li::before {
+content: ‘✓’;
+position: absolute;
+left: 0;
+color: #10b981;
+font-weight: 900;
+font-size: 16px;
+}
+
+.contact-list {
+display: flex; flex-wrap: wrap; gap: 8px;
+justify-content: center;
+margin-top: 12px;
+}
+.contact-pill {
+background: rgba(251,191,36,0.12);
+color: #fde68a;
+border: 1px solid rgba(251,191,36,0.3);
+border-radius: 99px;
+padding: 7px 14px;
+font-size: 13px;
+font-weight: 700;
+}
+
+.rewards-tiers {
+display: flex; flex-direction: column; gap: 10px;
+margin-top: 14px;
+}
+.tier-row {
+background: rgba(255,255,255,0.04);
+border: 1px solid rgba(255,255,255,0.08);
+border-radius: 14px;
+padding: 12px 16px;
+display: flex; align-items: center; justify-content: space-between;
+}
+.tier-row .tier-label {
+font-size: 16px; font-weight: 800; color: #ffffff;
+}
+.tier-row .tier-pct {
+border-radius: 99px;
+padding: 6px 16px;
+font-size: 16px;
+font-weight: 900;
+color: #1a1f2e;
+}
+.tier-row.gold .tier-pct { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+.tier-row.purple .tier-pct { background: linear-gradient(135deg, #a78bfa, #7c3aed); color: #ffffff; }
+.tier-row.green .tier-pct { background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; }
+
+.closing-quote {
+text-align: center;
+padding: 24px 12px 8px;
+}
+.closing-quote .q {
+font-family: ‘Playfair Display’, Georgia, serif;
+font-size: 24px;
+font-weight: 900;
+color: #ffffff;
+font-style: italic;
+line-height: 1.35;
+}
+.closing-quote .sub {
+font-size: 17px;
+color: #cbd5e1;
+font-weight: 500;
+line-height: 1.55;
+margin-top: 10px;
+}
+
+/* === Victory Hero (UNCHANGED) === */
 .victory-hero {
-  position: relative;
-  min-height: 100vh;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  overflow: hidden;
+position: relative;
+min-height: 100vh;
+width: 100%;
+display: flex;
+align-items: center;
+justify-content: center;
+text-align: center;
+overflow: hidden;
 }
 .victory-hero-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: -2;
-  filter: brightness(1.02) contrast(1.05);
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+object-fit: cover;
+z-index: -2;
+filter: brightness(1.02) contrast(1.05);
 }
 .victory-hero::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at 30% 20%, rgba(255,215,130,0.2) 0%, rgba(255,165,50,0.05) 60%, transparent 90%);
-  pointer-events: none;
-  z-index: -1;
+content: ‘’;
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: radial-gradient(circle at 30% 20%, rgba(255,215,130,0.2) 0%, rgba(255,165,50,0.05) 60%, transparent 90%);
+pointer-events: none;
+z-index: -1;
 }
 .victory-hero::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(145deg, rgba(10,12,18,0.2) 0%, rgba(0,0,0,0.3) 100%);
-  pointer-events: none;
-  z-index: -1;
+content: ‘’;
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: linear-gradient(145deg, rgba(10,12,18,0.2) 0%, rgba(0,0,0,0.3) 100%);
+pointer-events: none;
+z-index: -1;
 }
 .victory-hero-content {
-  max-width: 1200px;
-  padding: 2rem;
-  z-index: 2;
-  backdrop-filter: blur(2px);
+max-width: 1200px;
+padding: 2rem;
+z-index: 2;
+backdrop-filter: blur(2px);
 }
 .victory-hero h1 {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(3rem, 9vw, 6.8rem);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: #FFF9F0;
-  text-shadow: 0 8px 28px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.2);
-  margin-bottom: 0.5rem;
+font-family: ‘Cormorant Garamond’, serif;
+font-size: clamp(3rem, 9vw, 6.8rem);
+font-weight: 600;
+letter-spacing: -0.02em;
+color: #FFF9F0;
+text-shadow: 0 8px 28px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.2);
+margin-bottom: 0.5rem;
 }
 .victory-hero h1 span {
-  display: inline-block;
-  border-bottom: 3px solid #E8BC7E;
-  padding-bottom: 0.15em;
+display: inline-block;
+border-bottom: 3px solid #E8BC7E;
+padding-bottom: 0.15em;
 }
 .victory-hero .sun-ray-accent {
-  margin-top: 1.5rem;
-  font-size: 1rem;
-  letter-spacing: 4px;
-  color: #FFE6C7;
-  text-transform: uppercase;
+margin-top: 1.5rem;
+font-size: 1rem;
+letter-spacing: 4px;
+color: #FFE6C7;
+text-transform: uppercase;
 }
 .victory-book-section {
-  background: linear-gradient(145deg, #FEF9F0 0%, #FFF7E8 100%);
-  padding: 5rem 2rem 6rem;
+background: linear-gradient(145deg, #FEF9F0 0%, #FFF7E8 100%);
+padding: 5rem 2rem 6rem;
 }
 .victory-container {
-  max-width: 1280px;
-  margin: 0 auto;
+max-width: 1280px;
+margin: 0 auto;
 }
 .victory-book-showcase {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+display: flex;
+flex-direction: column;
+align-items: center;
+text-align: center;
 }
 .victory-book-cover-placeholder {
-  width: 100%;
-  max-width: 380px;
-  margin-bottom: 2.8rem;
-  transition: 0.3s;
-  filter: drop-shadow(0 30px 30px rgba(0,0,0,0.15));
+width: 100%;
+max-width: 380px;
+margin-bottom: 2.8rem;
+transition: 0.3s;
+filter: drop-shadow(0 30px 30px rgba(0,0,0,0.15));
 }
 .victory-book-cover-placeholder:hover {
-  transform: translateY(-8px);
+transform: translateY(-8px);
 }
 .victory-book-cover-img {
-  width: 100%;
-  border-radius: 18px;
-  display: block;
-  box-shadow: 0 20px 30px rgba(0,0,0,0.2);
+width: 100%;
+border-radius: 18px;
+display: block;
+box-shadow: 0 20px 30px rgba(0,0,0,0.2);
 }
 .victory-message p {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.9rem;
-  font-weight: 500;
-  color: #2C2418;
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 1.9rem;
+font-weight: 500;
+color: #2C2418;
 }
 .victory-amazon-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  background: #1E2A2F;
-  padding: 1rem 2.8rem;
-  border-radius: 60px;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 1.2rem;
-  color: #FFF7E8;
-  border: 1px solid #E8BC7E;
-  transition: 0.3s;
-  margin: 1rem 0 0.8rem;
+display: inline-flex;
+align-items: center;
+gap: 12px;
+background: #1E2A2F;
+padding: 1rem 2.8rem;
+border-radius: 60px;
+text-decoration: none;
+font-weight: 600;
+font-size: 1.2rem;
+color: #FFF7E8;
+border: 1px solid #E8BC7E;
+transition: 0.3s;
+margin: 1rem 0 0.8rem;
 }
 .victory-amazon-link i {
-  color: #E8BC7E;
+color: #E8BC7E;
 }
 .victory-amazon-link:hover {
-  background: #0F1A1E;
-  transform: scale(1.02);
+background: #0F1A1E;
+transform: scale(1.02);
 }
 .victory-callout-text {
-  background: rgba(232,188,126,0.18);
-  display: inline-block;
-  padding: 0.5rem 1.8rem;
-  border-radius: 100px;
+background: rgba(232,188,126,0.18);
+display: inline-block;
+padding: 0.5rem 1.8rem;
+border-radius: 100px;
 }
 .victory-fine-print {
-  font-size: 0.75rem;
-  color: #8F7A62;
-  margin-top: 2rem;
+font-size: 0.75rem;
+color: #8F7A62;
+margin-top: 2rem;
 }
 @media (max-width: 760px) {
-  .victory-message p { font-size: 1.5rem; }
+.victory-message p { font-size: 1.5rem; }
+.hero-tagline h1 { font-size: 26px; }
+.steps-title { font-size: 24px; }
+.step-num { width: 48px; height: 48px; font-size: 26px; }
+.step-content h3 { font-size: 17px; }
 }
 </style>
+
 </head>
 <body>
-<div id="main-header" class="app-header"><div class="header-logo">Givy</div><div class="header-rewards">REWARDS</div><div style="font-size:22px;font-weight:700;color:#ffffff;letter-spacing:1px;margin-top:6px;font-style:italic;">it's more than just giving</div></div>
+<div id="main-header" class="app-header">
+  <div class="header-logo">Givy</div>
+  <div class="header-rewards">REWARDS</div>
+</div>
+
 <div id="screen-home" class="screen active">
 <div class="page" style="background:#0a0e1a;">
-  <div style="text-align:center;padding:32px 8px 28px;">
-    <div style="font-family:'Playfair Display',Georgia,serif;font-size:30px;font-weight:900;color:#ffffff;line-height:1.25;letter-spacing:-0.5px;margin-bottom:14px;">We pick up new, like new, very good condition items<br><span style="color:#fbbf24;font-style:italic;">you're ready to give away - for free</span></div>
-    <div style="width:60px;height:3px;background:linear-gradient(90deg,#fbbf24,#059669);margin:0 auto;border-radius:99px;"></div>
+
+  <!-- HERO TAGLINE -->
+
+  <div class="hero-tagline">
+    <h1>Giving something away?<br><span class="accent">We pick it up — fast & free.</span></h1>
+    <p>No prep needed — just tell us what you want gone.</p>
+    <div class="hero-divider"></div>
   </div>
-  <div style="display: flex; justify-content: center; margin: 20px 0 8px;"><button class="btn-orange" id="mainScheduleBtn">📦 Schedule Free Pickup</button></div>
-  <div style="text-align: center; font-size: 0.85rem; color: #cbd5e1; letter-spacing: 0.3px; margin-bottom: 20px;">It’s super simple — takes 3 seconds</div>
+
+  <!-- ORANGE SCHEDULE BUTTON -->
+
+  <div style="display:flex; justify-content:center; margin: 20px 0 8px;">
+    <button class="btn-orange" id="mainScheduleBtn">📦 Schedule Free Pickup</button>
+  </div>
+  <div style="text-align:center; font-size:0.85rem; color:#cbd5e1; letter-spacing:0.3px; margin-bottom:20px;">
+    It's super simple — takes 3 seconds
+  </div>
+
+  <!-- CUSTOM IMAGE (carpet handover photo - KEEP) -->
+
   <div class="custom-image-area" id="customImagePlaceholder">
-    <img src="custom-image.jpg" alt="Custom photo">
+    <img src="custom-image.jpg" alt="Givy pickup">
   </div>
-  <div style="background:linear-gradient(145deg,#1a1f2e 0%,#0f1117 100%);border:1px solid rgba(251,191,36,0.2);border-radius:20px;padding:24px 22px;margin-bottom:14px;box-shadow:0 8px 32px rgba(0,0,0,0.4);"><div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px;"><span style="font-size:39px;">📦</span><span style="font-family:'Playfair Display',Georgia,serif;font-size:29px;font-weight:900;color:#fbbf24;letter-spacing:3px;text-transform:uppercase;">Service Value</span></div><div style="font-size:18px;font-weight:800;color:#ffffff;line-height:1.4;margin-bottom:12px;">Free fast pickup at your location and convenient time.</div><div style="font-size:22px;color:#cbd5e1;font-weight:500;line-height:1.65;">We help you easily get rid of unwanted household items - furniture, decor, office items, and more - so you can focus on what matters most.</div></div>
-  <div style="background:linear-gradient(145deg,#1a1f2e 0%,#0f1117 100%);border:1px solid rgba(251,191,36,0.4);border-radius:20px;padding:24px 22px;margin-bottom:14px;box-shadow:0 12px 40px rgba(0,0,0,0.5);">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
-      <span style="font-size:28px;">💎</span>
-      <span style="font-family:'Playfair Display',Georgia,serif;font-size:21px;font-weight:900;color:#fbbf24;letter-spacing:3px;text-transform:uppercase;">REWARDS VALUE</span>
+
+  <!-- 3 SIMPLE STEPS -->
+
+  <div class="steps-section">
+    <div class="steps-title">3 Simple Steps</div>
+
+```
+<div class="step-row">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    <h3>Schedule a Pickup &amp; Submit Your Request</h3>
+    <p>Send photos, a short description, and your ZIP code. Pick-up date and time.</p>
+  </div>
+</div>
+
+<div class="step-row">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    <h3>Get a Quick Response</h3>
+    <p>We'll review your request and respond quickly.</p>
+  </div>
+</div>
+
+<div class="step-row">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    <h3>We Pick Up at Your Convenience</h3>
+    <p>Choose a time that works for you — we handle the rest. Hassle-free.</p>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- EASY WAYS TO REACH US -->
+
+  <div class="info-block gold">
+    <div class="ib-header">
+      <span class="ib-icon">📞</span>
+      <span class="ib-title">Easy Ways to Reach Us</span>
     </div>
-    <div style="font-size:18px;font-weight:800;color:#ffffff;line-height:1.4;margin-bottom:12px;">Get value back for what you give.</div>
-    <div style="font-size:22px;color:#cbd5e1;font-weight:500;line-height:1.65;margin-bottom:24px;">You receive discounts in our GivyRewardsShop as a thank you for your contribution.</div>
-    <div style="font-size:19px;color:#94a3b8;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">REWARDS LEVELS</div>
-    <div style="display:flex;flex-direction:column;gap:12px;">
-      <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
-        <div><div style="font-family:'Playfair Display',Georgia,serif;font-size:18px;font-weight:900;color:#fbbf24;">Active Giver</div><div style="font-size:19px;color:#94a3b8;font-weight:600;">1-3 items</div></div>
-        <div style="background:linear-gradient(135deg,#fbbf24,#f59e0b);border-radius:99px;padding:8px 18px;font-size:18px;font-weight:900;color:#1a1f2e;">5%</div>
-      </div>
-      <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
-        <div><div style="font-family:'Playfair Display',Georgia,serif;font-size:18px;font-weight:900;color:#a78bfa;">Impact Giver</div><div style="font-size:19px;color:#94a3b8;font-weight:600;">4-7 items</div></div>
-        <div style="background:linear-gradient(135deg,#a78bfa,#7c3aed);border-radius:99px;padding:8px 18px;font-size:18px;font-weight:900;color:#ffffff;">20%</div>
-      </div>
-      <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
-        <div><div style="font-family:'Playfair Display',Georgia,serif;font-size:18px;font-weight:900;color:#10b981;">Hero Giver</div><div style="font-size:19px;color:#94a3b8;font-weight:600;">7+ items</div></div>
-        <div style="background:linear-gradient(135deg,#10b981,#059669);border-radius:99px;padding:8px 18px;font-size:18px;font-weight:900;color:#ffffff;">30%</div>
-      </div>
+    <p>Choose any way you prefer:</p>
+    <div class="contact-list">
+      <span class="contact-pill">✉️ Email</span>
+      <span class="contact-pill">💬 Text</span>
+      <span class="contact-pill">📘 Messenger</span>
+      <span class="contact-pill">📞 Call</span>
+      <span class="contact-pill">📱 WhatsApp</span>
+      <span class="contact-pill">💭 Live Chat</span>
+      <span class="contact-pill">✈️ Telegram</span>
     </div>
   </div>
-  <div style="background:linear-gradient(145deg,#1a1f2e 0%,#0f1117 100%);border:1px solid rgba(5,150,105,0.25);border-radius:20px;padding:24px 22px;margin-bottom:14px;box-shadow:0 8px 32px rgba(0,0,0,0.4);"><div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px;"><span style="font-size:39px;">♻️</span><span style="font-family:'Playfair Display',Georgia,serif;font-size:29px;font-weight:900;color:#10b981;letter-spacing:3px;text-transform:uppercase;">Second Life</span></div><div style="font-size:18px;font-weight:800;color:#ffffff;line-height:1.4;margin-bottom:10px;">Good items are reused, not wasted.</div><div style="font-size:22px;color:#cbd5e1;font-weight:500;line-height:1.65;">We clean and prepare items for resale and reuse.</div></div>
-<IMG SRC="BETWEEN-IMAGE.JPG" ALT="SEPARATOR" STYLE="DISPLAY: BLOCK; WIDTH: 100%; HEIGHT: AUTO; MARGIN: 0; PADDING: 0; BORDER: NONE; VERTICAL-ALIGN: BOTTOM;">
-<div style="background:linear-gradient(145deg,#1e3a8a 0%,#1e40af 100%);..."></div>
-  <div style="background:linear-gradient(145deg,#1e3a8a 0%,#1e40af 100%);border-radius:20px;padding:24px 22px;margin-bottom:14px;box-shadow:0 12px 40px rgba(30,58,138,0.4);"><div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px;"><span style="font-size:39px;">🌍</span><span style="font-family:'Playfair Display',Georgia,serif;font-size:29px;font-weight:900;color:#fbbf24;letter-spacing:3px;text-transform:uppercase;">Why It Matters More</span></div><div style="font-size:17px;font-weight:700;color:#ffffff;line-height:1.55;"><span style="color:#fbbf24;font-weight:900;font-size:22px;">10%</span> of proceeds are directed to addiction recovery programs and community initiatives.</div></div>
-  <div style="text-align:center;padding:24px 8px 8px;"><div style="font-family:'Playfair Display',Georgia,serif;font-size:24px;font-weight:900;color:#ffffff;line-height:1.3;font-style:italic;">It's more than just giving.</div><div style="font-size:21px;color:#cbd5e1;font-weight:500;line-height:1.6;margin-top:10px;">Each item you give helps build a cycle of positive impact.</div><div style="width:40px;height:2px;background:linear-gradient(90deg,#fbbf24,#059669);margin:18px auto 0;border-radius:99px;"></div></div>
-  <div class="footer-note" style="margin-top:24px;color:#64748b;font-size:18px;font-style:italic;text-align:center;">By joining us, you contribute to the fight against addiction.</div>
+
+  <!-- WHO IS THIS FOR -->
+
+  <div class="info-block">
+    <div class="ib-header">
+      <span class="ib-icon">👥</span>
+      <span class="ib-title" style="color:#ffffff;">Who Is This For?</span>
+    </div>
+    <ul>
+      <li>Moving or decluttering your space</li>
+      <li>Upgrading furniture or office equipment</li>
+      <li>Don't want to deal with your stuff?</li>
+      <li>Prefer giving things a second life instead of throwing them away</li>
+    </ul>
+  </div>
+
+  <!-- OPTIONAL GIVY REWARDS -->
+
+  <div class="info-block purple">
+    <div class="ib-header">
+      <span class="ib-icon">🎁</span>
+      <span class="ib-title">Optional · Unlock Givy Rewards</span>
+    </div>
+    <p class="lead">It's more than just giving.</p>
+    <p>Just sign up to schedule a pickup and confirm your request through registration.</p>
+    <p style="margin-top:14px; color:#fde68a; font-weight:700;">The more you give, the more you earn:</p>
+
+```
+<div class="rewards-tiers">
+  <div class="tier-row gold">
+    <span class="tier-label">1–3 items</span>
+    <span class="tier-pct">5% OFF</span>
+  </div>
+  <div class="tier-row purple">
+    <span class="tier-label">4–6 items</span>
+    <span class="tier-pct">20% OFF</span>
+  </div>
+  <div class="tier-row green">
+    <span class="tier-label">7+ items</span>
+    <span class="tier-pct">30% OFF</span>
+  </div>
+</div>
+
+<p style="margin-top:14px;">Use your rewards in the <strong style="color:#fbbf24;">GivyRewardsShop</strong> — where restored, carefully selected items are ready for their next life &amp; much more.</p>
+```
+
+  </div>
+
+  <!-- WHAT WE DO -->
+
+  <div class="info-block green">
+    <div class="ib-header">
+      <span class="ib-icon">♻️</span>
+      <span class="ib-title">What We Do</span>
+    </div>
+    <p class="lead">We operate a circular system:</p>
+    <ul>
+      <li>Collect unwanted items</li>
+      <li>Clean, repair, and restore what we can</li>
+      <li>Resell usable goods</li>
+      <li>Reduce landfill waste</li>
+      <li>Return part of the value back to users</li>
+    </ul>
+  </div>
+
+  <!-- WHAT WE ACCEPT -->
+
+  <div class="info-block gold">
+    <div class="ib-header">
+      <span class="ib-icon">📦</span>
+      <span class="ib-title">What We Accept</span>
+    </div>
+    <p>We help you easily remove unwanted household items — furniture, décor, office items, and more — so you can focus on what matters.</p>
+    <p style="margin-top:10px; color:#ffffff; font-weight:800;">We accept items in:</p>
+    <ul>
+      <li>New</li>
+      <li>Like New</li>
+      <li>Very Good (gently used)</li>
+      <li>Lightly Used (minor wear)</li>
+    </ul>
+    <p style="margin-top:12px;">We also accept items with minor damage, as long as they are still usable.</p>
+  </div>
+
+  <!-- POSITIVE IMPACT -->
+
+  <div class="info-block">
+    <div class="ib-header">
+      <span class="ib-icon">💚</span>
+      <span class="ib-title" style="color:#ffffff;">A Cycle of Positive Impact</span>
+    </div>
+    <p class="lead">It's more than just giving — it's a cycle of positive impact.</p>
+    <p>We use proceeds to keep pickups free, restore and reuse items, provide customer rewards, support community initiatives, and reduce environmental impact.</p>
+  </div>
+
+  <!-- WHY IT MATTERS -->
+
+  <div class="info-block blue">
+    <div class="ib-header">
+      <span class="ib-icon">🌍</span>
+      <span class="ib-title">Why It Matters</span>
+    </div>
+    <p style="font-size:17px;"><span style="color:#fbbf24; font-weight:900; font-size:22px;">10%</span> of proceeds support addiction recovery programs and community initiatives.</p>
+  </div>
+
+  <!-- CLOSING -->
+
+  <div class="closing-quote">
+    <div class="q">Every item you give creates a ripple of good.</div>
+    <div class="sub">Together, we keep things in motion — out of landfills and into new homes.</div>
+    <div style="width:40px; height:2px; background:linear-gradient(90deg,#fbbf24,#059669); margin:18px auto 0; border-radius:99px;"></div>
+  </div>
+
+  <div class="footer-note" style="margin-top:24px; color:#64748b; font-size:16px; font-style:italic; text-align:center;">
+    By joining us, you contribute to the fight against addiction.
+  </div>
+
 </div>
 </div>
+
 <div id="screen-post" class="screen"><div class="page"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><button class="btn-back" onclick="Nav.go('home')">← Back</button><span style="color:white;font-size:20px;font-weight:900;font-family:var(--font-h);">Give an Item</span></div><div id="post-banner-container"></div><div id="post-user-card" class="card" style="margin-bottom:8px;padding:14px 16px;"><div id="post-greeting" style="font-size:18px;font-weight:900;color:#111827;margin-bottom:8px;"></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;"><div style="background:#f0fdf4;border-radius:10px;padding:8px 4px;"><div id="post-items-count" style="font-size:20px;font-weight:900;color:#059669;"></div><div style="font-size:10px;color:#6b7280;font-weight:700;margin-top:2px;">Items Given</div></div><div style="background:#fef9c3;border-radius:10px;padding:8px 4px;"><div id="post-level" style="font-size:14px;font-weight:900;"></div><div style="font-size:10px;color:#6b7280;font-weight:700;margin-top:2px;">Level</div></div><div style="background:#ede9fe;border-radius:10px;padding:8px 4px;"><div id="post-discount" style="font-size:20px;font-weight:900;color:#7c3aed;"></div><div style="font-size:10px;color:#6b7280;font-weight:700;margin-top:2px;">Discount</div></div></div></div><div class="card"><div class="section-label">Item Details</div><input id="f-title" placeholder="Item title" class="inp"><textarea id="f-desc" placeholder="Description" class="inp" rows="3" style="resize:none;"></textarea><div class="section-label">Accepted Condition</div><div class="condition-grid"><div class="condition-btn" data-val="new" onclick="PostModule.selectCondition(this)"><span class="c-icon">✨</span><span class="c-name">New</span><span class="c-desc">Never used</span></div><div class="condition-btn" data-val="like_new" onclick="PostModule.selectCondition(this)"><span class="c-icon">⭐</span><span class="c-name">Like New</span><span class="c-desc">Used once or twice</span></div><div class="condition-btn" data-val="very_good" onclick="PostModule.selectCondition(this)"><span class="c-icon">👍</span><span class="c-name">Very Good</span><span class="c-desc">Minor wear only</span></div><div class="condition-btn" data-val="restorable" onclick="PostModule.selectCondition(this)"><span class="c-icon">🔧</span><span class="c-name">Restorable</span><span class="c-desc">Needs some work</span></div></div><div class="section-label">Photos (up to 10)</div><div class="photo-count-badge" id="photo-count">0 / 10 photos added</div><div id="photo-preview-grid" class="photo-preview-grid"></div><div class="photo-upload-area" onclick="document.getElementById('f-photo').click()"><div class="upload-icon">📷</div><div class="upload-text">Tap to add photos</div><div class="upload-limit">Up to 10 photos</div></div><input type="file" id="f-photo" multiple accept="image/*" style="display:none;" onchange="PhotoModule.handleFiles(this)"><div class="section-label">Pickup Location</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;"><input id="f-zip" placeholder="ZIP Code (98101)" class="inp" style="margin-bottom:0;" maxlength="5" oninput="LocationModule.onZipChange(this.value)"><button type="button" onclick="LocationModule.useMyLocation()" style="background:#059669;color:white;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-b);">📍 Use My Location</button></div><div id="f-map-container" style="display:none;margin-bottom:8px;border-radius:12px;overflow:hidden;border:2px solid #e5e7eb;"><div id="f-map" style="width:100%;height:200px;"></div><div id="f-location-info" style="padding:10px 12px;background:#f0fdf4;font-size:13px;color:#065f46;font-weight:700;"></div></div><div class="section-label">Pickup Date & Time</div><label for="f-date" style="display:block;font-size:13px;color:#6b7280;font-weight:600;margin-bottom:6px;margin-top:2px;">Pick up date</label><input type="date" id="f-date" class="inp date-empty" onchange="this.classList.toggle('date-empty', !this.value)"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><div><label for="f-t1" style="display:block;font-size:13px;color:#6b7280;font-weight:600;margin-bottom:6px;">Pick up time</label><input type="time" id="f-t1" class="inp time-empty" style="margin-bottom:0;" onchange="this.classList.toggle('time-empty', !this.value)"></div><div><label for="f-t2" style="display:block;font-size:13px;color:#6b7280;font-weight:600;margin-bottom:6px;">Pick up time</label><input type="time" id="f-t2" class="inp time-empty" style="margin-bottom:0;" onchange="this.classList.toggle('time-empty', !this.value)"></div></div><div style="height:14px;"></div><button class="btn" onclick="PostModule.submit()" style="margin-bottom:0;">✅ Submit Request</button>
 <div class="quick-contacts">
   <span style="color:#94a3b8; font-size:0.75rem;">Need help? Contact us:</span>
@@ -529,6 +909,7 @@ function openChoiceModal() { const modal = document.getElementById('choiceModal'
 function closeChoiceModal() { const modal = document.getElementById('choiceModal'); if (modal) { modal.classList.remove('open'); document.body.style.overflow = ''; } }
 function openGuestContactModal() { const modal = document.getElementById('guestContactModal'); if (modal) { modal.classList.add('open'); document.body.style.overflow = 'hidden'; } }
 function closeGuestContactModal() { const modal = document.getElementById('guestContactModal'); if (modal) { modal.classList.remove('open'); document.body.style.overflow = ''; } }
+window.closeGuestContactModal = closeGuestContactModal;
 
 document.getElementById('choiceNoRewards').onclick = () => { closeChoiceModal(); openGuestContactModal(); };
 document.getElementById('choiceWithRewards').onclick = () => { closeChoiceModal(); const user = Storage.get('user'); if (user && user.email) { Nav.go('post'); } else { const regModal = document.getElementById('registerModal'); if (regModal) regModal.classList.add('open'); else if (typeof RegModal !== 'undefined' && RegModal.open) RegModal.open(); } };
@@ -566,6 +947,7 @@ const ListModule = { cond: { new: 'cond-new', like_new: 'cond-likenew', very_goo
       const fid = item.firestoreId;
       if (!fid) continue;
       try {
+        const { doc, getDoc } = window.firebaseFunctions;
         const snap = await getDoc(doc(window.firebaseDB, 'orders', fid));
         if (snap.exists()) statuses[fid] = snap.data().status || 'pending';
       } catch(e) { console.log('Guest fetch error', e); }
@@ -667,6 +1049,7 @@ window.dispatchEvent(new Event('firebase-ready'));
 PWA.init();
 Nav.go('home');
 </script>
+
 <div id="registerModal" class="reg-modal"><div class="reg-box"><div style="font-size:40px;margin-bottom:8px;">🎁</div><h2>Create Account</h2><p class="reg-sub">To start earning points for your items</p><div class="reg-input-group"><label for="reg-nick">Nick Name / Account Name *</label><input type="text" id="reg-nick" placeholder="e.g. AlexGiver or John_Couch" oninput="RegModal.check()"></div><div class="reg-input-group"><label for="reg-email">Email *</label><input type="email" id="reg-email" placeholder="your@email.com" oninput="RegModal.check()"></div><div class="reg-input-group"><label for="reg-password">Password * (min 6 characters)</label><input type="password" id="reg-password" placeholder="Create a password" oninput="RegModal.check()"></div><div class="reg-terms"><input type="checkbox" id="reg-terms-check" onchange="RegModal.check()"><label for="reg-terms-check">I agree to the <a onclick="RegModal.showTerms()">Terms & Conditions</a></label></div><button id="reg-complete-btn" class="reg-complete-btn" disabled onclick="RegModal.complete()">Create Account</button><p style="margin-top:16px;font-size:13px;color:#777;">Already have an account? <a onclick="RegModal.showLogin()" style="color:#4CAF50;cursor:pointer;font-weight:700;">Log in</a></p></div></div>
 <div id="loginModal" class="reg-modal"><div class="reg-box"><h2>Welcome Back</h2><p class="reg-sub">Log in to your Givy account</p><div class="reg-input-group"><label for="login-email">Email</label><input type="email" id="login-email" placeholder="your@email.com"></div><div class="reg-input-group"><label for="login-password">Password</label><input type="password" id="login-password" placeholder="Your password"></div><button class="reg-complete-btn" onclick="RegModal.login()" style="background:#4CAF50;">Log In</button><p style="margin-top:10px;font-size:13px;color:#777;"><a onclick="RegModal.resetPassword()" style="color:#4CAF50;cursor:pointer;">Forgot password?</a></p><p style="margin-top:16px;font-size:13px;color:#777;">New here? <a onclick="RegModal.showRegister()" style="color:#4CAF50;cursor:pointer;font-weight:700;">Create account</a></p></div></div>
 <div id="termsModal" class="reg-modal"><div class="reg-box" style="text-align:left;max-height:85vh;"><h2 style="text-align:center;">Terms & Conditions</h2><br><strong style="font-size:15px;color:#111;">Item Acceptance & Condition Policy</strong><p style="font-size:14px;color:#374151;margin:10px 0;">We accept items in the following conditions: <strong>New, Like New,</strong> and, in some cases, <strong>Very Good Condition.</strong></p><p style="font-size:14px;color:#374151;margin:10px 0;">Items in New or Like New condition may still require minor repairs or partial cleaning.</p><p style="font-size:14px;color:#374151;margin:10px 0;">Items classified as Very Good Condition may also be accepted; however, each item is reviewed individually, and acceptance is determined at our sole discretion.</p><p style="font-size:14px;color:#374151;margin:10px 0;">By submitting or listing an item on our platform, you acknowledge and agree that we are not obligated to pick up or accept any item.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0;"><strong style="font-size:15px;color:#111;">Rewards Points & Levels Policy</strong><p style="font-size:14px;color:#374151;margin:10px 0;">Points are awarded based on the type, size, and value of the items provided.</p><p style="font-size:14px;color:#374151;margin:10px 0;">All point allocations are determined at our discretion.</p><br><button onclick="RegModal.closeTerms()" style="width:100%;padding:14px;background:#4CAF50;color:white;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;">Close</button></div></div>
@@ -685,4 +1068,3 @@ Tawk_API.onLoad=function(){try{var userStr=localStorage.getItem('user');if(userS
 <div class="victory-hero"><img class="victory-hero-bg" src="hero-youth.jpg" alt="Three joyful youths in sun rays"><div class="victory-hero-content"><h1><span>Together we will win</span></h1><div class="sun-ray-accent"><i class="fas fa-sun"></i> freedom · unity · light <i class="fas fa-sun"></i></div></div></div><div class="victory-book-section"><div class="victory-container victory-book-showcase"><div class="victory-book-cover-placeholder"><img class="victory-book-cover-img" src="book-cover.jpg" alt="Break Free Book Cover"></div><div class="victory-message"><p>⚡ Order, Download, go to victory — for you & your family ⚡</p></div><a href="https://a.co/d/0j98pcHn" class="victory-amazon-link" target="_blank"><i class="fab fa-amazon"></i> ORDER & DOWNLOAD ON AMAZON <i class="fas fa-arrow-right"></i></a><div class="victory-callout-text"><i class="fas fa-heart"></i> Claim your personal & family victory today <i class="fas fa-hands-helping"></i></div><div class="victory-fine-print">* Instant access — Kindle & Paperback. Your breakthrough starts here.</div></div></div>
 </body>
 </html>
-```
