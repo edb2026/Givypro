@@ -43,12 +43,55 @@
 .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
 .product-card { background: #121212; border-radius: 16px; padding: 15px; transition: transform 0.2s; }
 .product-card:hover { transform: translateY(-5px); }
-.product-img { background: #1E1E1E; height: 250px; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 15px; position: relative; cursor: pointer; }
-.product-img img { width: 100%; height: 100%; object-fit: cover; }
-.img-placeholder { font-size: 60px; }
-.image-counter { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 20px; font-size: 11px; }
-.sold-badge { position: absolute; bottom: 10px; left: 10px; background: #E41E3F; color: white; font-weight: bold; font-size: 13px; padding: 5px 12px; border-radius: 6px; letter-spacing: 1px; box-shadow: 0 2px 6px rgba(0,0,0,0.4); text-transform: uppercase; }
-.sold-card .product-img img { filter: grayscale(35%) brightness(0.85); }
+
+/* ===== КАРУСЕЛЬ ===== */
+.product-img {
+  position: relative;
+  height: 250px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 15px;
+  background: #1E1E1E;
+  cursor: pointer;
+}
+.carousel-track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+}
+.carousel-track img {
+  flex-shrink: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  user-select: none;
+}
+.carousel-dots {
+  position: absolute;
+  bottom: 8px;
+  left: 0; right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  pointer-events: none;
+}
+.carousel-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.4);
+  transition: background 0.2s, transform 0.2s;
+}
+.carousel-dot.active {
+  background: #fff;
+  transform: scale(1.3);
+}
+/* =================== */
+
+.img-placeholder { font-size: 60px; display: flex; align-items: center; justify-content: center; height: 100%; }
+.sold-badge { position: absolute; bottom: 10px; left: 10px; background: #E41E3F; color: white; font-weight: bold; font-size: 13px; padding: 5px 12px; border-radius: 6px; letter-spacing: 1px; box-shadow: 0 2px 6px rgba(0,0,0,0.4); text-transform: uppercase; z-index: 2; }
+.sold-card .carousel-track img { filter: grayscale(35%) brightness(0.85); }
 .brand { color: #C5A267; font-size: 12px; }
 .title { font-size: 18px; font-weight: bold; margin: 8px 0; }
 .desc { color: #999; font-size: 13px; margin: 10px 0; line-height: 1.4; }
@@ -117,23 +160,85 @@
     let lbImages = [];
     let lbIndex = 0;
 
-    // Real-time products subscription (PUBLIC READ - no auth needed per Firestore Rules)
+    // ===== КАРУСЕЛЬ =====
+    function initCarousel(el) {
+      const track = el.querySelector('.carousel-track');
+      const dots  = el.querySelectorAll('.carousel-dot');
+      if (!track || track.children.length <= 1) return;
+
+      const total = track.children.length;
+      let current = 0;
+      let startX = 0;
+      let diffX  = 0;
+      let dragging = false;
+
+      function goTo(idx) {
+        current = (idx + total) % total;
+        track.style.transform = 'translateX(-' + (current * 100) + '%)';
+        dots.forEach((d, i) => d.classList.toggle('active', i === current));
+      }
+
+      el.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        diffX  = 0;
+        dragging = true;
+        track.style.transition = 'none';
+      }, { passive: true });
+
+      el.addEventListener('touchmove', (e) => {
+        if (!dragging) return;
+        diffX = e.touches[0].clientX - startX;
+        const base = -(current * 100);
+        const shift = (diffX / el.offsetWidth) * 100;
+        track.style.transform = 'translateX(' + (base + shift) + '%)';
+      }, { passive: true });
+
+      el.addEventListener('touchend', () => {
+        if (!dragging) return;
+        dragging = false;
+        track.style.transition = '';
+        if      (diffX < -40) goTo(current + 1);
+        else if (diffX >  40) goTo(current - 1);
+        else                  goTo(current);
+      });
+
+      el.addEventListener('mousedown', (e) => {
+        startX = e.clientX; diffX = 0; dragging = true;
+        track.style.transition = 'none';
+        e.preventDefault();
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        diffX = e.clientX - startX;
+        const base = -(current * 100);
+        const shift = (diffX / el.offsetWidth) * 100;
+        track.style.transform = 'translateX(' + (base + shift) + '%)';
+      });
+      window.addEventListener('mouseup', () => {
+        if (!dragging) return;
+        dragging = false;
+        track.style.transition = '';
+        if      (diffX < -40) goTo(current + 1);
+        else if (diffX >  40) goTo(current - 1);
+        else                  goTo(current);
+      });
+
+      goTo(0);
+    }
+    // ====================
+
     const productsRef = collection(db, 'products');
     const productsQuery = query(productsRef, orderBy('createdAt', 'desc'));
 
     onSnapshot(productsQuery, (snapshot) => {
       products = [];
-      snapshot.forEach(docSnap => {
-        products.push({ id: docSnap.id, ...docSnap.data() });
-      });
-      console.log('Products synced from Firebase:', products.length);
+      snapshot.forEach(docSnap => { products.push({ id: docSnap.id, ...docSnap.data() }); });
       renderProducts();
     }, (error) => {
       console.error('Firestore error:', error);
       document.getElementById('products').innerHTML = '<div class="empty">Connection error. Please refresh the page.</div>';
     });
 
-    // Settings subscription (PUBLIC READ)
     const settingsRef = doc(db, 'shop_settings', 'main');
     onSnapshot(settingsRef, (snap) => {
       if (snap.exists()) {
@@ -222,27 +327,20 @@
     document.addEventListener('keydown', (e) => {
       if (!document.getElementById('lightbox').classList.contains('active')) return;
       if (e.key === 'Escape') closeLightbox();
-      else if (e.key === 'ArrowLeft' && lbImages.length > 1) { lbIndex = (lbIndex - 1 + lbImages.length) % lbImages.length; updateLightbox(); }
+      else if (e.key === 'ArrowLeft'  && lbImages.length > 1) { lbIndex = (lbIndex - 1 + lbImages.length) % lbImages.length; updateLightbox(); }
       else if (e.key === 'ArrowRight' && lbImages.length > 1) { lbIndex = (lbIndex + 1) % lbImages.length; updateLightbox(); }
     });
 
     function openMessenger(product) {
       const user = (product.fbUser || globalFb || '').replace(/^@/, '').trim();
       const msg = 'Hello! I\'m interested in "' + product.name + '" (' + (product.brand || 'GIVY STUDIO') + ') - $' + product.price + '. Is it still available?';
-      const encoded = encodeURIComponent(msg);
-
-      if (!user) {
-        alert('No Facebook username set yet.\n\nContact the seller about: ' + product.name);
-        return;
-      }
-      const url = 'https://m.me/' + user + '?text=' + encoded;
-      window.open(url, '_blank');
+      if (!user) { alert('No Facebook username set yet.\n\nContact the seller about: ' + product.name); return; }
+      window.open('https://m.me/' + user + '?text=' + encodeURIComponent(msg), '_blank');
     }
 
     function openMarketplace(product) {
       const q = encodeURIComponent((product.name + ' ' + (product.brand || '')).trim());
-      const url = 'https://www.facebook.com/marketplace/search/?query=' + q;
-      window.open(url, '_blank');
+      window.open('https://www.facebook.com/marketplace/search/?query=' + q, '_blank');
     }
 
     function renderProducts() {
@@ -256,7 +354,7 @@
         filtered = products.filter(p => !p.sold && p.category === activeFilter);
       }
 
-      if(filtered.length === 0) {
+      if (filtered.length === 0) {
         const msg = activeFilter === '__sold' ? '\uD83D\uDCED No sold products yet' : '\u2728 No products yet';
         container.innerHTML = '<div class="empty">' + msg + '</div>';
         return;
@@ -265,38 +363,55 @@
       container.innerHTML = '';
       filtered.forEach((p) => {
         const images = p.images && p.images.length ? p.images : [];
-        const firstImage = images.length > 0 ? images[0] : null;
-        const imageCount = images.length;
         const isSold = !!p.sold;
+
+        // Строим блок с изображениями
+        let imgHtml;
+        if (images.length === 0) {
+          imgHtml = '<div class="img-placeholder">\uD83E\uDE91</div>';
+        } else if (images.length === 1) {
+          imgHtml = '<div class="carousel-track"><img src="' + images[0] + '" alt="' + escapeHtml(p.name) + '"></div>';
+        } else {
+          const imgs = images.map(src => '<img src="' + src + '" alt="' + escapeHtml(p.name) + '">').join('');
+          const dots = images.map((_, i) => '<span class="carousel-dot' + (i === 0 ? ' active' : '') + '"></span>').join('');
+          imgHtml = '<div class="carousel-track">' + imgs + '</div><div class="carousel-dots">' + dots + '</div>';
+        }
+        if (isSold) imgHtml += '<div class="sold-badge">Sold</div>';
 
         const card = document.createElement('div');
         card.className = 'product-card' + (isSold ? ' sold-card' : '');
         card.innerHTML =
-          '<div class="product-img">' +
-            (firstImage ? '<img src="' + firstImage + '" alt="' + escapeHtml(p.name) + '">' : '<div class="img-placeholder">\uD83E\uDE91</div>') +
-            (imageCount > 1 ? '<div class="image-counter">\uD83D\uDCF7 ' + imageCount + '</div>' : '') +
-            (isSold ? '<div class="sold-badge">Sold</div>' : '') +
-          '</div>' +
+          '<div class="product-img">' + imgHtml + '</div>' +
           '<div class="brand">' + escapeHtml(p.brand || 'GIVY STUDIO') + '</div>' +
           '<div class="title">' + escapeHtml(p.name) + '</div>' +
           '<div class="desc">' + escapeHtml(p.desc || 'Luxury piece') + '</div>' +
           '<div class="price">$' + p.price + '</div>' +
           '<div class="action-btns">' +
-            '<button class="fb-btn" title="Message seller on Messenger"' + (isSold ? ' disabled style="opacity:0.5; cursor:not-allowed;"' : '') + '>\uD83D\uDCAC Interested</button>' +
-            '<button class="mp-btn" title="Find on Facebook Marketplace">\uD83D\uDED2 Marketplace</button>' +
+            '<button class="fb-btn"' + (isSold ? ' disabled style="opacity:0.5;cursor:not-allowed;"' : '') + '>\uD83D\uDCAC Interested</button>' +
+            '<button class="mp-btn">\uD83D\uDED2 Marketplace</button>' +
           '</div>';
+
+        // Клик по фото открывает лайтбокс (только если не тянем)
         const imgDiv = card.querySelector('.product-img');
-        imgDiv.onclick = () => openLightbox(images, 0);
+        let wasDragging = false;
+        imgDiv.addEventListener('mousedown', () => { wasDragging = false; });
+        imgDiv.addEventListener('mousemove', () => { wasDragging = true; });
+        imgDiv.addEventListener('click', () => { if (!wasDragging) openLightbox(images, 0); });
+
         if (!isSold) card.querySelector('.fb-btn').onclick = () => openMessenger(p);
         card.querySelector('.mp-btn').onclick = () => openMarketplace(p);
+
         container.appendChild(card);
+
+        // Инициализируем карусель после добавления в DOM
+        if (images.length > 1) initCarousel(imgDiv);
       });
     }
 
     document.getElementById('adminIcon').onclick = () => {
       clickCount++;
       setTimeout(() => clickCount = 0, 500);
-      if(clickCount >= 3) location.href = 'shop-admin.html';
+      if (clickCount >= 3) location.href = 'shop-admin.html';
     };
 
     function escapeHtml(str) { return str ? String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])) : ''; }
