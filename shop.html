@@ -20,36 +20,37 @@
     }
 
 ```
+/* ── Кнопка назад — ярче ── */
 .back-to-givy {
   position: fixed; top: 16px; left: 16px;
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-  color: #ffffff; padding: 10px 16px; border-radius: 999px;
+  background: #ffffff;
+  color: #000000;
+  padding: 10px 18px; border-radius: 999px;
   text-decoration: none; font-size: 14px; font-weight: 800;
   display: inline-flex; align-items: center; gap: 6px;
-  box-shadow: 0 4px 14px rgba(251,191,36,0.5);
+  box-shadow: 0 4px 16px rgba(255,255,255,0.25);
   z-index: 100; transition: transform 0.15s, box-shadow 0.15s;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.25);
 }
-.back-to-givy:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(251,191,36,0.7); }
+.back-to-givy:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,255,255,0.35); }
 .back-to-givy:active { transform: scale(0.97); }
 @media (max-width: 480px) {
-  .back-to-givy { padding: 8px 12px; font-size: 12px; }
-  h1 { padding-top: 36px; }
+  .back-to-givy { padding: 8px 13px; font-size: 12px; }
+  h1 { padding-top: 40px; }
 }
 
 .filters { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 30px; }
 .filter-btn { background: #1A1A1A; border: 1px solid #333; padding: 8px 20px; border-radius: 40px; color: white; cursor: pointer; }
 .filter-btn.active { background: #C5A267; color: black; }
 
-/* Grid */
+/* ── Grid: align-items:stretch → все карточки одной высоты в строке ── */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 25px;
-  align-items: start;
+  align-items: stretch;
 }
 
-/* Card */
+/* Карточка — flex колонка, растягивается по высоте ячейки */
 .product-card {
   background: #121212;
   border-radius: 16px;
@@ -57,10 +58,11 @@
   transition: transform 0.2s;
   display: flex;
   flex-direction: column;
+  height: 100%;          /* занимает всю высоту ячейки грида */
 }
 .product-card:hover { transform: translateY(-4px); }
 
-/* Carousel wrapper */
+/* Фото — фиксированная высота */
 .product-img {
   position: relative;
   width: 100%;
@@ -88,41 +90,33 @@
 }
 .carousel-dots {
   position: absolute;
-  bottom: 10px;
-  left: 0; right: 0;
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  pointer-events: none;
-  z-index: 3;
+  bottom: 10px; left: 0; right: 0;
+  display: flex; justify-content: center; gap: 6px;
+  pointer-events: none; z-index: 3;
 }
 .carousel-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
+  width: 7px; height: 7px; border-radius: 50%;
   background: rgba(255,255,255,0.35);
   transition: background 0.2s, transform 0.2s;
 }
-.carousel-dot.active {
-  background: #ffffff;
-  transform: scale(1.35);
-}
+.carousel-dot.active { background: #fff; transform: scale(1.35); }
 
 .img-placeholder { font-size: 60px; display: flex; align-items: center; justify-content: center; height: 100%; }
-.sold-badge { position: absolute; bottom: 10px; left: 10px; background: #E41E3F; color: white; font-weight: bold; font-size: 13px; padding: 5px 12px; border-radius: 6px; letter-spacing: 1px; box-shadow: 0 2px 6px rgba(0,0,0,0.4); text-transform: uppercase; z-index: 2; }
+.sold-badge { position: absolute; bottom: 10px; left: 10px; background: #E41E3F; color: white; font-weight: bold; font-size: 13px; padding: 5px 12px; border-radius: 6px; letter-spacing: 1px; text-transform: uppercase; z-index: 2; }
 .sold-card .carousel-track img { filter: grayscale(35%) brightness(0.85); }
 
-/* Card body */
+/* Тело карточки — flex растягивается, кнопки всегда внизу */
 .card-body {
   padding: 14px 15px 15px;
   display: flex;
   flex-direction: column;
-  flex: 1;
+  flex: 1;               /* занимает всё оставшееся место */
 }
-.brand { color: #C5A267; font-size: 12px; margin-bottom: 4px; }
-.title { font-size: 16px; font-weight: bold; margin-bottom: 8px; line-height: 1.3; }
+.brand  { color: #C5A267; font-size: 12px; margin-bottom: 4px; }
+.title  { font-size: 16px; font-weight: bold; margin-bottom: 8px; line-height: 1.3; }
 
-/* Description with More/Less */
-.desc-wrap { margin-bottom: 10px; }
+/* Описание — 3 строки, остальное скрыто, кнопка More */
+.desc-wrap { margin-bottom: 10px; flex: 1; }
 .desc {
   color: #999; font-size: 13px; line-height: 1.45;
   display: -webkit-box;
@@ -136,12 +130,13 @@
   overflow: visible;
 }
 .desc-toggle {
-  background: none; border: none; padding: 2px 0 0; margin: 0;
+  background: none; border: none; padding: 3px 0 0; margin: 0;
   color: #C5A267; font-size: 12px; cursor: pointer;
   font-family: inherit; display: block;
 }
 
-.price { color: #C5A267; font-size: 20px; font-weight: bold; margin-top: auto; padding-top: 8px; }
+/* Цена и кнопки — всегда прижаты к низу */
+.price { color: #C5A267; font-size: 20px; font-weight: bold; padding-top: 8px; }
 .action-btns { display: flex; gap: 8px; margin-top: 12px; }
 .fb-btn { background: #1877F2; border: none; padding: 10px; border-radius: 30px; color: white; font-weight: bold; flex: 1; cursor: pointer; font-size: 13px; }
 .mp-btn { background: #2a7f4f; border: none; padding: 10px; border-radius: 30px; color: white; font-weight: bold; flex: 1; cursor: pointer; font-size: 13px; }
@@ -167,7 +162,7 @@
   </style>
 </head>
 <body>
-  <a href="index.html" class="back-to-givy" title="Back to Givy Rewards">&#8592; Givy Rewards</a>
+  <a href="index.html" class="back-to-givy">&#8592; Givy Rewards</a>
   <h1><span class="logo-float">&#128715;&#65039;</span> GivyRewards<span class="shop-accent">Shop</span></h1>
   <div id="filters" class="filters"></div>
   <div id="products" class="product-grid"><div class="empty">Loading...</div></div>
@@ -198,20 +193,15 @@
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
 
-    let products     = [];
-    let categories   = ['furniture','seating','beds','rugs','decor','office'];
-    let activeFilter = 'all';
-    let globalFb     = '';
-    let clickCount   = 0;
-    let lbImages     = [];
-    let lbIndex      = 0;
+    let products = [], categories = ['furniture','seating','beds','rugs','decor','office'];
+    let activeFilter = 'all', globalFb = '', clickCount = 0;
+    let lbImages = [], lbIndex = 0;
 
-    /* ── CAROUSEL ── */
+    /* ── КАРУСЕЛЬ ── */
     function initCarousel(el) {
       const track = el.querySelector('.carousel-track');
       const dots  = Array.from(el.querySelectorAll('.carousel-dot'));
       if (!track || track.children.length <= 1) return;
-
       const total = track.children.length;
       let cur = 0, startX = 0, diffX = 0, dragging = false;
 
@@ -220,26 +210,20 @@
         track.style.transform = 'translateX(-' + (cur * 100) + '%)';
         dots.forEach((d, i) => d.classList.toggle('active', i === cur));
       }
-
       el.addEventListener('touchstart', e => {
         startX = e.touches[0].clientX; diffX = 0; dragging = true;
         track.style.transition = 'none';
       }, { passive: true });
-
       el.addEventListener('touchmove', e => {
         if (!dragging) return;
         diffX = e.touches[0].clientX - startX;
-        track.style.transform = 'translateX(calc(-' + (cur * 100) + '% + ' + diffX + 'px))';
+        track.style.transform = 'translateX(calc(-' + (cur*100) + '% + ' + diffX + 'px))';
       }, { passive: true });
-
       el.addEventListener('touchend', () => {
         if (!dragging) return; dragging = false;
         track.style.transition = '';
-        if      (diffX < -50) goTo(cur + 1);
-        else if (diffX >  50) goTo(cur - 1);
-        else                  goTo(cur);
+        if (diffX < -50) goTo(cur+1); else if (diffX > 50) goTo(cur-1); else goTo(cur);
       });
-
       el.addEventListener('mousedown', e => {
         startX = e.clientX; diffX = 0; dragging = true;
         track.style.transition = 'none'; e.preventDefault();
@@ -247,19 +231,15 @@
       window.addEventListener('mousemove', e => {
         if (!dragging) return;
         diffX = e.clientX - startX;
-        track.style.transform = 'translateX(calc(-' + (cur * 100) + '% + ' + diffX + 'px))';
+        track.style.transform = 'translateX(calc(-' + (cur*100) + '% + ' + diffX + 'px))';
       });
       window.addEventListener('mouseup', () => {
         if (!dragging) return; dragging = false;
         track.style.transition = '';
-        if      (diffX < -50) goTo(cur + 1);
-        else if (diffX >  50) goTo(cur - 1);
-        else                  goTo(cur);
+        if (diffX < -50) goTo(cur+1); else if (diffX > 50) goTo(cur-1); else goTo(cur);
       });
-
       goTo(0);
     }
-    /* ────────────── */
 
     /* Firebase */
     onSnapshot(query(collection(db,'products'), orderBy('createdAt','desc')), snap => {
@@ -268,7 +248,6 @@
     }, () => {
       document.getElementById('products').innerHTML = '<div class="empty">Connection error. Please refresh.</div>';
     });
-
     onSnapshot(doc(db,'shop_settings','main'), snap => {
       if (snap.exists()) {
         const d = snap.data();
@@ -278,7 +257,6 @@
       }
     });
 
-    /* Filters */
     function renderFilters() {
       const c = document.getElementById('filters');
       c.innerHTML = '';
@@ -290,16 +268,13 @@
         b.onclick = () => setFilter(val, b);
         c.appendChild(b);
       };
-      make('All', 'all');
+      make('All','all');
       categories.forEach(cat => make(cat, cat));
-      make('\uD83C\uDFF7\uFE0F Sold', '__sold', 'border-color:#E41E3F;');
+      make('\uD83C\uDFF7\uFE0F Sold','__sold','border-color:#E41E3F;');
     }
-
     function setFilter(val, btn) {
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      activeFilter = val;
-      renderProducts();
+      btn.classList.add('active'); activeFilter = val; renderProducts();
     }
 
     /* Lightbox */
@@ -318,7 +293,7 @@
       const thumbs = document.getElementById('lbThumbs');
       thumbs.style.display = multi ? 'flex' : 'none';
       if (multi) thumbs.innerHTML = lbImages.map((s,i) =>
-        '<div class="lightbox-thumb ' + (i===lbIndex?'active':'') + '" onclick="jumpLightbox(event,' + i + ')"><img src="' + s + '"></div>'
+        '<div class="lightbox-thumb '+(i===lbIndex?'active':'')+'" onclick="jumpLightbox(event,'+i+')"><img src="'+s+'"></div>'
       ).join('');
     }
     window.navLightbox   = (e,d) => { if(e)e.stopPropagation(); lbIndex=(lbIndex+d+lbImages.length)%lbImages.length; updateLightbox(); };
@@ -327,116 +302,112 @@
     document.getElementById('lightbox').addEventListener('click', e => { if(e.target.id==='lightbox') closeLightbox(); });
     document.addEventListener('keydown', e => {
       if (!document.getElementById('lightbox').classList.contains('active')) return;
-      if      (e.key === 'Escape')     closeLightbox();
-      else if (e.key === 'ArrowLeft')  { lbIndex=(lbIndex-1+lbImages.length)%lbImages.length; updateLightbox(); }
-      else if (e.key === 'ArrowRight') { lbIndex=(lbIndex+1)%lbImages.length; updateLightbox(); }
+      if (e.key==='Escape') closeLightbox();
+      else if (e.key==='ArrowLeft')  { lbIndex=(lbIndex-1+lbImages.length)%lbImages.length; updateLightbox(); }
+      else if (e.key==='ArrowRight') { lbIndex=(lbIndex+1)%lbImages.length; updateLightbox(); }
     });
 
     function openMessenger(p) {
-      const user = (p.fbUser || globalFb || '').replace(/^@/,'').trim();
-      if (!user) { alert('No Facebook username set.\n\nProduct: ' + p.name); return; }
-      const msg = 'Hello! I\'m interested in "' + p.name + '" (' + (p.brand||'GIVY STUDIO') + ') - $' + p.price + '. Is it still available?';
-      window.open('https://m.me/' + user + '?text=' + encodeURIComponent(msg), '_blank');
+      const user = (p.fbUser||globalFb||'').replace(/^@/,'').trim();
+      if (!user) { alert('No Facebook username set.\n\nProduct: '+p.name); return; }
+      const msg = 'Hello! I\'m interested in "'+p.name+'" ('+(p.brand||'GIVY STUDIO')+') - $'+p.price+'. Is it still available?';
+      window.open('https://m.me/'+user+'?text='+encodeURIComponent(msg),'_blank');
     }
     function openMarketplace(p) {
-      window.open('https://www.facebook.com/marketplace/search/?query=' + encodeURIComponent((p.name+' '+(p.brand||'')).trim()), '_blank');
+      window.open('https://www.facebook.com/marketplace/search/?query='+encodeURIComponent((p.name+' '+(p.brand||'')).trim()),'_blank');
     }
 
-    /* Render */
+    /* ── РЕНДЕР ── */
     function renderProducts() {
       const container = document.getElementById('products');
       let list;
-      if      (activeFilter === '__sold') list = products.filter(p => p.sold);
-      else if (activeFilter === 'all')    list = products.filter(p => !p.sold);
-      else                                list = products.filter(p => !p.sold && p.category === activeFilter);
+      if      (activeFilter==='__sold') list = products.filter(p=>p.sold);
+      else if (activeFilter==='all')    list = products.filter(p=>!p.sold);
+      else                              list = products.filter(p=>!p.sold && p.category===activeFilter);
 
       if (!list.length) {
-        container.innerHTML = '<div class="empty">' + (activeFilter==='__sold' ? '\uD83D\uDCED No sold products yet' : '\u2728 No products yet') + '</div>';
+        container.innerHTML = '<div class="empty">'+(activeFilter==='__sold'?'\uD83D\uDCED No sold products yet':'\u2728 No products yet')+'</div>';
         return;
       }
-
       container.innerHTML = '';
 
       list.forEach(p => {
         const images = p.images && p.images.length ? p.images : [];
         const isSold = !!p.sold;
-        const desc   = (p.desc || '').trim();
+        const desc   = (p.desc||'').trim();
 
-        /* Photo block */
+        /* фото */
         let imgInner = '';
-        if (images.length === 0) {
+        if (!images.length) {
           imgInner = '<div class="img-placeholder">\uD83E\uDE91</div>';
         } else {
-          imgInner = '<div class="carousel-track">' +
-            images.map(s => '<img src="' + s + '" alt="' + escHtml(p.name) + '" loading="lazy">').join('') +
+          imgInner = '<div class="carousel-track">'+
+            images.map(s=>'<img src="'+s+'" alt="'+escHtml(p.name)+'" loading="lazy">').join('')+
             '</div>';
           if (images.length > 1) {
-            imgInner += '<div class="carousel-dots">' +
-              images.map((_,i) => '<span class="carousel-dot' + (i===0?' active':'') + '"></span>').join('') +
+            imgInner += '<div class="carousel-dots">'+
+              images.map((_,i)=>'<span class="carousel-dot'+(i===0?' active':'')+'"></span>').join('')+
               '</div>';
           }
         }
         if (isSold) imgInner += '<div class="sold-badge">Sold</div>';
 
-        /* Description toggle */
+        /* описание */
         const needToggle = desc.length > 120;
-        const descBlock = '<div class="desc-wrap">' +
-          '<div class="desc">' + (escHtml(desc) || 'Luxury piece') + '</div>' +
-          (needToggle ? '<button class="desc-toggle" onclick="toggleDesc(this)">More \u25be</button>' : '') +
+        const descBlock =
+          '<div class="desc-wrap">'+
+            '<div class="desc">'+(escHtml(desc)||'Luxury piece')+'</div>'+
+            (needToggle ? '<button class="desc-toggle" onclick="toggleDesc(this)">More \u25be</button>' : '')+
           '</div>';
 
-        /* Build card */
         const card = document.createElement('div');
-        card.className = 'product-card' + (isSold ? ' sold-card' : '');
+        card.className = 'product-card'+(isSold?' sold-card':'');
         card.innerHTML =
-          '<div class="product-img">' + imgInner + '</div>' +
-          '<div class="card-body">' +
-            '<div class="brand">' + escHtml(p.brand || 'GIVY STUDIO') + '</div>' +
-            '<div class="title">' + escHtml(p.name) + '</div>' +
-            descBlock +
-            '<div class="price">$' + p.price + '</div>' +
-            '<div class="action-btns">' +
-              '<button class="fb-btn"' + (isSold?' disabled style="opacity:0.5;cursor:not-allowed;"':'') + '>\uD83D\uDCAC Interested</button>' +
-              '<button class="mp-btn">\uD83D\uDED2 Marketplace</button>' +
-            '</div>' +
+          '<div class="product-img">'+imgInner+'</div>'+
+          '<div class="card-body">'+
+            '<div class="brand">'+escHtml(p.brand||'GIVY STUDIO')+'</div>'+
+            '<div class="title">'+escHtml(p.name)+'</div>'+
+            descBlock+
+            '<div class="price">$'+p.price+'</div>'+
+            '<div class="action-btns">'+
+              '<button class="fb-btn"'+(isSold?' disabled style="opacity:0.5;cursor:not-allowed;"':'')+
+                '>\uD83D\uDCAC Interested</button>'+
+              '<button class="mp-btn">\uD83D\uDED2 Marketplace</button>'+
+            '</div>'+
           '</div>';
 
-        /* Click photo → lightbox (only if not swiping) */
+        /* клик по фото → лайтбокс (только если не свайп) */
         const imgDiv = card.querySelector('.product-img');
         let moved = false;
-        imgDiv.addEventListener('touchstart', () => { moved = false; }, { passive: true });
-        imgDiv.addEventListener('touchmove',  () => { moved = true;  }, { passive: true });
-        imgDiv.addEventListener('touchend',   () => { if (!moved && images.length) openLightbox(images, 0); });
-        imgDiv.addEventListener('mousedown',  () => { moved = false; });
-        imgDiv.addEventListener('mousemove',  () => { moved = true;  });
-        imgDiv.addEventListener('mouseup',    () => { if (!moved && images.length) openLightbox(images, 0); });
+        imgDiv.addEventListener('touchstart', ()=>{ moved=false; }, { passive:true });
+        imgDiv.addEventListener('touchmove',  ()=>{ moved=true;  }, { passive:true });
+        imgDiv.addEventListener('touchend',   ()=>{ if(!moved && images.length) openLightbox(images,0); });
+        imgDiv.addEventListener('mousedown',  ()=>{ moved=false; });
+        imgDiv.addEventListener('mousemove',  ()=>{ moved=true;  });
+        imgDiv.addEventListener('mouseup',    ()=>{ if(!moved && images.length) openLightbox(images,0); });
 
-        if (!isSold) card.querySelector('.fb-btn').onclick = () => openMessenger(p);
-        card.querySelector('.mp-btn').onclick = () => openMarketplace(p);
+        if (!isSold) card.querySelector('.fb-btn').onclick = ()=>openMessenger(p);
+        card.querySelector('.mp-btn').onclick = ()=>openMarketplace(p);
 
         container.appendChild(card);
-
-        /* Init carousel after DOM insert */
         if (images.length > 1) initCarousel(imgDiv);
       });
     }
 
-    /* More / Less toggle */
     window.toggleDesc = function(btn) {
       const desc = btn.previousElementSibling;
-      const expanded = desc.classList.toggle('expanded');
-      btn.textContent = expanded ? 'Less \u25b4' : 'More \u25be';
+      const exp  = desc.classList.toggle('expanded');
+      btn.textContent = exp ? 'Less \u25b4' : 'More \u25be';
     };
 
-    /* Triple-tap → Admin */
     document.getElementById('adminIcon').onclick = () => {
       clickCount++;
-      setTimeout(() => clickCount = 0, 500);
-      if (clickCount >= 3) location.href = 'shop-admin.html';
+      setTimeout(()=>clickCount=0, 500);
+      if (clickCount>=3) location.href='shop-admin.html';
     };
 
     function escHtml(s) {
-      return s ? String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])) : '';
+      return s ? String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])) : '';
     }
 
     renderFilters();
