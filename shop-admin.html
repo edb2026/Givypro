@@ -20,6 +20,27 @@
     button { background: #C5A267; border: none; padding: 12px 20px; border-radius: 30px; font-weight: bold; cursor: pointer; margin: 5px; font-family: inherit; }
     .btn-del { background: #aa2e2e; color: white; }
     .btn-export { background: #2a7f4f; color: white; }
+    .btn-crosspost { background: linear-gradient(135deg,#1877f2,#0d47a1); color: white; }
+
+```
+/* Cross-post modal */
+.xp-modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; padding:20px; }
+.xp-modal-bg.show { display:flex; }
+.xp-modal { background:#1a1a1a; border-radius:20px; padding:24px; max-width:560px; width:100%; max-height:90vh; overflow-y:auto; }
+.xp-modal h2 { color:#C5A267; margin-bottom:8px; }
+.xp-modal .xp-product-name { color:#fff; font-size:14px; margin-bottom:18px; opacity:0.8; }
+.xp-platform { background:#0e0e0e; border-radius:12px; padding:14px; margin-bottom:12px; }
+.xp-platform-title { color:#C5A267; font-weight:bold; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.xp-platform-row { display:flex; gap:8px; flex-wrap:wrap; }
+.xp-platform-row button { flex:1; min-width:120px; margin:0; font-size:13px; padding:10px; }
+.btn-fb { background:#1877f2; color:white; }
+.btn-ou { background:#13b9ad; color:white; }
+.btn-cl { background:#5a2d8c; color:white; }
+.btn-copy { background:#444; color:white; }
+.btn-photos { background:#2a7f4f; color:white; }
+.xp-close { background:#333; color:white; width:100%; margin-top:10px; }
+.xp-help { font-size:11px; color:#888; margin-top:6px; line-height:1.4; }
+```
 
 ```
 /* ===== UNIFORM PRODUCT CARDS ===== */
@@ -659,6 +680,7 @@ hr { margin: 20px 0; border-color: #333; }
           </div>
           <div class="product-actions">
             <button onclick="editProduct('${p.id}')" style="background:#2a5f8a; color:white;">✏️ Edit</button>
+            ${!p.sold ? `<button onclick="openCrossPost('${p.id}')" class="btn-crosspost">📤 Cross-post</button>` : ''}
             ${p.sold
               ? `<button onclick="unmarkSold('${p.id}')" class="btn-unmark">↩ Unmark</button>`
               : `<button onclick="markSold('${p.id}')" class="btn-sold">✓ Sold</button>`}
@@ -773,7 +795,204 @@ hr { margin: 20px 0; border-color: #333; }
   function escapeHtml(str) {
     return str ? String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])) : '';
   }
+
+  // ========== CROSS-POSTING ==========
+  // Открывает модалку с кнопками для постинга на FB Marketplace, OfferUp, Craigslist.
+  // Работает так: формирует готовый текст + скачивает фото архивом, открывает форму
+  // нужной площадки в новой вкладке. Вы вставляете текст (Ctrl+V) и фото — готово.
+
+  window.openCrossPost = async (id) => {
+    const p = products.find(x => x.id === id);
+    if (!p) return;
+
+    // Готовим текст для каждой площадки в их стиле
+    const cleanName = (p.name || '').trim();
+    const brand = (p.brand || '').trim();
+    const cat = (p.category || '').trim();
+    const price = p.price || '';
+    const desc = (p.description || '').trim();
+    const siteUrl = (siteBaseUrl || '').trim();
+    const productLink = siteUrl ? `${siteUrl}/product.html?id=${p.id}` : '';
+
+    // FB Marketplace — короткий заголовок (макс 100), описание подробное
+    const fbTitle = cleanName.substring(0, 99);
+    const fbDesc = [
+      brand ? `Brand: ${brand}` : '',
+      cat ? `Category: ${cat}` : '',
+      desc,
+      productLink ? `\nMore info: ${productLink}` : ''
+    ].filter(Boolean).join('\n');
+
+    // OfferUp — то же что FB по сути
+    const ouTitle = cleanName.substring(0, 79);
+    const ouDesc = fbDesc;
+
+    // Craigslist — заголовок с ценой и брендом помогает SEO
+    const clTitle = `${cleanName}${brand ? ' - ' + brand : ''} - $${price}`;
+    const clDesc = [
+      `${cleanName}`,
+      brand ? `Brand: ${brand}` : '',
+      cat ? `Category: ${cat}` : '',
+      `Price: $${price}`,
+      '',
+      desc,
+      productLink ? `\nView all photos and details: ${productLink}` : '',
+      '\nSerious inquiries only. Cash or local payment apps.'
+    ].filter(Boolean).join('\n');
+
+    // Сохраняем данные на модалке
+    window._xpData = {
+      product: p,
+      fb: { title: fbTitle, desc: fbDesc, price },
+      ou: { title: ouTitle, desc: ouDesc, price },
+      cl: { title: clTitle, desc: clDesc, price }
+    };
+
+    document.getElementById('xpProductName').textContent = p.name;
+    document.getElementById('xpModalBg').classList.add('show');
+  };
+
+  window.closeCrossPost = () => {
+    document.getElementById('xpModalBg').classList.remove('show');
+  };
+
+  // Копирует текст в буфер обмена
+  async function xpCopy(text, label) {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('✓ ' + label + ' copied to clipboard');
+    } catch (e) {
+      // Fallback для старых браузеров
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('✓ ' + label + ' copied');
+    }
+  }
+
+  // Скачивает все фото товара одним ZIP-архивом
+  window.xpDownloadPhotos = async () => {
+    const p = window._xpData?.product;
+    if (!p || !p.images || !p.images.length) {
+      alert('No photos for this product');
+      return;
+    }
+    showToast('Downloading ' + p.images.length + ' photo(s)...');
+    try {
+      const zip = new JSZip();
+      const safeName = (p.name || 'product').replace(/[^a-z0-9]/gi, '_').substring(0, 40);
+      for (let i = 0; i < p.images.length; i++) {
+        const url = p.images[i];
+        const resp = await fetch(url);
+        const blob = await resp.blob();
+        const ext = (blob.type.split('/')[1] || 'jpg').split('+')[0];
+        zip.file(`${safeName}_${i + 1}.${ext}`, blob);
+      }
+      const content = await zip.generateAsync({ type: 'blob' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(content);
+      a.download = `${safeName}_photos.zip`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      showToast('✓ Photos downloaded');
+    } catch (e) {
+      alert('Download failed: ' + e.message);
+    }
+  };
+
+  // Facebook Marketplace
+  window.xpPostFB = async () => {
+    const d = window._xpData?.fb;
+    if (!d) return;
+    const combined = `${d.title}\n\nPrice: $${d.price}\n\n${d.desc}`;
+    await xpCopy(combined, 'FB listing');
+    setTimeout(() => {
+      window.open('https://www.facebook.com/marketplace/create/item', '_blank');
+    }, 300);
+  };
+
+  // OfferUp
+  window.xpPostOU = async () => {
+    const d = window._xpData?.ou;
+    if (!d) return;
+    const combined = `${d.title}\n\nPrice: $${d.price}\n\n${d.desc}`;
+    await xpCopy(combined, 'OfferUp listing');
+    setTimeout(() => {
+      window.open('https://offerup.com/post/', '_blank');
+    }, 300);
+  };
+
+  // Craigslist
+  window.xpPostCL = async () => {
+    const d = window._xpData?.cl;
+    if (!d) return;
+    const combined = `TITLE:\n${d.title}\n\nPRICE: $${d.price}\n\nDESCRIPTION:\n${d.desc}`;
+    await xpCopy(combined, 'Craigslist listing');
+    setTimeout(() => {
+      window.open('https://post.craigslist.org/', '_blank');
+    }, 300);
+  };
+
+  // Только скопировать (без открытия)
+  window.xpCopyOnly = async (platform) => {
+    const d = window._xpData?.[platform];
+    if (!d) return;
+    const combined = `${d.title}\n\nPrice: $${d.price}\n\n${d.desc}`;
+    await xpCopy(combined, platform.toUpperCase() + ' text');
+  };
 </script>
+
+<!-- Cross-post modal -->
+
+<div class="xp-modal-bg" id="xpModalBg" onclick="if(event.target===this)closeCrossPost()">
+  <div class="xp-modal">
+    <h2>📤 Cross-post to Marketplaces</h2>
+    <div class="xp-product-name" id="xpProductName"></div>
+
+```
+<div class="xp-platform">
+  <div class="xp-platform-title">📷 Photos</div>
+  <div class="xp-platform-row">
+    <button class="btn-photos" onclick="xpDownloadPhotos()">⬇ Download all photos (ZIP)</button>
+  </div>
+  <div class="xp-help">Unzip and drag photos into each marketplace's upload area.</div>
+</div>
+
+<div class="xp-platform">
+  <div class="xp-platform-title">🟦 Facebook Marketplace</div>
+  <div class="xp-platform-row">
+    <button class="btn-fb" onclick="xpPostFB()">Copy + Open FB</button>
+    <button class="btn-copy" onclick="xpCopyOnly('fb')">Copy only</button>
+  </div>
+  <div class="xp-help">Opens FB Marketplace form. Paste title in Title field, rest in Description.</div>
+</div>
+
+<div class="xp-platform">
+  <div class="xp-platform-title">🟢 OfferUp</div>
+  <div class="xp-platform-row">
+    <button class="btn-ou" onclick="xpPostOU()">Copy + Open OfferUp</button>
+    <button class="btn-copy" onclick="xpCopyOnly('ou')">Copy only</button>
+  </div>
+  <div class="xp-help">Opens OfferUp post form. Sign in if needed, then paste.</div>
+</div>
+
+<div class="xp-platform">
+  <div class="xp-platform-title">🟣 Craigslist</div>
+  <div class="xp-platform-row">
+    <button class="btn-cl" onclick="xpPostCL()">Copy + Open Craigslist</button>
+    <button class="btn-copy" onclick="xpCopyOnly('cl')">Copy only</button>
+  </div>
+  <div class="xp-help">Choose your city → for sale → category. Paste title and description.</div>
+</div>
+
+<button class="xp-close" onclick="closeCrossPost()">Close</button>
+```
+
+  </div>
+</div>
 
 </body>
 </html>
