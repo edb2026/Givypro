@@ -725,78 +725,125 @@ margin-right: auto;
 .condition-grid { grid-template-columns: repeat(4, 1fr); gap: 14px; }
 }
 
-/* === Десктоп / большие экраны (≥1280px) === */
+/* === Десктоп / большие экраны (≥1280px) ===
+Шапку (.app-header / .header-logo / .header-rewards) НЕ трогаем — оставляем как было.
+Весь остальной текст увеличиваем на ~0.5rem (≈8px) и растягиваем контент
+на 2.5см (≈95px) влево и вправо относительно мобильной/планшетной версии. */
 @media (min-width: 1280px) {
+/* Растягиваем основную область на 2.5см с каждой стороны */
 .page {
-max-width: 1100px;
-padding: 28px 32px;
+max-width: 1290px; /* 1100 + 2 * 95 ≈ ширина + 2.5см с каждой стороны */
+padding-left: 127px;  /* ≈ 32px (исходный) + 95px (≈2.5см) */
+padding-right: 127px;
+padding-top: 28px;
 padding-bottom: 110px;
 }
-.app-header {
-padding: max(env(safe-area-inset-top), 24px) 32px 24px;
-}
-.header-logo {
-font-size: 64px;
-letter-spacing: 12px;
-}
-.header-rewards {
-font-size: 44px;
-letter-spacing: 5px;
-}
+
+/* Карточки — увеличиваем текст на ~0.5rem (8px) относительно прежнего десктопа */
 .card, .card-dark {
-padding: 32px;
-margin-bottom: 16px;
+padding: 36px;
+margin-bottom: 18px;
 border-radius: 28px;
 }
-.page-title { font-size: 42px; }
-.page-sub { font-size: 22px; }
-.section-label { font-size: 17px; margin: 28px 0 18px; letter-spacing: 2px; }
+
+/* Текстовые элементы: +0.5rem (≈ +8px) к прежним размерам */
+.page-title { font-size: 50px; }      /* было 42 → +8 */
+.page-sub { font-size: 30px; }        /* было 22 → +8 */
+.section-label { font-size: 25px; margin: 28px 0 18px; letter-spacing: 2px; }  /* было 17 → +8 */
+.order-title { font-size: 36px; }     /* было 28 → +8 */
+.order-meta { font-size: 27px; }      /* было 19 → +8 */
+.stat-card .sv { font-size: 48px; }   /* было 40 → +8 */
+.stat-card .sl { font-size: 22px; }   /* было 14 → +8 */
+.stat-card { padding: 24px; }
+.level-emoji { font-size: 80px; }     /* картинку/эмодзи не трогаем */
+.level-info .li-label { font-size: 22px; }
+.level-info .li-name { font-size: 52px; }   /* было 44 → +8 */
+.level-info .li-disc { font-size: 30px; }   /* было 22 → +8 */
+.level-info .li-disc span { font-size: 38px; }
+.info-card h3 { font-size: 22px; }
+.info-card p { font-size: 20px; }
+.footer-note { font-size: 19px; }
+
+/* Кнопка Schedule Free Pickup и обычные кнопки — увеличиваем текст и растягиваем по ширине */
 .btn {
-padding: 22px;
-font-size: 20px;
+padding: 26px;
+font-size: 28px;          /* было 20 → +8 */
 border-radius: 20px;
-max-width: 560px;
-margin-left: auto;
-margin-right: auto;
+max-width: none;          /* убираем ограничение, растягиваем */
+width: 100%;
+margin-left: 0;
+margin-right: 0;
 }
-.btn-outline { padding: 18px; font-size: 18px; max-width: 560px; margin-left: auto; margin-right: auto; }
-.inp { padding: 20px; font-size: 18px; border-radius: 16px; }
-.order-title { font-size: 28px; }
-.order-meta { font-size: 19px; }
-.stat-card { padding: 20px; }
-.stat-card .sv { font-size: 40px; }
-.stat-card .sl { font-size: 14px; }
-.level-emoji { font-size: 80px; }
-.level-info .li-name { font-size: 44px; }
-.level-info .li-disc { font-size: 22px; }
-.level-info .li-disc span { font-size: 30px; }
-.nav-btn { padding: 18px 0 16px; font-size: 14px; }
-.nav-btn .nav-icon { font-size: 32px; }
+.btn-outline {
+padding: 22px;
+font-size: 26px;          /* было 18 → +8 */
+max-width: none;
+width: 100%;
+margin-left: 0;
+margin-right: 0;
+}
+/* Главная оранжевая кнопка “📦 Schedule Free Pickup” */
+.btn-orange {
+font-size: 1.7rem;        /* было ~1.2rem → ≈ +0.5rem */
+padding: 1.3rem 4rem;
+max-width: none;
+width: auto;
+min-width: 480px;         /* приятная ширина на десктопе */
+}
+
+/* Поля ввода */
+.inp { padding: 22px; font-size: 26px; border-radius: 16px; }   /* было 18 → +8 */
+
+/* Текст в условиях/фото-блоке */
+.photo-count-badge { font-size: 23px; }
+.photo-upload-area .upload-text { font-size: 24px; }
+.photo-upload-area .upload-limit { font-size: 21px; }
+.condition-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.condition-btn { padding: 22px 14px; }
+.condition-btn .c-icon { font-size: 36px; }
+.condition-btn .c-name { font-size: 26px; }   /* было 18 → +8 */
+.condition-btn .c-desc { font-size: 22px; }   /* было 14 → +8 */
+.photo-preview-grid { grid-template-columns: repeat(8, 1fr); }
+
+/* Нижняя навигация — текст немного крупнее, ширина под ширину контента */
+.nav-btn { padding: 18px 0 16px; font-size: 22px; }   /* было 14 → +8 */
+.nav-btn .nav-icon { font-size: 36px; }
 .bottom-nav {
-max-width: 1100px;
+max-width: 1290px;
 left: 50%;
 transform: translateX(-50%);
 border-radius: 24px 24px 0 0;
 }
-.photo-preview-grid { grid-template-columns: repeat(8, 1fr); }
-.condition-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.condition-btn { padding: 22px 14px; }
-.condition-btn .c-icon { font-size: 36px; }
-.condition-btn .c-name { font-size: 18px; }
-.condition-btn .c-desc { font-size: 14px; }
+
+/* PWA-баннер */
 .pwa-banner { padding: 22px 26px; }
 .pwa-banner .pwa-icon { font-size: 44px; }
-.pwa-banner .pwa-title { font-size: 17px; }
-.pwa-banner .pwa-sub { font-size: 13px; }
+.pwa-banner .pwa-title { font-size: 25px; }   /* было 17 → +8 */
+.pwa-banner .pwa-sub { font-size: 21px; }     /* было 13 → +8 */
+
+/* Чат / списки чатов — тоже подгоняем чтобы не выглядело мелким */
+.chat-meta .cm-name { font-size: 23px; }
+.chat-meta .cm-preview { font-size: 20px; }
+.msg-bubble { font-size: 22px; }
+
+/* === Поднимаем модалку регистрации/выбора выше — чтобы кнопки были видны === */
+.reg-modal {
+align-items: flex-start;          /* было center → теперь модалка ближе к верху */
+padding-top: 40px;
+}
+.reg-box {
+max-height: calc(100vh - 80px);   /* запас, чтобы помещалась со скроллом */
+margin-top: 0;
+}
 }
 
 /* === Очень большие экраны (≥1600px) === */
 @media (min-width: 1600px) {
 .page {
-max-width: 1280px;
+max-width: 1400px;
 }
 .bottom-nav {
-max-width: 1280px;
+max-width: 1400px;
 }
 }
 
