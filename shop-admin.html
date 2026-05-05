@@ -797,85 +797,100 @@ hr { margin: 20px 0; border-color: #333; }
   }
 
   // ========== CROSS-POSTING ==========
-  // Открывает модалку с кнопками для постинга на FB Marketplace, OfferUp, Craigslist.
-  // Работает так: формирует готовый текст + скачивает фото архивом, открывает форму
-  // нужной площадки в новой вкладке. Вы вставляете текст (Ctrl+V) и фото — готово.
+  // FB Marketplace НЕ нужен здесь — товары идут автоматом через feed.csv → Commerce Manager.
+  // Эта кнопка только для OfferUp и Craigslist (у них нет API/feed для частных продавцов).
 
-  window.openCrossPost = async (id) => {
+  window.openCrossPost = function(id) {
+    console.log('[crosspost] opening for', id);
     const p = products.find(x => x.id === id);
-    if (!p) return;
+    if (!p) {
+      alert('Product not found: ' + id);
+      return;
+    }
 
-    // Готовим текст для каждой площадки в их стиле
     const cleanName = (p.name || '').trim();
     const brand = (p.brand || '').trim();
     const cat = (p.category || '').trim();
     const price = p.price || '';
     const desc = (p.description || '').trim();
-    const siteUrl = (siteBaseUrl || '').trim();
-    const productLink = siteUrl ? `${siteUrl}/product.html?id=${p.id}` : '';
+    const siteUrl = (siteBaseUrl || '').trim().replace(/\/$/, '');
+    const productLink = siteUrl ? siteUrl + '/product.html?id=' + p.id : '';
 
-    // FB Marketplace — короткий заголовок (макс 100), описание подробное
-    const fbTitle = cleanName.substring(0, 99);
-    const fbDesc = [
-      brand ? `Brand: ${brand}` : '',
-      cat ? `Category: ${cat}` : '',
+    // OfferUp — короткий, до 80 символов в заголовке
+    const ouTitle = cleanName.substring(0, 79);
+    const ouDesc = [
+      brand ? 'Brand: ' + brand : '',
+      cat ? 'Category: ' + cat : '',
       desc,
-      productLink ? `\nMore info: ${productLink}` : ''
+      productLink ? '\nMore info: ' + productLink : ''
     ].filter(Boolean).join('\n');
 
-    // OfferUp — то же что FB по сути
-    const ouTitle = cleanName.substring(0, 79);
-    const ouDesc = fbDesc;
-
-    // Craigslist — заголовок с ценой и брендом помогает SEO
-    const clTitle = `${cleanName}${brand ? ' - ' + brand : ''} - $${price}`;
+    // Craigslist — длинный заголовок с ценой и брендом для SEO
+    const clTitle = cleanName + (brand ? ' - ' + brand : '') + ' - $' + price;
     const clDesc = [
-      `${cleanName}`,
-      brand ? `Brand: ${brand}` : '',
-      cat ? `Category: ${cat}` : '',
-      `Price: $${price}`,
+      cleanName,
+      brand ? 'Brand: ' + brand : '',
+      cat ? 'Category: ' + cat : '',
+      'Price: $' + price,
       '',
       desc,
-      productLink ? `\nView all photos and details: ${productLink}` : '',
-      '\nSerious inquiries only. Cash or local payment apps.'
+      productLink ? '\nView all photos and details: ' + productLink : '',
+      '\nSerious inquiries only. Local pickup, cash or app payment.'
     ].filter(Boolean).join('\n');
 
-    // Сохраняем данные на модалке
     window._xpData = {
       product: p,
-      fb: { title: fbTitle, desc: fbDesc, price },
-      ou: { title: ouTitle, desc: ouDesc, price },
-      cl: { title: clTitle, desc: clDesc, price }
+      ou: { title: ouTitle, desc: ouDesc, price: price },
+      cl: { title: clTitle, desc: clDesc, price: price }
     };
 
-    document.getElementById('xpProductName').textContent = p.name;
-    document.getElementById('xpModalBg').classList.add('show');
+    const nameEl = document.getElementById('xpProductName');
+    const bgEl = document.getElementById('xpModalBg');
+    if (!nameEl || !bgEl) {
+      alert('Modal not found in page. Please refresh.');
+      return;
+    }
+    nameEl.textContent = p.name;
+    bgEl.classList.add('show');
+    console.log('[crosspost] modal opened');
   };
 
-  window.closeCrossPost = () => {
-    document.getElementById('xpModalBg').classList.remove('show');
+  window.closeCrossPost = function() {
+    const bg = document.getElementById('xpModalBg');
+    if (bg) bg.classList.remove('show');
   };
 
-  // Копирует текст в буфер обмена
-  async function xpCopy(text, label) {
+  // Копирует текст в буфер обмена (с фолбэком для iOS Safari)
+  window.xpCopy = async function(text, label) {
     try {
-      await navigator.clipboard.writeText(text);
-      showToast('✓ ' + label + ' copied to clipboard');
-    } catch (e) {
-      // Fallback для старых браузеров
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        showToast('✓ ' + label + ' copied');
+        return true;
+      }
+    } catch (e) { console.warn('clipboard api failed', e); }
+    // Fallback
+    try {
       const ta = document.createElement('textarea');
       ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
       document.body.appendChild(ta);
+      ta.focus();
       ta.select();
       document.execCommand('copy');
       document.body.removeChild(ta);
       showToast('✓ ' + label + ' copied');
+      return true;
+    } catch (e) {
+      alert('Copy failed. Please copy manually:\n\n' + text);
+      return false;
     }
-  }
+  };
 
   // Скачивает все фото товара одним ZIP-архивом
-  window.xpDownloadPhotos = async () => {
-    const p = window._xpData?.product;
+  window.xpDownloadPhotos = async function() {
+    const p = window._xpData && window._xpData.product;
     if (!p || !p.images || !p.images.length) {
       alert('No photos for this product');
       return;
@@ -885,63 +900,49 @@ hr { margin: 20px 0; border-color: #333; }
       const zip = new JSZip();
       const safeName = (p.name || 'product').replace(/[^a-z0-9]/gi, '_').substring(0, 40);
       for (let i = 0; i < p.images.length; i++) {
-        const url = p.images[i];
-        const resp = await fetch(url);
+        const resp = await fetch(p.images[i]);
         const blob = await resp.blob();
         const ext = (blob.type.split('/')[1] || 'jpg').split('+')[0];
-        zip.file(`${safeName}_${i + 1}.${ext}`, blob);
+        zip.file(safeName + '_' + (i + 1) + '.' + ext, blob);
       }
       const content = await zip.generateAsync({ type: 'blob' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(content);
-      a.download = `${safeName}_photos.zip`;
+      a.download = safeName + '_photos.zip';
+      document.body.appendChild(a);
       a.click();
-      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      document.body.removeChild(a);
+      setTimeout(function() { URL.revokeObjectURL(a.href); }, 1000);
       showToast('✓ Photos downloaded');
     } catch (e) {
       alert('Download failed: ' + e.message);
     }
   };
 
-  // Facebook Marketplace
-  window.xpPostFB = async () => {
-    const d = window._xpData?.fb;
+  // OfferUp — копирует и открывает форму
+  window.xpPostOU = async function() {
+    const d = window._xpData && window._xpData.ou;
     if (!d) return;
-    const combined = `${d.title}\n\nPrice: $${d.price}\n\n${d.desc}`;
-    await xpCopy(combined, 'FB listing');
-    setTimeout(() => {
-      window.open('https://www.facebook.com/marketplace/create/item', '_blank');
-    }, 300);
+    const combined = d.title + '\n\nPrice: $' + d.price + '\n\n' + d.desc;
+    await window.xpCopy(combined, 'OfferUp listing');
+    window.open('https://offerup.com/post/', '_blank');
   };
 
-  // OfferUp
-  window.xpPostOU = async () => {
-    const d = window._xpData?.ou;
+  // Craigslist — копирует и открывает форму
+  window.xpPostCL = async function() {
+    const d = window._xpData && window._xpData.cl;
     if (!d) return;
-    const combined = `${d.title}\n\nPrice: $${d.price}\n\n${d.desc}`;
-    await xpCopy(combined, 'OfferUp listing');
-    setTimeout(() => {
-      window.open('https://offerup.com/post/', '_blank');
-    }, 300);
+    const combined = 'TITLE:\n' + d.title + '\n\nPRICE: $' + d.price + '\n\nDESCRIPTION:\n' + d.desc;
+    await window.xpCopy(combined, 'Craigslist listing');
+    window.open('https://post.craigslist.org/', '_blank');
   };
 
-  // Craigslist
-  window.xpPostCL = async () => {
-    const d = window._xpData?.cl;
+  // Только скопировать текст без открытия
+  window.xpCopyOnly = async function(platform) {
+    const d = window._xpData && window._xpData[platform];
     if (!d) return;
-    const combined = `TITLE:\n${d.title}\n\nPRICE: $${d.price}\n\nDESCRIPTION:\n${d.desc}`;
-    await xpCopy(combined, 'Craigslist listing');
-    setTimeout(() => {
-      window.open('https://post.craigslist.org/', '_blank');
-    }, 300);
-  };
-
-  // Только скопировать (без открытия)
-  window.xpCopyOnly = async (platform) => {
-    const d = window._xpData?.[platform];
-    if (!d) return;
-    const combined = `${d.title}\n\nPrice: $${d.price}\n\n${d.desc}`;
-    await xpCopy(combined, platform.toUpperCase() + ' text');
+    const combined = d.title + '\n\nPrice: $' + d.price + '\n\n' + d.desc;
+    await window.xpCopy(combined, platform.toUpperCase() + ' text');
   };
 </script>
 
@@ -953,21 +954,20 @@ hr { margin: 20px 0; border-color: #333; }
     <div class="xp-product-name" id="xpProductName"></div>
 
 ```
+<div class="xp-platform" style="background:#0a2818; border-left:3px solid #2a7f4f;">
+  <div class="xp-platform-title" style="color:#4ade80;">🟦 Facebook Marketplace — Automatic ✓</div>
+  <div class="xp-help" style="color:#bbb; font-size:12px;">
+    Facebook Marketplace updates automatically via your Commerce Manager feed.csv.
+    No action needed here — just keep your feed.csv on GitHub up to date.
+  </div>
+</div>
+
 <div class="xp-platform">
-  <div class="xp-platform-title">📷 Photos</div>
+  <div class="xp-platform-title">📷 Photos (for OfferUp & Craigslist)</div>
   <div class="xp-platform-row">
     <button class="btn-photos" onclick="xpDownloadPhotos()">⬇ Download all photos (ZIP)</button>
   </div>
   <div class="xp-help">Unzip and drag photos into each marketplace's upload area.</div>
-</div>
-
-<div class="xp-platform">
-  <div class="xp-platform-title">🟦 Facebook Marketplace</div>
-  <div class="xp-platform-row">
-    <button class="btn-fb" onclick="xpPostFB()">Copy + Open FB</button>
-    <button class="btn-copy" onclick="xpCopyOnly('fb')">Copy only</button>
-  </div>
-  <div class="xp-help">Opens FB Marketplace form. Paste title in Title field, rest in Description.</div>
 </div>
 
 <div class="xp-platform">
@@ -976,7 +976,7 @@ hr { margin: 20px 0; border-color: #333; }
     <button class="btn-ou" onclick="xpPostOU()">Copy + Open OfferUp</button>
     <button class="btn-copy" onclick="xpCopyOnly('ou')">Copy only</button>
   </div>
-  <div class="xp-help">Opens OfferUp post form. Sign in if needed, then paste.</div>
+  <div class="xp-help">Title is in the first line. Price field — enter manually. Paste rest in description.</div>
 </div>
 
 <div class="xp-platform">
@@ -985,7 +985,7 @@ hr { margin: 20px 0; border-color: #333; }
     <button class="btn-cl" onclick="xpPostCL()">Copy + Open Craigslist</button>
     <button class="btn-copy" onclick="xpCopyOnly('cl')">Copy only</button>
   </div>
-  <div class="xp-help">Choose your city → for sale → category. Paste title and description.</div>
+  <div class="xp-help">Choose your city → for sale → category. Title and description are clearly labeled in the copied text.</div>
 </div>
 
 <button class="xp-close" onclick="closeCrossPost()">Close</button>
