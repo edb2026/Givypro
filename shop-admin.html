@@ -919,22 +919,27 @@ hr { margin: 20px 0; border-color: #333; }
     }
   };
 
-  // OfferUp — копирует и открывает форму
+  // OfferUp — ТОЛЬКО копирует текст. Сайт открывается отдельной кнопкой.
+  // Так iOS Safari не перезаписывает буфер обмена URL новой вкладки.
   window.xpPostOU = async function() {
     const d = window._xpData && window._xpData.ou;
     if (!d) return;
     const combined = d.title + '\n\nPrice: $' + d.price + '\n\n' + d.desc;
-    await window.xpCopy(combined, 'OfferUp listing');
-    window.open('https://offerup.com/post/', '_blank');
+    await window.xpCopy(combined, 'OfferUp text');
   };
 
-  // Craigslist — копирует и открывает форму
+  // Craigslist — ТОЛЬКО копирует текст
   window.xpPostCL = async function() {
     const d = window._xpData && window._xpData.cl;
     if (!d) return;
-    const combined = 'TITLE:\n' + d.title + '\n\nPRICE: $' + d.price + '\n\nDESCRIPTION:\n' + d.desc;
-    await window.xpCopy(combined, 'Craigslist listing');
-    window.open('https://post.craigslist.org/', '_blank');
+    const combined = 'TITLE: ' + d.title + '\n\nPRICE: $' + d.price + '\n\nDESCRIPTION:\n' + d.desc;
+    await window.xpCopy(combined, 'Craigslist text');
+  };
+
+  // Открывает сайт в новой вкладке БЕЗ копирования (отдельная кнопка)
+  window.xpOpenSite = function(platform) {
+    if (platform === 'ou') window.open('https://offerup.com/post/', '_blank');
+    else if (platform === 'cl') window.open('https://post.craigslist.org/', '_blank');
   };
 
   // Только скопировать текст без открытия
@@ -973,19 +978,19 @@ hr { margin: 20px 0; border-color: #333; }
 <div class="xp-platform">
   <div class="xp-platform-title">🟢 OfferUp</div>
   <div class="xp-platform-row">
-    <button class="btn-ou" onclick="xpPostOU()">Copy + Open OfferUp</button>
-    <button class="btn-copy" onclick="xpCopyOnly('ou')">Copy only</button>
+    <button class="btn-ou" onclick="xpPostOU()">1️⃣ Copy text</button>
+    <button class="btn-ou" onclick="xpOpenSite('ou')" style="background:#0d8a80;">2️⃣ Open OfferUp</button>
   </div>
-  <div class="xp-help">Title is in the first line. Price field — enter manually. Paste rest in description.</div>
+  <div class="xp-help">Step 1: tap "Copy text" — confirms "✓ OfferUp text copied". Step 2: tap "Open OfferUp" — paste in description field on OfferUp.</div>
 </div>
 
 <div class="xp-platform">
   <div class="xp-platform-title">🟣 Craigslist</div>
   <div class="xp-platform-row">
-    <button class="btn-cl" onclick="xpPostCL()">Copy + Open Craigslist</button>
-    <button class="btn-copy" onclick="xpCopyOnly('cl')">Copy only</button>
+    <button class="btn-cl" onclick="xpPostCL()">1️⃣ Copy text</button>
+    <button class="btn-cl" onclick="xpOpenSite('cl')" style="background:#3d1a5c;">2️⃣ Open Craigslist</button>
   </div>
-  <div class="xp-help">Choose your city → for sale → category. Title and description are clearly labeled in the copied text.</div>
+  <div class="xp-help">Step 1: tap "Copy text" first. Step 2: tap "Open Craigslist". Title and description are clearly labeled in the copied text.</div>
 </div>
 
 <button class="xp-close" onclick="closeCrossPost()">Close</button>
