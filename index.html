@@ -31,6 +31,15 @@ body{font-family:var(--font-b);background:#0f1117;color:#111827;min-height:100vh
 .header-logo{font-family:'Playfair Display',serif;font-size:40px;font-weight:900;color:#fff;letter-spacing:6px;line-height:1;font-style:italic;margin-bottom:4px;margin-top:-4px;}
 .header-rewards{font-family:var(--font-h);font-size:26px;font-weight:800;color:#FFD700;letter-spacing:2px;text-shadow:0 2px 8px rgba(0,0,0,0.3);line-height:1.1;}
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#0f1117;border-top:2px solid rgba(255,255,255,0.12);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 20px rgba(0,0,0,0.5);}
+/* Move Tawk.to live-chat bubble to the bottom-right so it covers the Messages (bell) nav button */
+iframe[title*="chat" i],
+iframe[id*="tawk" i],
+iframe[src*="tawk.to"]{
+  left:auto !important;
+  right:0 !important;
+  bottom:0 !important;
+  z-index:200 !important;
+}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 0 8px;background:none;border:none;color:#ffffff;font-size:10px;font-weight:800;font-family:var(--font-b);cursor:pointer;transition:color 0.2s;}
 .nav-btn .nav-icon{font-size:24px;color:#ffffff;}
 .nav-btn.active{color:#00e676;}.nav-btn.active .nav-icon{filter:drop-shadow(0 0 4px rgba(0,230,118,0.6));}
@@ -966,62 +975,6 @@ max-width: 480px;
 .reg-complete-btn { padding: 17px; font-size: 18px; }
 }
 
-/* ================================================================
-===  TAWK.TO CHAT WIDGET — POSITION OVERRIDES  =================
-Подвинуть зеленый пузырь влево, чтобы он накрывал кнопку
-“Messages” в нижней навигации. Окно чата при разворачивании
-делаем шире и поднимаем выше. Контуры/поле ввода/стрелка
-отправки внутри окна — настраиваются через JS-API ниже
-(Tawk_API.customStyle), т.к. внутренности iframe изолированы.
-================================================================ */
-
-/* Свёрнутый launcher (зелёный пузырь): высота обычно <= 80px.
-Сдвигаем влево, поверх иконки Messages в нижней навигации. */
-iframe[title=“chat widget”][style*=“height: 80px”],
-iframe[title=“chat widget”][style*=“height:80px”],
-iframe[title=“chat widget”][style*=“height: 60px”],
-iframe[title=“chat widget”][style*=“height:60px”],
-iframe[title=“chat widget”][style*=“height: 70px”],
-iframe[title=“chat widget”][style*=“height:70px”],
-iframe[title=“chat widget”][style*=“height: 50px”],
-iframe[title=“chat widget”][style*=“height:50px”] {
-right: auto !important;
-left: 8px !important;
-bottom: 6px !important;
-z-index: 2147483000 !important;
-}
-
-/* Развёрнутое окно чата на мобильном:
-делаем во всю ширину, поднимаем выше нижней панели,
-слегка скругляем верх. */
-@media (max-width: 768px) {
-iframe[title=“chat widget”][style*=“height: 100%”],
-iframe[title=“chat widget”][style*=“height:100%”],
-iframe[title=“chat widget”][style*=“height: 100vh”],
-iframe[title=“chat widget”][style*=“height:100vh”] {
-width: 100% !important;
-height: calc(100vh - 30px) !important;
-bottom: 30px !important;
-right: 0 !important;
-left: 0 !important;
-border-radius: 18px 18px 0 0 !important;
-box-shadow: 0 -8px 32px rgba(0,0,0,0.35) !important;
-}
-}
-
-/* Развёрнутое окно на десктопе: шире и выше */
-@media (min-width: 769px) {
-iframe[title=“chat widget”][style*=“height: 100%”],
-iframe[title=“chat widget”][style*=“height:100%”] {
-width: 440px !important;
-height: 680px !important;
-max-height: calc(100vh - 80px) !important;
-bottom: 80px !important;
-right: 16px !important;
-left: auto !important;
-}
-}
-
 </style>
 
 </head>
@@ -1505,7 +1458,6 @@ const ListModule = { cond: { new: 'cond-new', like_new: 'cond-likenew', very_goo
       emailHtml +
       photosHtml +
       statusBadge +
-      '<div style="margin-top:12px;"><button class="btn-sm" style="background:#059669;color:white;font-size:16px;font-weight:900;padding:12px 20px;" onclick="openTawkChat(\'' + i.id + '\')">💬 Chat</button></div>' +
       '<div class="quick-contacts" style="margin-top:10px;">' +
         '<a href="mailto:givyrewards@proton.me?subject=Regarding order ' + encodeURIComponent(i.title) + '" class="email" target="_blank"><i class="fas fa-envelope"></i> Email</a>' +
         '<a href="https://wa.me/12535006459" class="whatsapp" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp</a>' +
@@ -1538,7 +1490,7 @@ const ListModule = { cond: { new: 'cond-new', like_new: 'cond-likenew', very_goo
         const locText = loc.city ? (loc.city + ', ' + (loc.state || '') + ' ' + (loc.zip || '')) : '-';
         const photosArray = i.photoUrls && i.photoUrls.length ? i.photoUrls : (i.photos || []);
         const photosHtml = photosArray.length ? ('<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:10px;">' + photosArray.slice(0, 8).map(p => '<img src="' + p + '" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;">').join('') + (photosArray.length > 8 ? '<div style="aspect-ratio:1;background:#f1f5f9;border-radius:8px;display:flex;align-items:center;justify-content:center;">+' + (photosArray.length - 8) + '</div>' : '') + '</div>') : '';
-        return '<div class="card"><div style="display:flex;justify-content:space-between;"><div style="font-size:22px;font-weight:900;">' + escapeHtml(i.title) + '</div><span class="condition-badge cond-new">' + i.conditionLabel + '</span></div><div style="margin:6px 0;">' + escapeHtml(i.desc) + '</div><div>📍 ' + escapeHtml(locText) + '</div><div>📅 ' + i.date + ' ⏰ ' + i.time + '</div>' + photosHtml + statusBadge + '<div style="margin-top:12px;"><button class="btn-sm" style="background:#059669;color:white;font-size:16px;font-weight:900;padding:12px 20px;" onclick="openTawkChat(\'' + i.id + '\')">💬 Chat</button></div><div class="quick-contacts" style="margin-top:10px;"><a href="mailto:givyrewards@proton.me?subject=Regarding order ' + encodeURIComponent(i.title) + '" class="email" target="_blank"><i class="fas fa-envelope"></i> Email</a><a href="https://t.me/givyrewards" class="telegram" target="_blank"><i class="fab fa-telegram-plane"></i> Telegram</a><a href="https://wa.me/12535006459" class="whatsapp" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp</a><a href="https://m.me/your_page_username" class="messenger" target="_blank"><i class="fab fa-facebook-messenger"></i> Messenger</a><a href="javascript:void(0)" class="tawk" onclick="openTawkChat(\'' + i.id + '\'); return false;"><i class="fas fa-comments"></i> Live Chat</a></div></div>';
+        return '<div class="card"><div style="display:flex;justify-content:space-between;"><div style="font-size:22px;font-weight:900;">' + escapeHtml(i.title) + '</div><span class="condition-badge cond-new">' + i.conditionLabel + '</span></div><div style="margin:6px 0;">' + escapeHtml(i.desc) + '</div><div>📍 ' + escapeHtml(locText) + '</div><div>📅 ' + i.date + ' ⏰ ' + i.time + '</div>' + photosHtml + statusBadge + '<div class="quick-contacts" style="margin-top:10px;"><a href="mailto:givyrewards@proton.me?subject=Regarding order ' + encodeURIComponent(i.title) + '" class="email" target="_blank"><i class="fas fa-envelope"></i> Email</a><a href="https://t.me/givyrewards" class="telegram" target="_blank"><i class="fab fa-telegram-plane"></i> Telegram</a><a href="https://wa.me/12535006459" class="whatsapp" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp</a><a href="https://m.me/your_page_username" class="messenger" target="_blank"><i class="fab fa-facebook-messenger"></i> Messenger</a><a href="javascript:void(0)" class="tawk" onclick="openTawkChat(\'' + i.id + '\'); return false;"><i class="fas fa-comments"></i> Live Chat</a></div></div>';
       }).join('');
       box.innerHTML = itemsHtml;
       document.getElementById('list-level-card').innerHTML = '';
@@ -1594,29 +1546,12 @@ window.RegModal = RegModal;
 </script>
 <script type="text/javascript">
 var Tawk_API=Tawk_API||{};var Tawk_LoadStart=new Date();
-/* Кастомное позиционирование зеленого пузыря Tawk:
-   сдвигаем на левый нижний угол, поверх иконки "Messages" в нижней навигации,
-   и поднимаем zIndex максимально. Развернутое окно центрируется автоматически
-   за счёт CSS-правил для iframe[title="chat widget"][style*="height: 100%"]. */
-Tawk_API.customStyle = {
-  visibility: {
-    desktop: {
-      position: 'bl',          // bottom-left
-      xOffset: '4px',
-      yOffset: '6px'
-    },
-    mobile: {
-      position: 'bl',
-      xOffset: 4,
-      yOffset: 6
-    },
-    bubble: {
-      rotate: '0deg',
-      xOffset: 4,
-      yOffset: 6
-    }
-  },
-  zIndex: 2147483000
+/* Place the Tawk launcher bubble in the bottom-right corner so it sits over the "Messages" bell in the bottom nav */
+Tawk_API.customStyle={
+  visibility:{
+    desktop:{position:'br',xOffset:0,yOffset:0},
+    mobile:{position:'br',xOffset:0,yOffset:0}
+  }
 };
 (function(){try{var userStr=localStorage.getItem('user');if(userStr){var user=JSON.parse(userStr);if(user&&user.nickname){Tawk_API.visitor={name:user.nickname,email:user.email||''};}}}catch(e){console.log('Tawk visitor init error:',e);}})();
 Tawk_API.onLoad=function(){try{var userStr=localStorage.getItem('user');if(userStr){var user=JSON.parse(userStr);if(user&&user.nickname&&Tawk_API.setAttributes){Tawk_API.setAttributes({'name':user.nickname,'email':user.email||''},function(error){if(error)console.log('Tawk onLoad setAttributes error:',error);});}}}catch(e){console.log('Tawk onLoad error:',e);}};
