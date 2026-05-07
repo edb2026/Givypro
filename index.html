@@ -168,6 +168,45 @@ transition: transform 0.15s ease, box-shadow 0.15s ease;
 /* Hide FAB when modals are open */
 body.modal-open .fab-pickup { display: none !important; }
 
+/* Unread message badge */
+.unread-badge {
+position: absolute;
+top: 2px;
+right: 50%;
+transform: translateX(140%);
+background: #ef4444;
+color: white;
+font-size: 11px;
+font-weight: 900;
+min-width: 18px;
+height: 18px;
+padding: 0 5px;
+border-radius: 999px;
+display: flex;
+align-items: center;
+justify-content: center;
+line-height: 1;
+box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+pointer-events: none;
+z-index: 100;
+animation: badge-pop 0.3s ease;
+}
+@keyframes badge-pop {
+0% { transform: translateX(140%) scale(0); }
+60% { transform: translateX(140%) scale(1.2); }
+100% { transform: translateX(140%) scale(1); }
+}
+.nav-btn { position: relative; }
+.quick-contacts a.tawk { position: relative; }
+.quick-contacts a.tawk .unread-badge {
+top: -6px;
+right: -6px;
+transform: none;
+}
+.quick-contacts a.tawk .unread-badge {
+animation: none;
+}
+
 .custom-image-area {
 text-align: center;
 margin: 20px auto;
@@ -1185,6 +1224,7 @@ max-width: 480px;
   <a href="https://wa.me/12535006459" class="whatsapp" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp</a>
   <a href="https://t.me/givyrewards" class="telegram" target="_blank"><i class="fab fa-telegram-plane"></i> Telegram</a>
   <a href="https://m.me/your_page_username" class="messenger" target="_blank"><i class="fab fa-facebook-messenger"></i> Messenger</a>
+  <a href="javascript:void(0)" class="tawk" onclick="openTawkChat(0); return false;"><i class="fas fa-comments"></i> Live Chat</a>
 </div>
 </div></div></div>
 <div id="screen-list" class="screen"><div class="page"><div style="margin-bottom:10px;"><span style="color:white;font-size:32px;font-weight:900;font-family:var(--font-h);">My Requests</span></div><div id="list-user-header" style="margin-bottom:10px;"></div><div id="list-banner-container"></div><div id="list-level-card" class="card"></div><div id="list-items"></div><div style="display:flex;justify-content:flex-start;margin-top:20px;padding:0 4px;"><button onclick="logoutUser()" style="background:transparent;color:#94a3b8;border:2px solid #475569;border-radius:999px;padding:12px 28px;font-size:15px;font-weight:900;font-family:var(--font-b);cursor:pointer;display:flex;align-items:center;gap:8px;" onmouseover="this.style.borderColor='#94a3b8';this.style.color='#cbd5e1';" onmouseout="this.style.borderColor='#475569';this.style.color='#94a3b8';"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>Log out</button></div></div></div>
@@ -1415,6 +1455,7 @@ const ListModule = { cond: { new: 'cond-new', like_new: 'cond-likenew', very_goo
         '<a href="https://wa.me/12535006459" class="whatsapp" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp</a>' +
         '<a href="https://t.me/givyrewards" class="telegram" target="_blank"><i class="fab fa-telegram-plane"></i> Telegram</a>' +
         '<a href="https://m.me/your_page_username" class="messenger" target="_blank"><i class="fab fa-facebook-messenger"></i> Messenger</a>' +
+        '<a href="javascript:void(0)" class="tawk" onclick="openTawkChat(\'' + i.id + '\'); return false;"><i class="fas fa-comments"></i> Live Chat</a>' +
       '</div>' +
     '</div>';
   },
@@ -1441,7 +1482,7 @@ const ListModule = { cond: { new: 'cond-new', like_new: 'cond-likenew', very_goo
         const locText = loc.city ? (loc.city + ', ' + (loc.state || '') + ' ' + (loc.zip || '')) : '-';
         const photosArray = i.photoUrls && i.photoUrls.length ? i.photoUrls : (i.photos || []);
         const photosHtml = photosArray.length ? ('<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:10px;">' + photosArray.slice(0, 8).map(p => '<img src="' + p + '" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;">').join('') + (photosArray.length > 8 ? '<div style="aspect-ratio:1;background:#f1f5f9;border-radius:8px;display:flex;align-items:center;justify-content:center;">+' + (photosArray.length - 8) + '</div>' : '') + '</div>') : '';
-        return '<div class="card"><div style="display:flex;justify-content:space-between;"><div style="font-size:22px;font-weight:900;">' + escapeHtml(i.title) + '</div><span class="condition-badge cond-new">' + i.conditionLabel + '</span></div><div style="margin:6px 0;">' + escapeHtml(i.desc) + '</div><div>📍 ' + escapeHtml(locText) + '</div><div>📅 ' + i.date + ' ⏰ ' + i.time + '</div>' + photosHtml + statusBadge + '<div style="margin-top:12px;"><button class="btn-sm" style="background:#059669;color:white;font-size:16px;font-weight:900;padding:12px 20px;" onclick="openTawkChat(\'' + i.id + '\')">💬 Chat</button></div><div class="quick-contacts" style="margin-top:10px;"><a href="mailto:givyrewards@proton.me?subject=Regarding order ' + encodeURIComponent(i.title) + '" class="email" target="_blank"><i class="fas fa-envelope"></i> Email</a><a href="https://t.me/givyrewards" class="telegram" target="_blank"><i class="fab fa-telegram-plane"></i> Telegram</a><a href="https://wa.me/12535006459" class="whatsapp" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp</a><a href="https://m.me/your_page_username" class="messenger" target="_blank"><i class="fab fa-facebook-messenger"></i> Messenger</a></div></div>';
+        return '<div class="card"><div style="display:flex;justify-content:space-between;"><div style="font-size:22px;font-weight:900;">' + escapeHtml(i.title) + '</div><span class="condition-badge cond-new">' + i.conditionLabel + '</span></div><div style="margin:6px 0;">' + escapeHtml(i.desc) + '</div><div>📍 ' + escapeHtml(locText) + '</div><div>📅 ' + i.date + ' ⏰ ' + i.time + '</div>' + photosHtml + statusBadge + '<div style="margin-top:12px;"><button class="btn-sm" style="background:#059669;color:white;font-size:16px;font-weight:900;padding:12px 20px;" onclick="openTawkChat(\'' + i.id + '\')">💬 Chat</button></div><div class="quick-contacts" style="margin-top:10px;"><a href="mailto:givyrewards@proton.me?subject=Regarding order ' + encodeURIComponent(i.title) + '" class="email" target="_blank"><i class="fas fa-envelope"></i> Email</a><a href="https://t.me/givyrewards" class="telegram" target="_blank"><i class="fab fa-telegram-plane"></i> Telegram</a><a href="https://wa.me/12535006459" class="whatsapp" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp</a><a href="https://m.me/your_page_username" class="messenger" target="_blank"><i class="fab fa-facebook-messenger"></i> Messenger</a><a href="javascript:void(0)" class="tawk" onclick="openTawkChat(\'' + i.id + '\'); return false;"><i class="fas fa-comments"></i> Live Chat</a></div></div>';
       }).join('');
       box.innerHTML = itemsHtml;
       document.getElementById('list-level-card').innerHTML = '';
@@ -1496,7 +1537,7 @@ window.RegModal = RegModal;
 ['registerModal', 'loginModal', 'termsModal', 'successModal'].forEach(function(id) { var el = document.getElementById(id); if (el) el.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('open'); }); });
 </script>
 <script type="text/javascript">
-var Tawk_API=Tawk_API||{};var Tawk_LoadStart=new Date();Tawk_API.customStyle={visibility:{desktop:{xOffset:-1000,yOffset:-1000},mobile:{xOffset:-1000,yOffset:-1000}}};Tawk_API.onLoaded=function(){try{var s=document.createElement('style');s.innerHTML='#tawk-bubble-container,iframe[title*="chat widget"]:not([style*="height: 100%"]):not([style*="height:100%"]){display:none!important;visibility:hidden!important;}';document.head.appendChild(s);}catch(e){}};
+var Tawk_API=Tawk_API||{};var Tawk_LoadStart=new Date();
 (function(){try{var userStr=localStorage.getItem('user');if(userStr){var user=JSON.parse(userStr);if(user&&user.nickname){Tawk_API.visitor={name:user.nickname,email:user.email||''};}}}catch(e){console.log('Tawk visitor init error:',e);}})();
 Tawk_API.onLoad=function(){try{var userStr=localStorage.getItem('user');if(userStr){var user=JSON.parse(userStr);if(user&&user.nickname&&Tawk_API.setAttributes){Tawk_API.setAttributes({'name':user.nickname,'email':user.email||''},function(error){if(error)console.log('Tawk onLoad setAttributes error:',error);});}}}catch(e){console.log('Tawk onLoad error:',e);}};
 (function(){var s1=document.createElement('script');var s0=document.getElementsByTagName('script')[0];s1.async=true;s1.src='https://embed.tawk.to/69e2eb20a7ff261c327a9ce5/1jmf6ctgi';s1.charset='UTF-8';s1.setAttribute('crossorigin','*');s0.parentNode.insertBefore(s1,s0);})();
@@ -1586,6 +1627,125 @@ Tawk_API.onLoad=function(){try{var userStr=localStorage.getItem('user');if(userS
       btn.style.top = pos.y + 'px';
     }
   });
+})();
+</script>
+
+<script>
+(function(){
+  var unread = 0;
+  var audioCtx = null;
+  var soundEnabled = false;
+
+  // Enable sound after first user interaction (mobile browser requirement)
+  function enableSoundOnce() {
+    soundEnabled = true;
+    document.removeEventListener('click', enableSoundOnce);
+    document.removeEventListener('touchstart', enableSoundOnce);
+  }
+  document.addEventListener('click', enableSoundOnce, { once: true });
+  document.addEventListener('touchstart', enableSoundOnce, { once: true });
+
+  function playPing() {
+    if (!soundEnabled) return;
+    try {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      var now = audioCtx.currentTime;
+      // Pleasant two-tone "ding" - C6 then E6
+      [[1046.5, 0], [1318.5, 0.08]].forEach(function(p){
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = p[0];
+        gain.gain.setValueAtTime(0, now + p[1]);
+        gain.gain.linearRampToValueAtTime(0.18, now + p[1] + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + p[1] + 0.4);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(now + p[1]);
+        osc.stop(now + p[1] + 0.45);
+      });
+    } catch(e) { console.log('Sound error:', e); }
+  }
+
+  function renderBadges() {
+    // Badge on bottom nav Messages icon
+    var navChat = document.getElementById('nav-chat');
+    if (navChat) {
+      var existingNav = navChat.querySelector('.unread-badge');
+      if (unread > 0) {
+        if (!existingNav) {
+          var b = document.createElement('span');
+          b.className = 'unread-badge';
+          navChat.appendChild(b);
+          existingNav = b;
+        }
+        existingNav.textContent = unread > 99 ? '99+' : String(unread);
+      } else if (existingNav) {
+        existingNav.remove();
+      }
+    }
+    // Badge on each Tawk Live Chat anchor in quick-contacts
+    var tawkLinks = document.querySelectorAll('.quick-contacts a.tawk');
+    tawkLinks.forEach(function(link){
+      var existing = link.querySelector('.unread-badge');
+      if (unread > 0) {
+        if (!existing) {
+          var b = document.createElement('span');
+          b.className = 'unread-badge';
+          link.appendChild(b);
+          existing = b;
+        }
+        existing.textContent = unread > 99 ? '99+' : String(unread);
+      } else if (existing) {
+        existing.remove();
+      }
+    });
+  }
+
+  function increment() {
+    unread++;
+    playPing();
+    renderBadges();
+  }
+
+  function reset() {
+    if (unread === 0) return;
+    unread = 0;
+    renderBadges();
+  }
+
+  window.MessageBadge = { increment: increment, reset: reset, getCount: function(){ return unread; }, render: renderBadges };
+
+  // Hook into Tawk_API events when ready
+  function hookTawk() {
+    if (typeof Tawk_API === 'undefined') {
+      setTimeout(hookTawk, 500);
+      return;
+    }
+    // New incoming message from agent
+    Tawk_API.onChatMessageAgent = function(message) { increment(); };
+    // Reset counter when chat is opened/maximized
+    Tawk_API.onChatMaximized = function() { reset(); };
+    // Also reset on chat-started or status changes
+    Tawk_API.onChatStarted = function() { reset(); };
+  }
+  hookTawk();
+
+  // Reset badge when user clicks Messages nav button
+  document.addEventListener('DOMContentLoaded', function(){
+    var navChat = document.getElementById('nav-chat');
+    if (navChat) {
+      navChat.addEventListener('click', function(){ reset(); });
+    }
+  });
+  // In case DOMContentLoaded already fired
+  if (document.readyState !== 'loading') {
+    var navChat = document.getElementById('nav-chat');
+    if (navChat) {
+      navChat.addEventListener('click', function(){ reset(); });
+    }
+  }
 })();
 </script>
 
