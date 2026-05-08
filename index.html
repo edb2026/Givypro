@@ -31,33 +31,33 @@ body{font-family:var(--font-b);background:#0f1117;color:#111827;min-height:100vh
 .header-logo{font-family:'Playfair Display',serif;font-size:40px;font-weight:900;color:#fff;letter-spacing:6px;line-height:1;font-style:italic;margin-bottom:4px;margin-top:-4px;}
 .header-rewards{font-family:var(--font-h);font-size:26px;font-weight:800;color:#FFD700;letter-spacing:2px;text-shadow:0 2px 8px rgba(0,0,0,0.3);line-height:1.1;}
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#0f1117;border-top:2px solid rgba(255,255,255,0.12);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 20px rgba(0,0,0,0.5);}
-/* Move Tawk.to live-chat bubble to the bottom-right so it covers the Messages (bell) nav button */
+/* Position the Tawk live-chat bubble inside the 5th slot of the bottom-nav (where "Messages" was). The nav has 5 equal flex items, so the 5th slot's centre is at 90% from the left of the nav. We offset the ~70px wide bubble by half its width to centre it. */
 iframe[title*="chat" i],
 iframe[id*="tawk" i],
 iframe[src*="tawk.to"],
 div[id*="tawk" i],
 div[class*="tawk" i]{
   left:auto !important;
-  right:0 !important;
-  bottom:0 !important;
+  right: calc(10vw - 35px) !important;
+  bottom: 4px !important;
   z-index:200 !important;
 }
 /* On wide desktop screens (≥1280px) the bottom-nav is centred with max-width 1290px,
-   so right:0 puts the Tawk bubble far to the right of the last nav slot. Pull it inward
-   so it sits visually inside the right-most quarter of the nav (where "Messages" was). */
+   so the 5th slot's centre is at (50vw + 516px) from the left, i.e. (50vw - 516px) from the right.
+   Subtract half the bubble width (~35px) so it lands centred on the slot. */
 @media (min-width: 1280px){
   iframe[title*="chat" i],
   iframe[id*="tawk" i],
   iframe[src*="tawk.to"],
   div[id*="tawk" i],
   div[class*="tawk" i]{
-    right: calc((100vw - 1290px) / 2 + 24px) !important;
-    bottom: 12px !important;
+    right: calc((100vw - 1290px) / 2 + 94px) !important;
+    bottom: 8px !important;
   }
 }
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 0 8px;background:none;border:none;color:#ffffff;font-size:10px;font-weight:800;font-family:var(--font-b);cursor:pointer;transition:color 0.2s;}
-/* Hide the bottom-nav "Messages" button — its slot is taken visually by the Tawk live-chat bubble. The element stays in the DOM so existing badge / navigation code keeps working without changes. */
-#nav-chat{display:none !important;}
+/* Make the bottom-nav "Messages" button an invisible slot — keeps the 5-button grid layout, but the icon and label are hidden so the Tawk live-chat bubble sits cleanly on top of this slot as the 5th button. The element stays in the DOM and clickable area is disabled so taps go to the Tawk bubble. */
+#nav-chat{visibility:hidden;pointer-events:none;}
 .nav-btn .nav-icon{font-size:24px;color:#ffffff;}
 .nav-btn.active{color:#00e676;}.nav-btn.active .nav-icon{filter:drop-shadow(0 0 4px rgba(0,230,118,0.6));}
 #nav-post .nav-icon{color:#059669 !important;}
