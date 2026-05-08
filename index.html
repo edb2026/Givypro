@@ -34,13 +34,30 @@ body{font-family:var(--font-b);background:#0f1117;color:#111827;min-height:100vh
 /* Move Tawk.to live-chat bubble to the bottom-right so it covers the Messages (bell) nav button */
 iframe[title*="chat" i],
 iframe[id*="tawk" i],
-iframe[src*="tawk.to"]{
+iframe[src*="tawk.to"],
+div[id*="tawk" i],
+div[class*="tawk" i]{
   left:auto !important;
   right:0 !important;
   bottom:0 !important;
   z-index:200 !important;
 }
+/* On wide desktop screens (≥1280px) the bottom-nav is centred with max-width 1290px,
+   so right:0 puts the Tawk bubble far to the right of the last nav slot. Pull it inward
+   so it sits visually inside the right-most quarter of the nav (where "Messages" was). */
+@media (min-width: 1280px){
+  iframe[title*="chat" i],
+  iframe[id*="tawk" i],
+  iframe[src*="tawk.to"],
+  div[id*="tawk" i],
+  div[class*="tawk" i]{
+    right: calc((100vw - 1290px) / 2 + 24px) !important;
+    bottom: 12px !important;
+  }
+}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 0 8px;background:none;border:none;color:#ffffff;font-size:10px;font-weight:800;font-family:var(--font-b);cursor:pointer;transition:color 0.2s;}
+/* Hide the bottom-nav "Messages" button — its slot is taken visually by the Tawk live-chat bubble. The element stays in the DOM so existing badge / navigation code keeps working without changes. */
+#nav-chat{display:none !important;}
 .nav-btn .nav-icon{font-size:24px;color:#ffffff;}
 .nav-btn.active{color:#00e676;}.nav-btn.active .nav-icon{filter:drop-shadow(0 0 4px rgba(0,230,118,0.6));}
 #nav-post .nav-icon{color:#059669 !important;}
@@ -282,7 +299,7 @@ border: 1px solid rgba(251,191,36,0.3);
 }
 .quick-contacts a i { font-size: 1.2rem; }
 .quick-contacts a.email { background: #ea4335; }
-.quick-contacts a.tawk { background: #1e2a2f; }
+.quick-contacts a.tawk { background: #059669; }
 .quick-contacts a.whatsapp { background: #25D366; }
 .quick-contacts a.telegram { background: #229ED9; }
 .quick-contacts a.messenger { background: #0084ff; }
@@ -459,6 +476,34 @@ padding: 7px 14px;
 font-size: 13px;
 font-weight: 700;
 }
+/* Brand-coloured contact pills on the main “Easy Ways to Reach Us” block */
+.contact-pill.brand-email,
+.contact-pill.brand-text,
+.contact-pill.brand-messenger,
+.contact-pill.brand-call,
+.contact-pill.brand-whatsapp,
+.contact-pill.brand-livechat,
+.contact-pill.brand-telegram {
+color: #ffffff;
+border: none;
+display: inline-flex;
+align-items: center;
+gap: 6px;
+}
+.contact-pill.brand-email i,
+.contact-pill.brand-text i,
+.contact-pill.brand-messenger i,
+.contact-pill.brand-call i,
+.contact-pill.brand-whatsapp i,
+.contact-pill.brand-livechat i,
+.contact-pill.brand-telegram i { font-size: 14px; }
+.contact-pill.brand-email     { background: #ea4335; }
+.contact-pill.brand-text      { background: #84cc16; color: #0b1d00; }
+.contact-pill.brand-messenger { background: #0084ff; }
+.contact-pill.brand-call      { background: #000000; }
+.contact-pill.brand-whatsapp  { background: #25D366; }
+.contact-pill.brand-livechat  { background: #059669; }
+.contact-pill.brand-telegram  { background: #229ED9; }
 
 .rewards-tiers {
 display: flex; flex-direction: column; gap: 10px;
@@ -1116,13 +1161,13 @@ max-width: 480px;
     </div>
     <p>Choose any way you prefer:</p>
     <div class="contact-list">
-      <span class="contact-pill">✉️ Email</span>
-      <span class="contact-pill">💬 Text</span>
-      <span class="contact-pill">📘 Messenger</span>
-      <span class="contact-pill">📞 Call</span>
-      <span class="contact-pill">📱 WhatsApp</span>
-      <span class="contact-pill">💭 Live Chat</span>
-      <span class="contact-pill">✈️ Telegram</span>
+      <span class="contact-pill brand-email"><i class="fas fa-envelope"></i> Email</span>
+      <span class="contact-pill brand-text"><i class="fas fa-comment-dots"></i> Text</span>
+      <span class="contact-pill brand-messenger"><i class="fab fa-facebook-messenger"></i> Messenger</span>
+      <span class="contact-pill brand-call"><i class="fas fa-phone"></i> Call</span>
+      <span class="contact-pill brand-whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp</span>
+      <span class="contact-pill brand-livechat"><i class="fas fa-comments"></i> Live Chat</span>
+      <span class="contact-pill brand-telegram"><i class="fab fa-telegram-plane"></i> Telegram</span>
     </div>
   </div>
 
