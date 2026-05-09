@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Terms of Service — GivyRewards</title>
+<meta name="description" content="Terms of Service for GivyRewards.com — the rules and agreement for using our service." />
+<meta name="robots" content="index, follow" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --bg-card: #ffffff;
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --ink-muted: #7a7a7a;
+    --accent: #2d5a4a;
+    --accent-soft: #e8f0ec;
+    --rule: #e5e1d8;
+    --rule-soft: #efece4;
+    --warn-bg: #fff8ec;
+    --warn-rule: #e8d9b2;
+    --alert-bg: #fdf0ec;
+    --alert-rule: #e8b8a6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter Tight', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.65;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .page { max-width: 760px; margin: 0 auto; padding: 64px 32px 96px; }
+  header.brand {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 56px; padding-bottom: 24px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .logo {
+    font-family: 'Fraunces', Georgia, serif; font-weight: 600;
+    font-size: 22px; letter-spacing: -0.02em;
+    color: var(--ink); text-decoration: none;
+  }
+  .logo .dot { color: var(--accent); }
+  .back-link {
+    font-size: 14px; color: var(--ink-muted);
+    text-decoration: none; transition: color 0.2s ease;
+  }
+  .back-link:hover { color: var(--accent); }
+  .eyebrow {
+    text-transform: uppercase; letter-spacing: 0.18em;
+    font-size: 12px; color: var(--accent);
+    font-weight: 600; margin-bottom: 16px;
+  }
+  h1 {
+    font-family: 'Fraunces', Georgia, serif; font-weight: 500;
+    font-size: clamp(36px, 5vw, 52px); letter-spacing: -0.03em;
+    line-height: 1.05; margin-bottom: 20px;
+  }
+  .updated { font-size: 14px; color: var(--ink-muted); margin-bottom: 40px; }
+  .lede {
+    font-size: 17px; color: var(--ink-soft);
+    margin-bottom: 48px; padding-bottom: 32px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .toc {
+    background: var(--bg-card); border: 1px solid var(--rule);
+    border-radius: 4px; padding: 24px 28px; margin-bottom: 56px;
+  }
+  .toc h2 {
+    font-family: 'Inter Tight', sans-serif; font-size: 12px;
+    font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.15em; color: var(--ink-muted); margin-bottom: 14px;
+  }
+  .toc ol { list-style: none; counter-reset: item; columns: 2; column-gap: 32px; }
+  .toc li { counter-increment: item; padding: 4px 0; font-size: 14px; break-inside: avoid; }
+  .toc li::before {
+    content: counter(item, decimal-leading-zero);
+    color: var(--accent); font-variant-numeric: tabular-nums;
+    margin-right: 10px; font-weight: 500;
+  }
+  .toc a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s ease; }
+  .toc a:hover { color: var(--accent); }
+  @media (max-width: 560px) { .toc ol { columns: 1; } }
+  section { margin-bottom: 48px; scroll-margin-top: 24px; }
+  h2.section-title {
+    font-family: 'Fraunces', Georgia, serif; font-weight: 500;
+    font-size: 26px; letter-spacing: -0.02em; margin-bottom: 16px;
+    display: flex; align-items: baseline; gap: 14px;
+  }
+  h2.section-title .num {
+    font-family: 'Inter Tight', sans-serif; font-size: 13px;
+    font-weight: 600; color: var(--accent);
+    font-variant-numeric: tabular-nums; letter-spacing: 0.1em;
+    padding: 4px 8px; background: var(--accent-soft);
+    border-radius: 3px; transform: translateY(-2px);
+  }
+  section h3 {
+    font-family: 'Inter Tight', sans-serif; font-size: 15px;
+    font-weight: 600; color: var(--ink);
+    margin: 18px 0 8px; letter-spacing: -0.01em;
+  }
+  section p { color: var(--ink-soft); margin-bottom: 14px; }
+  section ul { list-style: none; padding: 0; margin-bottom: 14px; }
+  section ul li {
+    padding: 6px 0 6px 22px; position: relative; color: var(--ink-soft);
+  }
+  section ul li::before {
+    content: ""; position: absolute; left: 0; top: 16px;
+    width: 10px; height: 1px; background: var(--accent);
+  }
+  section strong { color: var(--ink); font-weight: 600; }
+  section a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  section a:hover { text-decoration: underline; }
+  .important {
+    background: var(--warn-bg); border-left: 3px solid var(--warn-rule);
+    padding: 16px 20px; margin: 18px 0; border-radius: 0 4px 4px 0;
+  }
+  .important strong {
+    display: block; font-size: 12px; text-transform: uppercase;
+    letter-spacing: 0.15em; color: #8a6a1f;
+    margin-bottom: 8px; font-weight: 600;
+  }
+  .important ul li::before { background: #8a6a1f; }
+  .alert {
+    background: var(--alert-bg); border-left: 3px solid var(--alert-rule);
+    padding: 16px 20px; margin: 18px 0; border-radius: 0 4px 4px 0;
+  }
+  .alert strong {
+    display: block; font-size: 12px; text-transform: uppercase;
+    letter-spacing: 0.15em; color: #a04a2e;
+    margin-bottom: 8px; font-weight: 600;
+  }
+  .pullquote {
+    font-family: 'Fraunces', Georgia, serif; font-style: italic;
+    font-size: 19px; color: var(--accent); padding: 4px 0;
+  }
+  .legal-block {
+    background: var(--bg-card); border: 1px solid var(--rule);
+    padding: 18px 22px; border-radius: 4px; margin: 18px 0;
+    text-transform: uppercase; font-size: 13px; line-height: 1.6;
+    letter-spacing: 0.02em; font-weight: 500; color: var(--ink-soft);
+  }
+  .contact {
+    margin-top: 64px; padding: 32px;
+    background: var(--bg-card); border: 1px solid var(--rule);
+    border-radius: 4px;
+  }
+  .contact h3 {
+    font-family: 'Fraunces', Georgia, serif; font-weight: 500;
+    font-size: 22px; margin-bottom: 8px;
+  }
+  .contact p { font-size: 15px; color: var(--ink-soft); }
+  .contact a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  .contact a:hover { text-decoration: underline; }
+  footer {
+    margin-top: 72px; padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px; color: var(--ink-muted);
+    flex-wrap: wrap; gap: 12px;
+  }
+  footer a {
+    color: var(--ink-muted); text-decoration: none; margin-left: 18px;
+  }
+  footer a:hover { color: var(--accent); }
+  @media print {
+    body { background: white; }
+    .toc, .back-link, footer { display: none; }
+    .page { padding: 0; max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="brand">
+  <a href="/" class="logo">Givy<span class="dot">·</span>Rewards</a>
+  <a href="/" class="back-link">← Back to home</a>
+</header>
+
+<div class="eyebrow">Legal</div>
+<h1>Terms of Service</h1>
+<div class="updated">Effective date: May 8, 2026 &nbsp;·&nbsp; Last updated: May 8, 2026</div>
+
+<p class="lede">
+  These Terms describe the rules and the legal agreement between you and GivyRewards. By using the Service, scheduling a pickup, or creating an account, you agree to these Terms. Please read them carefully — Section 13 contains an arbitration clause and a class-action waiver that affect your legal rights.
+</p>
+
+<nav class="toc" aria-label="Table of contents">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#s1">Agreement &amp; the Service</a></li>
+    <li><a href="#s2">Eligibility</a></li>
+    <li><a href="#s3">Your account</a></li>
+    <li><a href="#s4">Items we accept</a></li>
+    <li><a href="#s5">Pickup process</a></li>
+    <li><a href="#s6">Rewards points</a></li>
+    <li><a href="#s7">Acceptable use</a></li>
+    <li><a href="#s8">Your content</a></li>
+    <li><a href="#s9">Intellectual property</a></li>
+    <li><a href="#s10">Disclaimers</a></li>
+    <li><a href="#s11">Limitation of liability</a></li>
+    <li><a href="#s12">Indemnification</a></li>
+    <li><a href="#s13">Disputes &amp; arbitration</a></li>
+    <li><a href="#s14">Governing law</a></li>
+    <li><a href="#s15">Termination</a></li>
+    <li><a href="#s16">Changes &amp; misc.</a></li>
+  </ol>
+</nav>
+
+<section id="s1">
+  <h2 class="section-title"><span class="num">01</span> Agreement &amp; the Service</h2>
+  <p>These Terms of Service ("Terms") form a binding agreement between you and GivyRewards ("we," "us," "our," the "Service"), operating in the State of Washington, USA, through <a href="https://givyrewards.com">https://givyrewards.com</a>.</p>
+  <p>The Service offers free pickup of unwanted furniture, household goods, and office equipment in our service area. Users may earn loyalty points ("Givy Points") for accepted items, redeemable per the rules described in the app.</p>
+  <p>We may modify, suspend, or discontinue any part of the Service at any time, with or without notice. We are not liable to you or any third party for any such modification.</p>
+</section>
+
+<section id="s2">
+  <h2 class="section-title"><span class="num">02</span> Eligibility</h2>
+  <ul>
+    <li>You must be at least 13 years old. If you are under 18, you may use the Service only with the consent of a parent or legal guardian who agrees to these Terms on your behalf.</li>
+    <li>You must own the items you submit, or have legal authority to give them away.</li>
+    <li>You must reside or operate within our published service area.</li>
+    <li>You must not be barred from using the Service under applicable law.</li>
+  </ul>
+</section>
+
+<section id="s3">
+  <h2 class="section-title"><span class="num">03</span> Your account</h2>
+  <p>To access certain features (such as earning rewards) you must create an account. You agree to:</p>
+  <ul>
+    <li>Provide accurate, complete, and current information</li>
+    <li>Keep your password secure and confidential</li>
+    <li>Be responsible for all activity under your account</li>
+    <li>Notify us immediately at <a href="mailto:givyrewards@proton.me">givyrewards@proton.me</a> if you suspect unauthorized access</li>
+    <li>Use the Service only for yourself — one person, one account</li>
+  </ul>
+</section>
+
+<section id="s4">
+  <h2 class="section-title"><span class="num">04</span> Items we accept</h2>
+  <p>We accept clean, usable items in working condition. <strong>We may refuse, at our sole discretion, any item that is:</strong></p>
+  <ul>
+    <li>Broken, badly stained, mouldy, infested, or unsafe</li>
+    <li>Hazardous (chemicals, fuels, large batteries, asbestos, biohazards)</li>
+    <li>On our published exclusion list (such as mattresses, large appliances)</li>
+    <li>Not legally transferable or resalable</li>
+    <li>Too large, too heavy, or impractical to transport safely with our team and equipment</li>
+  </ul>
+  <p>If we decline an item on arrival, you remain responsible for its disposal.</p>
+</section>
+
+<section id="s5">
+  <h2 class="section-title"><span class="num">05</span> Pickup process</h2>
+  <div class="important">
+    <strong>By scheduling a pickup, you agree</strong>
+    <ul>
+      <li>The items presented are yours to give away and are not subject to any liens or claims</li>
+      <li>You will provide safe, reasonable access to the pickup location</li>
+      <li>You or an authorized adult will be present at pickup time</li>
+      <li>Once we collect an item, ownership transfers to us, and we may donate, recycle, sell, or dispose of it at our sole discretion</li>
+    </ul>
+  </div>
+  <p>Our team is not required to navigate stairs, narrow corridors, locked gates, or hazardous conditions. We are not liable for ordinary wear or for damage caused by impractical pickup conditions outside our control.</p>
+</section>
+
+<section id="s6">
+  <h2 class="section-title"><span class="num">06</span> Rewards points ("Givy Points")</h2>
+  <ul>
+    <li>Givy Points have <strong>no cash value</strong> and cannot be redeemed for cash</li>
+    <li>Points may be redeemed for service-related rewards as described in the app</li>
+    <li>Points are non-transferable between accounts</li>
+    <li>Points expire after 24 months of account inactivity</li>
+    <li>We may revoke points awarded fraudulently or in violation of these Terms</li>
+    <li>We may modify, suspend, or terminate the rewards program at any time</li>
+  </ul>
+</section>
+
+<section id="s7">
+  <h2 class="section-title"><span class="num">07</span> Acceptable use</h2>
+  <p>You agree not to:</p>
+  <ul>
+    <li>Use the Service for any unlawful purpose or in violation of any law</li>
+    <li>Submit items you do not own or have no right to dispose of</li>
+    <li>Defraud the rewards program (multiple accounts, fake pickups, etc.)</li>
+    <li>Harass, threaten, or abuse our employees, contractors, or other users</li>
+    <li>Upload viruses, malware, or any harmful code</li>
+    <li>Probe, scan, or test the Service for vulnerabilities without our written permission</li>
+    <li>Use bots, scrapers, or automated tools to access the Service</li>
+    <li>Reproduce, modify, or create derivative works of the Service without permission</li>
+    <li>Impersonate any person or entity</li>
+  </ul>
+  <p>Violation may result in immediate suspension or termination of your account and forfeiture of accumulated points.</p>
+</section>
+
+<section id="s8">
+  <h2 class="section-title"><span class="num">08</span> Your content</h2>
+  <p>When you upload photos, item descriptions, messages, or other content ("User Content"), you:</p>
+  <ul>
+    <li>Confirm that you own or have the right to share the content</li>
+    <li>Grant us a worldwide, royalty-free, non-exclusive license to use, store, copy, modify, and display the content as needed to operate the Service</li>
+    <li>Agree that the content is not unlawful, defamatory, infringing, obscene, or harmful</li>
+  </ul>
+  <p>We may remove any content that violates these Terms or the law, without notice.</p>
+</section>
+
+<section id="s9">
+  <h2 class="section-title"><span class="num">09</span> Intellectual property</h2>
+  <p>All content on the Service that is not User Content (including the GivyRewards name, logo, designs, software, text, graphics, and images) is owned by us or our licensors and is protected by U.S. intellectual property laws. You receive a limited, non-transferable, revocable license to access and use the Service for its intended purpose.</p>
+</section>
+
+<section id="s10">
+  <h2 class="section-title"><span class="num">10</span> Disclaimers</h2>
+  <div class="legal-block">
+    The Service is provided "as is" and "as available" without warranties of any kind, whether express, implied, statutory, or otherwise. We disclaim all implied warranties of merchantability, fitness for a particular purpose, title, and non-infringement. We do not warrant that the Service will be uninterrupted, secure, error-free, or that defects will be corrected. We make no warranty regarding the accuracy or completeness of any content on the Service.
+  </div>
+  <p>Some jurisdictions do not allow the exclusion of certain warranties, so some of the above may not apply to you.</p>
+</section>
+
+<section id="s11">
+  <h2 class="section-title"><span class="num">11</span> Limitation of liability</h2>
+  <div class="legal-block">
+    To the maximum extent permitted by law, in no event shall GivyRewards or its affiliates, officers, directors, employees, or agents be liable for any indirect, incidental, special, consequential, exemplary, or punitive damages, or any loss of profits, revenues, data, goodwill, or other intangible losses, arising out of or relating to your use of (or inability to use) the Service, regardless of the legal theory.
+    <br><br>
+    Our total aggregate liability for any and all claims arising out of or relating to the Service shall not exceed one hundred U.S. dollars (US $100.00) or the amount you paid us in the past twelve months, whichever is greater.
+  </div>
+  <p>You acknowledge that the Service is provided to you free of charge and that these limits are essential to our willingness to offer it.</p>
+</section>
+
+<section id="s12">
+  <h2 class="section-title"><span class="num">12</span> Indemnification</h2>
+  <p>You agree to indemnify, defend, and hold harmless GivyRewards and its affiliates from any claims, damages, losses, costs, or expenses (including reasonable attorneys' fees) arising out of or related to: (a) your use of the Service; (b) your violation of these Terms; (c) your violation of any third-party right, including intellectual property or privacy rights; or (d) any content you submit.</p>
+</section>
+
+<section id="s13">
+  <h2 class="section-title"><span class="num">13</span> Disputes &amp; arbitration</h2>
+  <div class="alert">
+    <strong>This section affects your legal rights — read carefully</strong>
+    <p>You and GivyRewards agree to resolve disputes through binding arbitration on an individual basis, and to waive class-action and jury-trial rights, except as set out below.</p>
+  </div>
+
+  <h3>Informal resolution first</h3>
+  <p>If a dispute arises, contact us at <a href="mailto:givyrewards@proton.me">givyrewards@proton.me</a> and try to resolve it informally for at least 30 days before starting any legal proceeding.</p>
+
+  <h3>Binding arbitration</h3>
+  <p>Any unresolved dispute shall be settled by binding individual arbitration administered by the American Arbitration Association (AAA) under its Consumer Arbitration Rules. The arbitration will take place in Washington State, in English, before a single arbitrator. Judgment on the award may be entered in any court of competent jurisdiction.</p>
+
+  <h3>Class-action waiver</h3>
+  <div class="legal-block">
+    You and GivyRewards each agree that disputes will be resolved on an individual basis only. You waive any right to participate in a class action, class arbitration, or representative proceeding.
+  </div>
+
+  <h3>Exceptions</h3>
+  <p>Either party may bring an individual claim in small-claims court for disputes within that court's jurisdiction. Either party may also seek injunctive relief in court for intellectual-property infringement.</p>
+
+  <h3>Opt-out</h3>
+  <p>You may opt out of this arbitration agreement by sending us a written notice within 30 days of first using the Service to <a href="mailto:givyrewards@proton.me">givyrewards@proton.me</a>. Your notice must include your name, the email associated with your account, and a clear statement that you decline arbitration.</p>
+</section>
+
+<section id="s14">
+  <h2 class="section-title"><span class="num">14</span> Governing law</h2>
+  <p>These Terms are governed by the laws of the State of Washington, USA, without regard to its conflict-of-law principles. Subject to Section 13, you agree that any judicial proceeding (other than small-claims actions) shall take place in the state or federal courts located in Washington State.</p>
+</section>
+
+<section id="s15">
+  <h2 class="section-title"><span class="num">15</span> Termination</h2>
+  <p>You may stop using the Service and delete your account at any time by emailing <a href="mailto:givyrewards@proton.me">givyrewards@proton.me</a>.</p>
+  <p>We may suspend or terminate your account, with or without notice, if:</p>
+  <ul>
+    <li>You violate these Terms</li>
+    <li>We suspect fraudulent or abusive activity</li>
+    <li>Required by law or to protect the safety of others</li>
+    <li>The Service is being discontinued</li>
+  </ul>
+  <p>Upon termination, your right to use the Service ends immediately. Sections that by their nature should survive (e.g., disclaimers, limitations of liability, dispute resolution) will continue to apply.</p>
+</section>
+
+<section id="s16">
+  <h2 class="section-title"><span class="num">16</span> Changes &amp; misc.</h2>
+  <h3>Changes to these Terms</h3>
+  <p>We may update these Terms from time to time. Material changes will be announced in-app or by email at least 14 days before they take effect. Continued use after the effective date means you accept the updated Terms.</p>
+  <h3>Miscellaneous</h3>
+  <ul>
+    <li><strong>Entire agreement.</strong> These Terms and the Privacy Policy are the entire agreement between you and us regarding the Service.</li>
+    <li><strong>Severability.</strong> If any provision is held unenforceable, the rest remains in full force.</li>
+    <li><strong>No waiver.</strong> Our failure to enforce any provision is not a waiver of that provision.</li>
+    <li><strong>Assignment.</strong> You may not assign these Terms without our written consent. We may assign them in connection with a merger or sale.</li>
+    <li><strong>Force majeure.</strong> We are not liable for failures caused by events beyond our reasonable control.</li>
+    <li><strong>Notices.</strong> We may give you notices via email or in-app messages.</li>
+  </ul>
+</section>
+
+<div class="contact">
+  <h3>Questions?</h3>
+  <p>For questions about these Terms, contact us at <a href="mailto:givyrewards@proton.me">givyrewards@proton.me</a>.</p>
+</div>
+
+<footer>
+  <div>© 2026 GivyRewards. All rights reserved.</div>
+  <div>
+    <a href="/terms.html">Terms of Service</a>
+    <a href="/privacy.html">Privacy</a>
+    <a href="mailto:givyrewards@proton.me">Contact</a>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>
