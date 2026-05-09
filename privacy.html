@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Privacy Policy — GivyRewards</title>
+<meta name="description" content="Privacy Policy for GivyRewards.com — how we collect, use, and protect your data." />
+<meta name="robots" content="index, follow" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --bg-card: #ffffff;
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --ink-muted: #7a7a7a;
+    --accent: #2d5a4a;
+    --accent-soft: #e8f0ec;
+    --rule: #e5e1d8;
+    --rule-soft: #efece4;
+    --warn-bg: #fff8ec;
+    --warn-rule: #e8d9b2;
+    --alert-bg: #fdf0ec;
+    --alert-rule: #e8b8a6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter Tight', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.65;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .page { max-width: 760px; margin: 0 auto; padding: 64px 32px 96px; }
+  header.brand {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 56px; padding-bottom: 24px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .logo {
+    font-family: 'Fraunces', Georgia, serif; font-weight: 600;
+    font-size: 22px; letter-spacing: -0.02em;
+    color: var(--ink); text-decoration: none;
+  }
+  .logo .dot { color: var(--accent); }
+  .back-link {
+    font-size: 14px; color: var(--ink-muted);
+    text-decoration: none; transition: color 0.2s ease;
+  }
+  .back-link:hover { color: var(--accent); }
+  .eyebrow {
+    text-transform: uppercase; letter-spacing: 0.18em;
+    font-size: 12px; color: var(--accent);
+    font-weight: 600; margin-bottom: 16px;
+  }
+  h1 {
+    font-family: 'Fraunces', Georgia, serif; font-weight: 500;
+    font-size: clamp(36px, 5vw, 52px); letter-spacing: -0.03em;
+    line-height: 1.05; margin-bottom: 20px;
+  }
+  .updated { font-size: 14px; color: var(--ink-muted); margin-bottom: 40px; }
+  .lede {
+    font-size: 17px; color: var(--ink-soft);
+    margin-bottom: 48px; padding-bottom: 32px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .toc {
+    background: var(--bg-card); border: 1px solid var(--rule);
+    border-radius: 4px; padding: 24px 28px; margin-bottom: 56px;
+  }
+  .toc h2 {
+    font-family: 'Inter Tight', sans-serif; font-size: 12px;
+    font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.15em; color: var(--ink-muted); margin-bottom: 14px;
+  }
+  .toc ol { list-style: none; counter-reset: item; columns: 2; column-gap: 32px; }
+  .toc li { counter-increment: item; padding: 4px 0; font-size: 14px; break-inside: avoid; }
+  .toc li::before {
+    content: counter(item, decimal-leading-zero);
+    color: var(--accent); font-variant-numeric: tabular-nums;
+    margin-right: 10px; font-weight: 500;
+  }
+  .toc a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s ease; }
+  .toc a:hover { color: var(--accent); }
+  @media (max-width: 560px) { .toc ol { columns: 1; } }
+  section { margin-bottom: 48px; scroll-margin-top: 24px; }
+  h2.section-title {
+    font-family: 'Fraunces', Georgia, serif; font-weight: 500;
+    font-size: 26px; letter-spacing: -0.02em; margin-bottom: 16px;
+    display: flex; align-items: baseline; gap: 14px;
+  }
+  h2.section-title .num {
+    font-family: 'Inter Tight', sans-serif; font-size: 13px;
+    font-weight: 600; color: var(--accent);
+    font-variant-numeric: tabular-nums; letter-spacing: 0.1em;
+    padding: 4px 8px; background: var(--accent-soft);
+    border-radius: 3px; transform: translateY(-2px);
+  }
+  section h3 {
+    font-family: 'Inter Tight', sans-serif; font-size: 15px;
+    font-weight: 600; color: var(--ink);
+    margin: 18px 0 8px; letter-spacing: -0.01em;
+  }
+  section p { color: var(--ink-soft); margin-bottom: 14px; }
+  section ul { list-style: none; padding: 0; margin-bottom: 14px; }
+  section ul li {
+    padding: 6px 0 6px 22px; position: relative; color: var(--ink-soft);
+  }
+  section ul li::before {
+    content: ""; position: absolute; left: 0; top: 16px;
+    width: 10px; height: 1px; background: var(--accent);
+  }
+  section strong { color: var(--ink); font-weight: 600; }
+  section a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  section a:hover { text-decoration: underline; }
+  .important {
+    background: var(--warn-bg); border-left: 3px solid var(--warn-rule);
+    padding: 16px 20px; margin: 18px 0; border-radius: 0 4px 4px 0;
+  }
+  .important strong {
+    display: block; font-size: 12px; text-transform: uppercase;
+    letter-spacing: 0.15em; color: #8a6a1f;
+    margin-bottom: 8px; font-weight: 600;
+  }
+  .important ul li::before { background: #8a6a1f; }
+  .alert {
+    background: var(--alert-bg); border-left: 3px solid var(--alert-rule);
+    padding: 16px 20px; margin: 18px 0; border-radius: 0 4px 4px 0;
+  }
+  .alert strong {
+    display: block; font-size: 12px; text-transform: uppercase;
+    letter-spacing: 0.15em; color: #a04a2e;
+    margin-bottom: 8px; font-weight: 600;
+  }
+  .pullquote {
+    font-family: 'Fraunces', Georgia, serif; font-style: italic;
+    font-size: 19px; color: var(--accent); padding: 4px 0;
+  }
+  .legal-block {
+    background: var(--bg-card); border: 1px solid var(--rule);
+    padding: 18px 22px; border-radius: 4px; margin: 18px 0;
+    text-transform: uppercase; font-size: 13px; line-height: 1.6;
+    letter-spacing: 0.02em; font-weight: 500; color: var(--ink-soft);
+  }
+  .contact {
+    margin-top: 64px; padding: 32px;
+    background: var(--bg-card); border: 1px solid var(--rule);
+    border-radius: 4px;
+  }
+  .contact h3 {
+    font-family: 'Fraunces', Georgia, serif; font-weight: 500;
+    font-size: 22px; margin-bottom: 8px;
+  }
+  .contact p { font-size: 15px; color: var(--ink-soft); }
+  .contact a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  .contact a:hover { text-decoration: underline; }
+  footer {
+    margin-top: 72px; padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px; color: var(--ink-muted);
+    flex-wrap: wrap; gap: 12px;
+  }
+  footer a {
+    color: var(--ink-muted); text-decoration: none; margin-left: 18px;
+  }
+  footer a:hover { color: var(--accent); }
+  @media print {
+    body { background: white; }
+    .toc, .back-link, footer { display: none; }
+    .page { padding: 0; max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="brand">
+  <a href="/" class="logo">Givy<span class="dot">·</span>Rewards</a>
+  <a href="/" class="back-link">← Back to home</a>
+</header>
+
+<div class="eyebrow">Legal</div>
+<h1>Privacy Policy</h1>
+<div class="updated">Effective date: May 8, 2026 &nbsp;·&nbsp; Last updated: May 8, 2026</div>
+
+<p class="lede">
+  This Privacy Policy explains what information GivyRewards collects, why we collect it, how we use and protect it, and what choices you have. We aim to keep this short, plain, and honest — no dark patterns, no hidden tracking, and we never sell your data.
+</p>
+
+<nav class="toc" aria-label="Table of contents">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#s1">Who we are</a></li>
+    <li><a href="#s2">Information we collect</a></li>
+    <li><a href="#s3">How we use information</a></li>
+    <li><a href="#s4">Sharing of information</a></li>
+    <li><a href="#s5">Third-party services</a></li>
+    <li><a href="#s6">How long we keep data</a></li>
+    <li><a href="#s7">Data security</a></li>
+    <li><a href="#s8">Your rights &amp; choices</a></li>
+    <li><a href="#s9">California residents (CCPA)</a></li>
+    <li><a href="#s10">Children's privacy</a></li>
+    <li><a href="#s11">Cookies &amp; tracking</a></li>
+    <li><a href="#s12">Changes to this policy</a></li>
+  </ol>
+</nav>
+
+<section id="s1">
+  <h2 class="section-title"><span class="num">01</span> Who we are</h2>
+  <p>GivyRewards (the "Service," "we," "us," or "our") is a free pickup service for unwanted furniture, household goods, and office equipment, operating in the State of Washington, USA, through the website <a href="https://givyrewards.com">https://givyrewards.com</a>.</p>
+  <p>For privacy questions or requests, contact us at <a href="mailto:givyrewards@proton.me">givyrewards@proton.me</a>.</p>
+</section>
+
+<section id="s2">
+  <h2 class="section-title"><span class="num">02</span> Information we collect</h2>
+  <p>We collect only what we need to operate the Service.</p>
+
+  <h3>Information you provide directly</h3>
+  <ul>
+    <li>Email address (for account creation and login)</li>
+    <li>Name or nickname</li>
+    <li>Phone number (optional, for pickup coordination)</li>
+    <li>Pickup address, ZIP code, preferred date and time</li>
+    <li>Photos and descriptions of items you submit</li>
+    <li>Messages you send us through chat, email, or contact forms</li>
+  </ul>
+
+  <h3>Information collected automatically</h3>
+  <ul>
+    <li>Approximate location (derived from IP address) to confirm you are within our service area</li>
+    <li>Device and browser type, operating system, language</li>
+    <li>Usage data: pages viewed, timestamps, interactions</li>
+    <li>Cookies and local storage to keep you signed in and remember preferences</li>
+  </ul>
+
+  <p>We do <strong>not</strong> collect payment information. We do not collect precise GPS coordinates unless you explicitly grant permission.</p>
+</section>
+
+<section id="s3">
+  <h2 class="section-title"><span class="num">03</span> How we use information</h2>
+  <p>We use the information we collect to:</p>
+  <ul>
+    <li>Provide and operate the Service (scheduling pickups, awarding loyalty points)</li>
+    <li>Verify your identity and keep your account secure</li>
+    <li>Communicate with you about pickups, account, and support requests</li>
+    <li>Send service-related notifications (pickup confirmations, status updates)</li>
+    <li>Send promotional messages — only if you opt in; you can unsubscribe at any time</li>
+    <li>Improve and troubleshoot the Service</li>
+    <li>Prevent fraud, abuse, and unauthorized access</li>
+    <li>Comply with legal obligations</li>
+    <li>Enforce our Terms of Service and protect our rights</li>
+  </ul>
+</section>
+
+<section id="s4">
+  <h2 class="section-title"><span class="num">04</span> Sharing of information</h2>
+  <p class="pullquote">We do not sell, rent, or trade your personal information.</p>
+  <p>We share information only in these limited situations:</p>
+  <ul>
+    <li><strong>Service providers</strong> who help us run the Service (see Section 5)</li>
+    <li><strong>Legal compliance</strong> — when required by law, subpoena, court order, or to protect safety and prevent fraud</li>
+    <li><strong>Business transfers</strong> — if we merge with or are acquired by another company, your data may be transferred as part of that transaction (you will be notified)</li>
+    <li><strong>With your consent</strong> — when you specifically authorize us to share</li>
+    <li><strong>Aggregated / anonymized data</strong> that cannot identify you</li>
+  </ul>
+</section>
+
+<section id="s5">
+  <h2 class="section-title"><span class="num">05</span> Third-party services</h2>
+  <p>We use trusted third-party tools to run the Service. They process data only on our behalf and according to their own privacy policies:</p>
+  <ul>
+    <li><strong>Google Firebase</strong> — authentication, database, hosting, analytics</li>
+    <li><strong>Tawk.to</strong> — live chat support</li>
+    <li><strong>Formspree</strong> — handling of contact forms</li>
+    <li><strong>Web hosting provider</strong> — to serve the Service</li>
+    <li><strong>Messaging platforms</strong> — WhatsApp, Telegram, Messenger links initiated by you</li>
+  </ul>
+</section>
+
+<section id="s6">
+  <h2 class="section-title"><span class="num">06</span> How long we keep data</h2>
+  <ul>
+    <li><strong>Account data</strong> — while your account is active and up to 24 months after closure</li>
+    <li><strong>Pickup records</strong> — up to 36 months for tax, legal, and quality purposes</li>
+    <li><strong>Chat logs</strong> — up to 12 months</li>
+    <li><strong>Analytics data</strong> — up to 26 months</li>
+    <li><strong>Backups</strong> — overwritten on a rolling basis (typically within 90 days)</li>
+  </ul>
+  <p>If you ask us to delete your account, we will erase your personal data within 30 days, except information we are legally required to retain.</p>
+</section>
+
+<section id="s7">
+  <h2 class="section-title"><span class="num">07</span> Data security</h2>
+  <p>We use reasonable technical and organizational measures to protect your data, including HTTPS encryption in transit, encrypted storage at rest (Google Firebase), restricted access controls, and regular security reviews.</p>
+  <p>However, no system can be guaranteed 100% secure. If we discover a data breach affecting you, we will notify you without undue delay as required by applicable law.</p>
+</section>
+
+<section id="s8">
+  <h2 class="section-title"><span class="num">08</span> Your rights &amp; choices</h2>
+  <p>You can:</p>
+  <ul>
+    <li><strong>Access</strong> — request a copy of the personal data we hold about you</li>
+    <li><strong>Correct</strong> — ask us to fix inaccurate information</li>
+    <li><strong>Delete</strong> — close your account and request removal of your data</li>
+    <li><strong>Opt out</strong> — unsubscribe from promotional messages at any time</li>
+    <li><strong>Stop using</strong> — leave the Service whenever you choose</li>
+  </ul>
+  <p>To exercise these rights, email us at <a href="mailto:givyrewards@proton.me">givyrewards@proton.me</a> from the address associated with your account. We respond within 30 days.</p>
+</section>
+
+<section id="s9">
+  <h2 class="section-title"><span class="num">09</span> California residents (CCPA)</h2>
+  <p>If you are a California resident, the California Consumer Privacy Act (CCPA / CPRA) gives you specific rights:</p>
+  <ul>
+    <li>The right to know what personal information we collect about you</li>
+    <li>The right to delete your personal information</li>
+    <li>The right to correct inaccurate personal information</li>
+    <li>The right to opt out of the "sale" or "sharing" of personal information</li>
+    <li>The right to non-discrimination for exercising your rights</li>
+  </ul>
+  <div class="important">
+    <strong>We do not sell or share personal information</strong>
+    <p>We do not sell personal information for monetary value, and we do not share it for cross-context behavioural advertising. There is nothing to opt out of in this regard.</p>
+  </div>
+  <p>To exercise your CCPA rights, email <a href="mailto:givyrewards@proton.me">givyrewards@proton.me</a>. You may also designate an authorized agent to make a request on your behalf (we may verify their authority).</p>
+</section>
+
+<section id="s10">
+  <h2 class="section-title"><span class="num">10</span> Children's privacy</h2>
+  <p>GivyRewards is not directed to children under 13 years old. We do not knowingly collect personal information from children under 13.</p>
+  <p>If you believe a child has provided us with personal information, contact us at <a href="mailto:givyrewards@proton.me">givyrewards@proton.me</a> and we will promptly delete it. (COPPA compliance.)</p>
+</section>
+
+<section id="s11">
+  <h2 class="section-title"><span class="num">11</span> Cookies &amp; tracking</h2>
+  <p>We use cookies and browser local storage for these purposes:</p>
+  <ul>
+    <li><strong>Strictly necessary</strong> — to keep you signed in, remember preferences, and operate the Service securely</li>
+    <li><strong>Functional</strong> — to remember your installed-app status and chat-window state</li>
+    <li><strong>Analytics</strong> — to understand aggregate usage patterns</li>
+  </ul>
+  <p>You can refuse or delete cookies through your browser settings, though some features may not work properly afterward. Our Service does not respond to "Do Not Track" browser signals because no industry standard exists; we honor opt-out requests received directly from you.</p>
+</section>
+
+<section id="s12">
+  <h2 class="section-title"><span class="num">12</span> Changes to this policy</h2>
+  <p>We may update this Privacy Policy from time to time. When we do, we will update the "Effective date" at the top, and for material changes we will notify you in-app or by email at least 14 days before the change takes effect.</p>
+  <p>Continued use of the Service after the effective date constitutes acceptance of the updated Policy.</p>
+</section>
+
+<div class="contact">
+  <h3>Questions?</h3>
+  <p>For privacy-related requests, deletion of your account, or any other concerns, contact us at <a href="mailto:givyrewards@proton.me">givyrewards@proton.me</a>.</p>
+</div>
+
+<footer>
+  <div>© 2026 GivyRewards. All rights reserved.</div>
+  <div>
+    <a href="/terms.html">Terms of Service</a>
+    <a href="/privacy.html">Privacy</a>
+    <a href="mailto:givyrewards@proton.me">Contact</a>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>
