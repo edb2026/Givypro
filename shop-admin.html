@@ -190,6 +190,12 @@ hr { margin: 20px 0; border-color: #333; }
   <input type="number" id="price" placeholder="Price USD *">
   <input type="text" id="fbUser" placeholder="Facebook username (e.g. john.doe)">
 
+  <label style="color:#C5A267; font-size:13px; display:block; margin-top:4px;">&#128279; Facebook Marketplace URL <span style="color:#888; font-weight:normal;">(direct link to this product's FB post)</span></label>
+  <input type="text" id="marketplaceUrl" placeholder="https://www.facebook.com/marketplace/item/...">
+  <div style="color:#888; font-size:11px; margin-top:-10px; margin-bottom:15px; line-height:1.4;">
+    &#128161; Paste the link from your Facebook Marketplace listing. The "Grab on Facebook" button on the shop will open this exact post. If empty, falls back to Messenger.
+  </div>
+
   <div style="margin: 15px 0;">
     <label style="color:#C5A267;">&#128248; Product Images (up to 10 photos)</label>
     <div class="upload-info">Images uploaded to cloud storage. Visible on all devices.</div>
@@ -573,6 +579,7 @@ hr { margin: 20px 0; border-color: #333; }
     document.getElementById('desc').value = '';
     document.getElementById('price').value = '';
     document.getElementById('fbUser').value = '';
+    document.getElementById('marketplaceUrl').value = '';
     document.getElementById('editId').value = '';
     resetImages();
     document.getElementById('saveBtn').innerHTML = '\uD83D\uDCBE Save Product';
@@ -593,6 +600,7 @@ hr { margin: 20px 0; border-color: #333; }
       desc: document.getElementById('desc').value.trim(),
       price: price,
       fbUser: document.getElementById('fbUser').value.trim(),
+      marketplaceUrl: document.getElementById('marketplaceUrl').value.trim(),
       images: [...currentImages],
       sold: existing ? !!existing.sold : false
     };
@@ -628,6 +636,7 @@ hr { margin: 20px 0; border-color: #333; }
     document.getElementById('desc').value = p.desc || '';
     document.getElementById('price').value = p.price || '';
     document.getElementById('fbUser').value = p.fbUser || '';
+    document.getElementById('marketplaceUrl').value = p.marketplaceUrl || '';
     document.getElementById('editId').value = p.id;
     currentImages = p.images ? [...p.images] : [];
     renderImagePreview();
@@ -675,6 +684,7 @@ hr { margin: 20px 0; border-color: #333; }
             <div class="product-meta">${escapeHtml(p.brand)} | ${escapeHtml(p.category)}</div>
             <div class="product-price">$${p.price}</div>
             ${p.fbUser ? `<div class="product-fb">FB: ${escapeHtml(p.fbUser)}</div>` : ''}
+            ${p.marketplaceUrl ? `<div class="product-fb" style="color:#4ade80;">🔗 Direct FB link ✓</div>` : ''}
             ${p.images && p.images.length ? `<div class="product-photos">📷 ${p.images.length} photo(s)</div>` : ''}
             ${p.sold && soldDateStr ? `<div class="product-sold-date">Sold on ${soldDateStr}</div>` : ''}
           </div>
