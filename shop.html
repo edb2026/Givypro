@@ -146,11 +146,35 @@ color: #C5A267; font-size: 12px; cursor: pointer;
 font-family: inherit; display: block;
 }
 
-/* Цена и кнопки — всегда прижаты к низу */
+/* Цена и кнопка — всегда прижаты к низу */
 .price { color: #C5A267; font-size: 20px; font-weight: bold; padding-top: 8px; }
-.action-btns { display: flex; gap: 8px; margin-top: 12px; }
-.fb-btn { background: #1877F2; border: none; padding: 10px; border-radius: 30px; color: white; font-weight: bold; flex: 1; cursor: pointer; font-size: 13px; }
-.mp-btn { background: #2a7f4f; border: none; padding: 10px; border-radius: 30px; color: white; font-weight: bold; flex: 1; cursor: pointer; font-size: 13px; }
+.action-btns { display: flex; justify-content: center; margin-top: 12px; }
+.grab-btn {
+background: linear-gradient(135deg, #1877F2, #0d47a1);
+border: none;
+padding: 11px 22px;
+border-radius: 999px;
+color: white;
+font-weight: 700;
+cursor: pointer;
+font-size: 13px;
+letter-spacing: 0.3px;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+gap: 6px;
+box-shadow: 0 4px 14px rgba(24,119,242,0.35);
+transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+white-space: nowrap;
+}
+.grab-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(24,119,242,0.5); }
+.grab-btn:active { transform: scale(0.97); }
+.grab-btn:disabled {
+background: #3a3a3a;
+box-shadow: none;
+opacity: 0.65;
+cursor: not-allowed;
+}
 
 .admin-icon { position: fixed; bottom: 20px; left: 20px; width: 40px; height: 40px; background: #C5A267; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0.3; cursor: pointer; z-index: 999; }
 .empty { text-align: center; padding: 50px; color: #666; }
@@ -178,8 +202,8 @@ body { padding: 12px; }
 .title { font-size: 14px; margin-bottom: 6px; }
 .desc { font-size: 12px; }
 .price { font-size: 17px; }
-.action-btns { flex-direction: column; gap: 6px; }
-.fb-btn, .mp-btn { font-size: 12px; padding: 9px 6px; }
+.action-btns { margin-top: 10px; }
+.grab-btn { font-size: 12px; padding: 10px 18px; }
 }
 
   </style>
@@ -330,14 +354,21 @@ body { padding: 12px; }
       else if (e.key==='ArrowRight') { lbIndex=(lbIndex+1)%lbImages.length; updateLightbox(); }
     });
 
-    function openMessenger(p) {
-      const user = (p.fbUser||globalFb||'').replace(/^@/,'').trim();
-      if (!user) { alert('No Facebook username set.\n\nProduct: '+p.name); return; }
-      const msg = 'Hello! I\'m interested in "'+p.name+'" ('+(p.brand||'GIVY STUDIO')+') - $'+p.price+'. Is it still available?';
-      window.open('https://m.me/'+user+'?text='+encodeURIComponent(msg),'_blank');
-    }
-    function openMarketplace(p) {
-      window.open('https://www.facebook.com/marketplace/search/?query='+encodeURIComponent((p.name+' '+(p.brand||'')).trim()),'_blank');
+    function grabOnFacebook(p) {
+      // Приоритет 1: прямая ссылка на пост Marketplace
+      if (p.marketplaceUrl && p.marketplaceUrl.trim()) {
+        window.open(p.marketplaceUrl.trim(), '_blank');
+        return;
+      }
+      // Приоритет 2 (fallback): Messenger с готовым текстом
+      const user = (p.fbUser || globalFb || '').replace(/^@/,'').trim();
+      if (user) {
+        const msg = 'Hello! I\'m interested in "' + p.name + '" (' + (p.brand||'GIVY STUDIO') + ') - $' + p.price + '. Is it still available?';
+        window.open('https://m.me/' + user + '?text=' + encodeURIComponent(msg), '_blank');
+        return;
+      }
+      // Приоритет 3 (последний fallback): поиск по Marketplace
+      window.open('https://www.facebook.com/marketplace/search/?query=' + encodeURIComponent((p.name + ' ' + (p.brand||'')).trim()), '_blank');
     }
 
     /* ── РЕНДЕР ── */
@@ -393,9 +424,9 @@ body { padding: 12px; }
             descBlock+
             '<div class="price">$'+p.price+'</div>'+
             '<div class="action-btns">'+
-              '<button class="fb-btn"'+(isSold?' disabled style="opacity:0.5;cursor:not-allowed;"':'')+
-                '>\uD83D\uDCAC Interested</button>'+
-              '<button class="mp-btn">\uD83D\uDED2 Marketplace</button>'+
+              '<button class="grab-btn"'+(isSold?' disabled':'')+'>'+
+                (isSold ? '\uD83C\uDFF7\uFE0F Sold' : '\uD83D\uDED2 Grab on Facebook')+
+              '</button>'+
             '</div>'+
           '</div>';
 
@@ -409,8 +440,7 @@ body { padding: 12px; }
         imgDiv.addEventListener('mousemove',  ()=>{ moved=true;  });
         imgDiv.addEventListener('mouseup',    ()=>{ if(!moved && images.length) openLightbox(images,0); });
 
-        if (!isSold) card.querySelector('.fb-btn').onclick = ()=>openMessenger(p);
-        card.querySelector('.mp-btn').onclick = ()=>openMarketplace(p);
+        if (!isSold) card.querySelector('.grab-btn').onclick = ()=>grabOnFacebook(p);
 
         container.appendChild(card);
         if (images.length > 1) initCarousel(imgDiv);
