@@ -146,9 +146,10 @@ color: #C5A267; font-size: 12px; cursor: pointer;
 font-family: inherit; display: block;
 }
 
-/* Цена и кнопка — всегда прижаты к низу */
+/* Цена и кнопка */
 .price { color: #C5A267; font-size: 20px; font-weight: bold; padding-top: 8px; }
 .action-btns { display: flex; justify-content: center; margin-top: 12px; }
+.action-btns-top { margin-top: 0; padding: 12px 12px 10px; }
 .grab-btn {
 background: linear-gradient(135deg, #1877F2, #0d47a1);
 border: none;
@@ -417,17 +418,17 @@ body { padding: 12px; }
         const card = document.createElement('div');
         card.className = 'product-card'+(isSold?' sold-card':'');
         card.innerHTML =
+          '<div class="action-btns action-btns-top">'+
+            '<button class="grab-btn"'+(isSold?' disabled':'')+'>'+
+              (isSold ? '\uD83C\uDFF7\uFE0F Sold' : '\uD83D\uDED2 Grab on Facebook')+
+            '</button>'+
+          '</div>'+
           '<div class="product-img">'+imgInner+'</div>'+
           '<div class="card-body">'+
             '<div class="brand">'+escHtml(p.brand||'GIVY STUDIO')+'</div>'+
             '<div class="title">'+escHtml(p.name)+'</div>'+
             descBlock+
             '<div class="price">$'+p.price+'</div>'+
-            '<div class="action-btns">'+
-              '<button class="grab-btn"'+(isSold?' disabled':'')+'>'+
-                (isSold ? '\uD83C\uDFF7\uFE0F Sold' : '\uD83D\uDED2 Grab on Facebook')+
-              '</button>'+
-            '</div>'+
           '</div>';
 
         /* клик по фото → лайтбокс (только если не свайп) */
