@@ -2095,11 +2095,8 @@ const ChatModule = {
         );
       } catch(e) { console.log('markRead error:', e); }
     }
-    // Also clear hasUnreadAdminMessage flag on the order
-    try {
-      const { doc, updateDoc } = window.firebaseFunctions;
-      await updateDoc(doc(window.firebaseDB, 'orders', firestoreId), { hasUnreadAdminMessage: false });
-    } catch(e) {}
+    // Note: no order-level metadata update here — security rules block client
+    // writes to the order, and per-message readByClient flags are sufficient.
   },
 
   /* Format chat timestamp from Firestore Timestamp or fallback. */
@@ -2182,7 +2179,7 @@ const ChatModule = {
       return;
     }
     const user = Storage.get('user') || {};
-    const { collection, addDoc, doc, updateDoc, serverTimestamp } = window.firebaseFunctions;
+    const { collection, addDoc, serverTimestamp } = window.firebaseFunctions;
     try {
       await addDoc(collection(window.firebaseDB, 'orders', firestoreId, 'messages'), {
         text: text,
@@ -2192,12 +2189,10 @@ const ChatModule = {
         readByAdmin: false,
         readByClient: true
       });
-      // Bump order with last-message info (admin badge)
-      await updateDoc(doc(window.firebaseDB, 'orders', firestoreId), {
-        lastClientMessage: text,
-        lastClientMessageAt: new Date().toISOString(),
-        hasUnreadClientMessage: true
-      });
+      // Note: we don't update the parent order doc here — security rules don't
+      // let the client update their order, and the admin's unread badge is driven
+      // by the messages subcollection listener (counts messages with sender:'client'
+      // && !readByAdmin), so no order-level metadata is needed.
     } catch(e) {
       console.log('sendMessage error:', e);
       alert('Failed to send: ' + e.message);
