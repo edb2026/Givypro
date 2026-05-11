@@ -44,8 +44,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;m
 .search-box:focus{outline:none;border-color:#059669;}
 .refresh-btn{background:#2563eb;color:white;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:900;cursor:pointer;}
 .refresh-btn:hover{background:#1d4ed8;}
-.tawk-btn{background:#f59e0b;color:white;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:900;cursor:pointer;}
-.tawk-btn:hover{background:#d97706;}
 
 .orders-list{display:flex;flex-direction:column;gap:14px;}
 .order-card{background:#1a1f2e;border-radius:16px;padding:20px;border:2px solid transparent;transition:border-color 0.2s;}
@@ -87,9 +85,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;m
 .action-btn.confirm:hover{background:#047857;}
 .action-btn.pickup{background:#2563eb;color:white;}
 .action-btn.pickup:hover{background:#1d4ed8;}
-.action-btn.chat{background:#7c3aed;color:white;}
+.action-btn.chat{background:#7c3aed;color:white;position:relative;}
 .action-btn.chat:hover{background:#6d28d9;}
 .action-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.chat-unread-dot{position:absolute;top:-5px;right:-5px;width:16px;height:16px;background:#ef4444;border-radius:50%;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;border:2px solid #1a1f2e;}
 
 .empty-state{text-align:center;padding:60px 20px;color:#6b7280;}
 .empty-state .emoji{font-size:64px;margin-bottom:12px;}
@@ -117,10 +116,49 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;m
 .confirm-yes{background:#059669;color:white;}
 .confirm-no{background:#374151;color:white;}
 
+/* ===================== CHAT MODAL ===================== */
+.chat-modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:2000;align-items:center;justify-content:center;padding:16px;}
+.chat-modal.open{display:flex;}
+.chat-window{background:#1a1f2e;border-radius:20px;width:100%;max-width:560px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,0.6);border:1px solid #374151;overflow:hidden;}
+
+.chat-header{background:linear-gradient(135deg,#7c3aed,#6d28d9);padding:16px 20px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-shrink:0;}
+.chat-header-info{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.chat-header-name{font-size:17px;font-weight:900;color:white;}
+.chat-header-product{font-size:13px;color:rgba(255,255,255,0.8);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chat-header-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+.chat-meta-pill{background:rgba(255,255,255,0.15);border-radius:99px;padding:3px 10px;font-size:12px;color:white;font-weight:700;white-space:nowrap;}
+.chat-header-actions{display:flex;gap:8px;flex-shrink:0;}
+.chat-form-link{background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.4);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:900;cursor:pointer;text-decoration:none;white-space:nowrap;}
+.chat-form-link:hover{background:rgba(255,255,255,0.3);}
+.chat-close{background:rgba(255,255,255,0.15);color:white;border:none;border-radius:8px;width:34px;height:34px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.chat-close:hover{background:rgba(255,255,255,0.25);}
+
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:380px;}
+.chat-msg{display:flex;flex-direction:column;max-width:80%;}
+.chat-msg.admin{align-self:flex-end;align-items:flex-end;}
+.chat-msg.client{align-self:flex-start;align-items:flex-start;}
+.chat-msg-sender{font-size:11px;color:#6b7280;font-weight:700;margin-bottom:3px;}
+.chat-msg.admin .chat-msg-sender{color:#a78bfa;}
+.chat-bubble{padding:10px 14px;border-radius:14px;font-size:14px;font-weight:600;line-height:1.5;word-break:break-word;}
+.chat-msg.admin .chat-bubble{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:white;border-bottom-right-radius:4px;}
+.chat-msg.client .chat-bubble{background:#2a2f3e;color:#e5e7eb;border-bottom-left-radius:4px;}
+.chat-msg-time{font-size:11px;color:#4b5563;margin-top:3px;font-weight:600;}
+.chat-empty{text-align:center;color:#4b5563;font-size:14px;font-weight:700;padding:40px 20px;}
+
+.chat-input-area{padding:12px 16px;border-top:1px solid #374151;display:flex;gap:10px;align-items:flex-end;background:#0f1117;flex-shrink:0;}
+.chat-textarea{flex:1;padding:12px 14px;border-radius:12px;border:2px solid #374151;background:#1a1f2e;color:white;font-size:14px;font-weight:600;resize:none;min-height:44px;max-height:120px;font-family:inherit;line-height:1.4;}
+.chat-textarea:focus{outline:none;border-color:#7c3aed;}
+.chat-textarea::placeholder{color:#4b5563;}
+.chat-send-btn{padding:12px 18px;background:#7c3aed;color:white;border:none;border-radius:12px;font-size:16px;cursor:pointer;flex-shrink:0;height:44px;display:flex;align-items:center;justify-content:center;font-weight:900;}
+.chat-send-btn:hover{background:#6d28d9;}
+.chat-send-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.chat-loading{text-align:center;color:#6b7280;font-size:13px;padding:12px;font-weight:700;}
+
 @media(max-width:768px){
 .stats-grid{grid-template-columns:repeat(2,1fr);}
 .order-details{grid-template-columns:1fr;}
 .header h1{font-size:18px;}
+.chat-window{max-height:95vh;}
 }
 </style>
 
@@ -154,7 +192,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;m
   </div>
 
   <div class="content">
-    <!-- Stats cards (clickable filters) -->
     <div class="stats-grid">
       <div class="stat-card active" data-filter="all" onclick="filterByStatus('all')">
         <div class="stat-number" id="count-all">0</div>
@@ -182,7 +219,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;m
 <div class="toolbar">
   <input type="text" class="search-box" id="search-input" placeholder="🔍 Search by name, item, email, location..." oninput="applyFilters()">
   <button class="refresh-btn" onclick="loadOrders()">🔄 Refresh</button>
-  <button class="tawk-btn" onclick="openTawkDashboard()">💬 Open Tawk.to</button>
 </div>
 
 <div id="orders-container">
@@ -216,10 +252,44 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;m
   </div>
 </div>
 
+<!-- ===================== CHAT MODAL ===================== -->
+
+<div id="chat-modal" class="chat-modal" onclick="handleChatModalClick(event)">
+  <div class="chat-window" onclick="event.stopPropagation()">
+    <div class="chat-header">
+      <div class="chat-header-info">
+        <div class="chat-header-name" id="chat-client-name">—</div>
+        <div class="chat-header-product" id="chat-product-name">—</div>
+        <div class="chat-header-meta">
+          <span class="chat-meta-pill" id="chat-pickup-time">—</span>
+          <span class="chat-meta-pill" id="chat-location">—</span>
+        </div>
+      </div>
+      <div class="chat-header-actions">
+        <a id="chat-form-link" href="#" target="_blank" class="chat-form-link">🔗 View Form</a>
+        <button class="chat-close" onclick="closeChatModal()">✕</button>
+      </div>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+      <div class="chat-empty">No messages yet. Start the conversation!</div>
+    </div>
+    <div class="chat-input-area">
+      <textarea class="chat-textarea" id="chat-input" placeholder="Write a message..." rows="1"
+        onkeydown="handleChatKeydown(event)" oninput="autoResizeTextarea(this)"></textarea>
+      <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()">➤</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, updateDoc, orderBy, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore, collection, getDocs, doc, updateDoc,
+  addDoc, query, orderBy, onSnapshot, serverTimestamp, getDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAzSh_wSb6hdZtq3HULcNnyZmT8HbA1CRU",
@@ -231,6 +301,8 @@ const firebaseConfig = {
 };
 
 const ADMIN_EMAIL = "givyrewards@proton.me";
+const ADMIN_DISPLAY = "Givy Team";
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
@@ -240,8 +312,14 @@ const dashboard = document.getElementById('dashboard');
 
 let allOrders = [];
 let currentFilter = 'all';
+let chatUnsubscribe = null; // current chat listener
+let currentChatOrderId = null;
+// unread counts per order: { orderId: count }
+let chatUnreadCounts = {};
+// listeners to track unread per order
+let unreadListeners = {};
 
-// Auth state handler
+// ===================== AUTH =====================
 onAuthStateChanged(auth, (user) => {
   if (user && user.email && user.email.toLowerCase() === ADMIN_EMAIL) {
     loginScreen.style.display = 'none';
@@ -263,14 +341,11 @@ window.adminLogin = async function() {
   const password = document.getElementById('admin-password').value;
   const errEl = document.getElementById('login-error');
   errEl.textContent = '';
-  
   if (email.toLowerCase() !== ADMIN_EMAIL) {
     errEl.textContent = 'Access denied: only admin can access this page';
     return;
   }
-  
   errEl.textContent = 'Logging in...';
-  
   try {
     await signInWithEmailAndPassword(auth, email, password);
     errEl.textContent = '';
@@ -290,10 +365,10 @@ window.adminLogout = async function() {
   await signOut(auth);
 };
 
+// ===================== ORDERS =====================
 window.loadOrders = async function() {
   const container = document.getElementById('orders-container');
   container.innerHTML = '<div class="loading"><div class="spinner"></div><div style="color:#94a3b8;font-weight:700;">Loading orders...</div></div>';
-  
   try {
     const q = query(collection(db, 'orders'));
     const snap = await getDocs(q);
@@ -301,8 +376,11 @@ window.loadOrders = async function() {
     snap.forEach(docSnap => {
       allOrders.push({ id: docSnap.id, ...docSnap.data() });
     });
-    // Sort by createdAt descending
     allOrders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    
+    // Start unread listeners for all orders
+    allOrders.forEach(o => startUnreadListener(o.id));
+    
     updateStats();
     applyFilters();
   } catch(e) {
@@ -310,6 +388,27 @@ window.loadOrders = async function() {
     container.innerHTML = '<div class="empty-state"><div class="emoji">❌</div><div class="title">Error loading orders</div><div class="sub">' + e.message + '</div></div>';
   }
 };
+
+// Listen for unread messages (from client, not yet seen by admin)
+function startUnreadListener(orderId) {
+  if (unreadListeners[orderId]) return; // already listening
+  const messagesRef = collection(db, 'orders', orderId, 'messages');
+  const q = query(messagesRef, orderBy('createdAt', 'asc'));
+  unreadListeners[orderId] = onSnapshot(q, (snap) => {
+    let unread = 0;
+    snap.forEach(d => {
+      const msg = d.data();
+      if (msg.sender === 'client' && !msg.readByAdmin) unread++;
+    });
+    chatUnreadCounts[orderId] = unread;
+    // Update badge on the button if rendered
+    const badge = document.getElementById('chat-badge-' + orderId);
+    if (badge) {
+      badge.textContent = unread;
+      badge.style.display = unread > 0 ? 'flex' : 'none';
+    }
+  });
+}
 
 function updateStats() {
   document.getElementById('count-all').textContent = allOrders.length;
@@ -329,7 +428,6 @@ window.filterByStatus = function(status) {
 window.applyFilters = function() {
   const search = document.getElementById('search-input').value.toLowerCase();
   let filtered = allOrders;
-  
   if (currentFilter !== 'all') {
     if (currentFilter === 'pending') {
       filtered = filtered.filter(o => !o.status || o.status === 'pending');
@@ -337,7 +435,6 @@ window.applyFilters = function() {
       filtered = filtered.filter(o => o.status === currentFilter);
     }
   }
-  
   if (search) {
     filtered = filtered.filter(o => {
       const loc = o.location || {};
@@ -345,25 +442,25 @@ window.applyFilters = function() {
       return hay.includes(search);
     });
   }
-  
   renderOrders(filtered);
-}
+};
 
 function renderOrders(orders) {
   const container = document.getElementById('orders-container');
-  
   if (orders.length === 0) {
     container.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><div class="title">No orders found</div><div class="sub">Try changing filters or search</div></div>';
     return;
   }
-  
   container.innerHTML = '<div class="orders-list">' + orders.map(o => renderOrderCard(o)).join('') + '</div>';
-  
-  // Init maps for orders with location
   orders.forEach(o => {
     const loc = o.location || {};
-    if (loc.lat && loc.lng) {
-      setTimeout(() => initMap(o.id, loc.lat, loc.lng), 50);
+    if (loc.lat && loc.lng) setTimeout(() => initMap(o.id, loc.lat, loc.lng), 50);
+    // Update unread badge after render
+    const badge = document.getElementById('chat-badge-' + o.id);
+    if (badge) {
+      const u = chatUnreadCounts[o.id] || 0;
+      badge.textContent = u;
+      badge.style.display = u > 0 ? 'flex' : 'none';
     }
   });
 }
@@ -376,34 +473,32 @@ function renderOrderCard(o) {
     picked_up: '🔵 Picked Up',
     rejected: '⚠️ Rejected'
   }[status];
-  
+
   const loc = o.location || {};
   const locText = loc.city ? `${loc.city}, ${loc.state || ''} ${loc.zip || ''}` : (o.zip || o.address || '—');
   const googleMaps = loc.lat ? `<a href="https://www.google.com/maps?q=${loc.lat},${loc.lng}" target="_blank" style="color:#10b981;">📍 Google Maps</a>` : '';
-  
   const timeAgo = formatTimeAgo(o.createdAt);
-  
   const photosHTML = o.photos && o.photos.length > 0 ?
-    `<div class="photos-grid">${o.photos.map(p => `<img src="${p}" onclick="openPhoto('${p}')">`).join('')}</div>` : '';
-  
+    `<div class="photos-grid">${o.photos.map(p => `<img src="${escapeHtml(p)}" onclick="openPhoto('${escapeHtml(p)}')">`).join('')}</div>` : '';
   const mapHTML = loc.lat ? `<div class="map-container"><div class="map" id="map-${o.id}"></div></div>` : '';
-  
-  // Action buttons based on current status
+
   let actions = '';
   if (status === 'pending') {
     actions = `
-      <button class="action-btn confirm" onclick="confirmOrder('${o.id}', 'confirmed_intent', '${escapeHtml(o.nickname || 'Customer')}', '${escapeHtml(o.title)}')">✅ Confirm</button>
-      <button class="action-btn reject" onclick="confirmOrder('${o.id}', 'rejected', '${escapeHtml(o.nickname || 'Customer')}', '${escapeHtml(o.title)}')">⚠️ Reject</button>
+      <button class="action-btn confirm" onclick="confirmOrder('${o.id}','confirmed_intent','${escapeHtml(o.nickname||'Customer')}','${escapeHtml(o.title)}')">✅ Confirm</button>
+      <button class="action-btn reject" onclick="confirmOrder('${o.id}','rejected','${escapeHtml(o.nickname||'Customer')}','${escapeHtml(o.title)}')">⚠️ Reject</button>
     `;
   } else if (status === 'confirmed_intent') {
     actions = `
-      <button class="action-btn pickup" onclick="confirmOrder('${o.id}', 'picked_up', '${escapeHtml(o.nickname || 'Customer')}', '${escapeHtml(o.title)}')">🔵 Mark as Picked Up</button>
-      <button class="action-btn reject" onclick="confirmOrder('${o.id}', 'rejected', '${escapeHtml(o.nickname || 'Customer')}', '${escapeHtml(o.title)}')">⚠️ Reject</button>
+      <button class="action-btn pickup" onclick="confirmOrder('${o.id}','picked_up','${escapeHtml(o.nickname||'Customer')}','${escapeHtml(o.title)}')">🔵 Mark as Picked Up</button>
+      <button class="action-btn reject" onclick="confirmOrder('${o.id}','rejected','${escapeHtml(o.nickname||'Customer')}','${escapeHtml(o.title)}')">⚠️ Reject</button>
     `;
   } else {
     actions = `<button class="action-btn" style="background:#374151;color:#94a3b8;cursor:default;" disabled>Status finalized</button>`;
   }
-  
+
+  const unread = chatUnreadCounts[o.id] || 0;
+
   return `
     <div class="order-card ${status}">
       <div class="order-header">
@@ -416,53 +511,157 @@ function renderOrderCard(o) {
           <div class="order-time" style="margin-top:4px;">${timeAgo}</div>
         </div>
       </div>
-      
       ${o.desc ? `<div class="order-desc">${escapeHtml(o.desc)}</div>` : ''}
-      
       <div class="order-details">
         <div class="detail"><strong>Condition:</strong> ${escapeHtml(o.condition || '—')}</div>
         <div class="detail"><strong>Location:</strong> ${escapeHtml(locText)} ${googleMaps}</div>
         <div class="detail"><strong>Pickup Date:</strong> ${escapeHtml(o.date || '—')}</div>
         <div class="detail"><strong>Time:</strong> ${escapeHtml(o.time || '—')}</div>
       </div>
-      
       ${mapHTML}
       ${photosHTML}
-      
       <div class="action-buttons">
         ${actions}
-        <button class="action-btn chat" onclick="openTawkDashboard()">💬 Open Chat</button>
+        <button class="action-btn chat" onclick="openChatModal('${o.id}')">
+          💬 Chat
+          <span id="chat-badge-${o.id}" class="chat-unread-dot" style="display:${unread > 0 ? 'flex' : 'none'}">${unread}</span>
+        </button>
       </div>
     </div>
   `;
 }
 
-function initMap(orderId, lat, lng) {
-  const mapEl = document.getElementById('map-' + orderId);
-  if (!mapEl || mapEl._leaflet_id) return;
-  try {
-    const map = L.map(mapEl).setView([lat, lng], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map);
-    L.circle([lat, lng], { color: '#059669', fillColor: '#059669', fillOpacity: 0.2, radius: 1609 }).addTo(map);
-  } catch(e) { console.log('Map init error:', e); }
+// ===================== CHAT =====================
+window.openChatModal = async function(orderId) {
+  currentChatOrderId = orderId;
+  const order = allOrders.find(o => o.id === orderId);
+  if (!order) return;
+
+  // Fill header info
+  const loc = order.location || {};
+  const locText = loc.city ? `${loc.city}, ${loc.state || ''}` : (order.zip || order.address || '—');
+  document.getElementById('chat-client-name').textContent = (order.nickname || order.email || order.userEmail || 'Customer');
+  document.getElementById('chat-product-name').textContent = '📦 ' + (order.title || 'No title');
+  document.getElementById('chat-pickup-time').textContent = '📅 ' + (order.date || '—') + (order.time ? '  ⏰ ' + order.time : '');
+  document.getElementById('chat-location').textContent = '📍 ' + locText;
+
+  // Form link — link to the order document in Firebase console or your own page
+  // Change this URL to your own order detail page if you have one
+  const formUrl = `https://console.firebase.google.com/project/givy-rewards-7e086/firestore/data/orders/${orderId}`;
+  document.getElementById('chat-form-link').href = formUrl;
+
+  // Open modal
+  document.getElementById('chat-modal').classList.add('open');
+  document.getElementById('chat-input').value = '';
+  document.getElementById('chat-messages').innerHTML = '<div class="chat-loading">Loading messages...</div>';
+
+  // Unsubscribe previous listener
+  if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
+
+  // Real-time listener for messages
+  const messagesRef = collection(db, 'orders', orderId, 'messages');
+  const q = query(messagesRef, orderBy('createdAt', 'asc'));
+  chatUnsubscribe = onSnapshot(q, async (snap) => {
+    const msgs = [];
+    snap.forEach(d => msgs.push({ id: d.id, ...d.data() }));
+    renderChatMessages(msgs, order);
+
+    // Mark all client messages as read
+    const batch = [];
+    snap.forEach(d => {
+      const data = d.data();
+      if (data.sender === 'client' && !data.readByAdmin) {
+        batch.push(updateDoc(doc(db, 'orders', orderId, 'messages', d.id), { readByAdmin: true }));
+      }
+    });
+    if (batch.length > 0) await Promise.all(batch);
+  });
+};
+
+function renderChatMessages(msgs, order) {
+  const container = document.getElementById('chat-messages');
+  if (msgs.length === 0) {
+    container.innerHTML = '<div class="chat-empty">No messages yet. Start the conversation! 👋</div>';
+    return;
+  }
+  container.innerHTML = msgs.map(msg => {
+    const isAdmin = msg.sender === 'admin';
+    const senderName = isAdmin ? (msg.senderName || ADMIN_DISPLAY) : (order.nickname || 'Customer');
+    const time = msg.createdAt ? formatChatTime(msg.createdAt.toDate ? msg.createdAt.toDate() : new Date(msg.createdAt)) : '';
+    return `
+      <div class="chat-msg ${isAdmin ? 'admin' : 'client'}">
+        <div class="chat-msg-sender">${escapeHtml(senderName)}</div>
+        <div class="chat-bubble">${escapeHtml(msg.text)}</div>
+        <div class="chat-msg-time">${time}</div>
+      </div>
+    `;
+  }).join('');
+  // Scroll to bottom
+  container.scrollTop = container.scrollHeight;
 }
 
-window.openPhoto = function(url) {
-  document.getElementById('photo-modal-img').src = url;
-  document.getElementById('photo-modal').classList.add('open');
+window.sendChatMessage = async function() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || !currentChatOrderId) return;
+
+  const btn = document.getElementById('chat-send-btn');
+  btn.disabled = true;
+  input.value = '';
+  autoResizeTextarea(input);
+
+  try {
+    await addDoc(collection(db, 'orders', currentChatOrderId, 'messages'), {
+      text: text,
+      sender: 'admin',
+      senderName: ADMIN_DISPLAY,
+      createdAt: serverTimestamp(),
+      readByAdmin: true,
+      readByClient: false
+    });
+    // Also update order's lastMessage for client to see notification
+    await updateDoc(doc(db, 'orders', currentChatOrderId), {
+      lastAdminMessage: text,
+      lastAdminMessageAt: new Date().toISOString(),
+      hasUnreadAdminMessage: true
+    });
+  } catch(e) {
+    alert('Error sending message: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    input.focus();
+  }
 };
 
-window.closePhotoModal = function() {
-  document.getElementById('photo-modal').classList.remove('open');
+window.closeChatModal = function() {
+  document.getElementById('chat-modal').classList.remove('open');
+  if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
+  currentChatOrderId = null;
 };
 
+window.handleChatModalClick = function(e) {
+  if (e.target === document.getElementById('chat-modal')) closeChatModal();
+};
+
+window.handleChatKeydown = function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendChatMessage();
+  }
+};
+
+window.autoResizeTextarea = function(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+};
+
+// ===================== STATUS UPDATE =====================
 window.confirmOrder = function(orderId, newStatus, nickname, title) {
   const messages = {
-    'confirmed_intent': { title: '✅ Confirm order?', msg: `Mark "${title}" from ${nickname} as CONFIRMED. Customer will see: "Your order is confirmed. We are ready to pick it up."` },
-    'rejected': { title: '⚠️ Reject order?', msg: `Mark "${title}" from ${nickname} as REJECTED. Customer will see: "We cannot accept your item."` },
-    'picked_up': { title: '🔵 Mark as picked up?', msg: `Confirm you picked up "${title}" from ${nickname}. Their rewards level will update automatically.` }
+    'confirmed_intent': { title: '✅ Confirm order?', msg: `Mark "${title}" from ${nickname} as CONFIRMED.` },
+    'rejected': { title: '⚠️ Reject order?', msg: `Mark "${title}" from ${nickname} as REJECTED.` },
+    'picked_up': { title: '🔵 Mark as picked up?', msg: `Confirm you picked up "${title}" from ${nickname}.` }
   };
-  
   const m = messages[newStatus];
   document.getElementById('confirm-title').textContent = m.title;
   document.getElementById('confirm-message').textContent = m.msg;
@@ -479,167 +678,89 @@ window.closeConfirmModal = function() {
 
 async function doUpdateStatus(orderId, newStatus) {
   try {
-    // Find order data
     const order = allOrders.find(o => o.id === orderId);
-    if (!order) {
-      alert('Order not found');
-      return;
-    }
-    
-    // Update Firebase
+    if (!order) { alert('Order not found'); return; }
     await updateDoc(doc(db, 'orders', orderId), {
       status: newStatus,
       updatedAt: new Date().toISOString(),
       updatedBy: auth.currentUser.email
     });
-    
-    // Update local copy
     const idx = allOrders.findIndex(o => o.id === orderId);
     if (idx >= 0) allOrders[idx].status = newStatus;
     updateStats();
     applyFilters();
-    
-    // Send email notification to client
     sendClientNotification(order, newStatus);
-    
     alert('✅ Status updated! Client will receive email notification.');
   } catch(e) {
     alert('❌ Error: ' + e.message);
   }
 }
 
+// ===================== EMAIL NOTIFICATIONS =====================
 async function sendClientNotification(order, newStatus) {
   const clientEmail = order.email || order.userEmail;
-  if (!clientEmail) {
-    console.log('No client email, skipping notification');
-    return;
-  }
-  
+  if (!clientEmail) return;
   const messages = {
     'confirmed_intent': {
       subject: '✅ Your Givy Order is Confirmed!',
-      title: 'Order Confirmed!',
-      color: '#059669',
-      body: 
-        `<h2 style="color:#059669;">✅ Order Confirmed!</h2>` +
-        `<p>Hello <strong>${order.nickname || 'there'}</strong>!</p>` +
-        `<p>Great news! Your order <strong>"${order.title}"</strong> has been <strong>CONFIRMED</strong>.</p>` +
-        `<div style="background:#f0fdf4;border-left:4px solid #059669;padding:14px;margin:16px 0;border-radius:8px;">` +
-        `<p style="margin:4px 0;"><strong>📦 Item:</strong> ${order.title}</p>` +
-        `<p style="margin:4px 0;"><strong>📅 Pickup Date:</strong> ${order.date}</p>` +
-        `<p style="margin:4px 0;"><strong>⏰ Time Window:</strong> ${order.time}</p>` +
-        `</div>` +
-        `<p>We are ready to pick it up at your scheduled time!</p>` +
-        `<div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:14px;margin:16px 0;border-radius:8px;">` +
-        `<p style="margin:0;"><strong>🏠 IMPORTANT — Please reply with:</strong></p>` +
-        `<ul style="margin:8px 0;">` +
-        `<li>Your exact street address</li>` +
-        `<li>Parking instructions</li>` +
-        `<li>Gate codes (if any)</li>` +
-        `<li>Any special instructions for pickup</li>` +
-        `</ul>` +
-        `</div>` +
-        `<p>This information helps us pick up your item smoothly and on time.</p>` +
-        `<p>Thank you for using Givy Rewards!</p>` +
-        `<p style="color:#6b7280;">— The Givy Team</p>`
+      body: `<h2 style="color:#059669;">✅ Order Confirmed!</h2><p>Hello <strong>${order.nickname || 'there'}</strong>!</p><p>Your order <strong>"${order.title}"</strong> has been <strong>CONFIRMED</strong>.</p><div style="background:#f0fdf4;border-left:4px solid #059669;padding:14px;margin:16px 0;border-radius:8px;"><p style="margin:4px 0;"><strong>📦 Item:</strong> ${order.title}</p><p style="margin:4px 0;"><strong>📅 Pickup Date:</strong> ${order.date}</p><p style="margin:4px 0;"><strong>⏰ Time Window:</strong> ${order.time}</p></div><p>We are ready to pick it up at your scheduled time!</p><p style="color:#6b7280;">— The Givy Team</p>`,
+      color: '#059669'
     },
     'rejected': {
       subject: '⚠️ About Your Givy Order',
-      title: 'About Your Order',
-      color: '#f59e0b',
-      body:
-        `<h2 style="color:#f59e0b;">⚠️ About Your Order</h2>` +
-        `<p>Hello <strong>${order.nickname || 'there'}</strong>,</p>` +
-        `<p>We received your donation request for <strong>"${order.title}"</strong>.</p>` +
-        `<div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:14px;margin:16px 0;border-radius:8px;">` +
-        `<p style="margin:0;">Unfortunately, we are not able to accept this item at this time. We are very sorry for the inconvenience.</p>` +
-        `</div>` +
-        `<p>Please feel free to try another item — we would love to help you earn rewards! 🎁</p>` +
-        `<p>Thank you for your understanding.</p>` +
-        `<p style="color:#6b7280;">— The Givy Team</p>`
+      body: `<h2 style="color:#f59e0b;">⚠️ About Your Order</h2><p>Hello <strong>${order.nickname || 'there'}</strong>,</p><p>Unfortunately, we are not able to accept <strong>"${order.title}"</strong> at this time. We are sorry for the inconvenience.</p><p>Please feel free to try another item!</p><p style="color:#6b7280;">— The Givy Team</p>`,
+      color: '#f59e0b'
     },
     'picked_up': {
       subject: '🎉 Your Item Has Been Picked Up!',
-      title: 'Item Picked Up!',
-      color: '#2563eb',
-      body:
-        `<h2 style="color:#2563eb;">🎉 Item Picked Up!</h2>` +
-        `<p>Hello <strong>${order.nickname || 'there'}</strong>!</p>` +
-        `<p>Your item <strong>"${order.title}"</strong> has been successfully picked up. 🎉</p>` +
-        `<div style="background:#dbeafe;border-left:4px solid #2563eb;padding:14px;margin:16px 0;border-radius:8px;">` +
-        `<p style="margin:0;">🎁 <strong>Reward points have been added to your account!</strong></p>` +
-        `</div>` +
-        `<p>📊 Check your updated level and discount in the <strong>My Items</strong> section of the app.</p>` +
-        `<p>Thank you so much for your contribution! We appreciate you using Givy Rewards.</p>` +
-        `<p>Looking forward to your next item! 🦝</p>` +
-        `<p style="color:#6b7280;">— The Givy Team</p>`
+      body: `<h2 style="color:#2563eb;">🎉 Item Picked Up!</h2><p>Hello <strong>${order.nickname || 'there'}</strong>!</p><p>Your item <strong>"${order.title}"</strong> has been successfully picked up. 🎉</p><div style="background:#dbeafe;border-left:4px solid #2563eb;padding:14px;margin:16px 0;border-radius:8px;"><p style="margin:0;">🎁 <strong>Reward points have been added to your account!</strong></p></div><p style="color:#6b7280;">— The Givy Team</p>`,
+      color: '#2563eb'
     }
   };
-  
   const msg = messages[newStatus];
   if (!msg) return;
-  
-  // Resend API config - REPLACE WITH YOUR API KEY:
   const RESEND_API_KEY = 're_Yojdd1ie_Gki7MrhMTd7ctoCuLqCD5ESC';
-  
-  if (RESEND_API_KEY === 'YOUR_RESEND_API_KEY_HERE') {
-    console.log('⚠️ Resend not configured yet. Skipping email to', clientEmail);
-    console.log('Email content:', msg);
-    return;
-  }
-  
   try {
-    const response = await fetch('https://api.resend.com/emails', {
+    await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + RESEND_API_KEY,
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Authorization': 'Bearer ' + RESEND_API_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         from: 'Givy Rewards <noreply@givyrewards.com>',
         to: clientEmail,
         subject: msg.subject,
-        html: `
-          <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#ffffff;">
-            <div style="background:linear-gradient(135deg,${msg.color} 0%,${msg.color}dd 100%);padding:30px;border-radius:16px 16px 0 0;text-align:center;">
-              <div style="font-size:36px;color:white;font-weight:900;">🦝 Givy Rewards</div>
-              <div style="color:white;font-size:16px;opacity:0.9;margin-top:8px;">It's more than just giving</div>
-            </div>
-            <div style="padding:30px;background:#ffffff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 16px 16px;color:#111827;">
-              ${msg.body}
-            </div>
-            <div style="text-align:center;padding:20px;color:#6b7280;font-size:13px;">
-              You are receiving this because you submitted an order on Givy Rewards.
-            </div>
-          </div>
-        `
+        html: `<div style="font-family:-apple-system,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#fff;"><div style="background:linear-gradient(135deg,${msg.color},${msg.color}dd);padding:30px;border-radius:16px 16px 0 0;text-align:center;"><div style="font-size:36px;color:white;font-weight:900;">🦝 Givy Rewards</div></div><div style="padding:30px;background:#fff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 16px 16px;color:#111827;">${msg.body}</div></div>`
       })
     });
-    
-    const result = await response.json();
-    if (response.ok) {
-      console.log('✅ Email sent to client:', clientEmail, result);
-    } else {
-      console.log('❌ Resend error:', result);
-    }
-  } catch(e) {
-    console.log('❌ Email send error:', e);
-  }
+  } catch(e) { console.log('Email error:', e); }
 }
 
-window.openTawkDashboard = function() {
-  window.open('https://dashboard.tawk.to', '_blank');
+// ===================== UTILS =====================
+function initMap(orderId, lat, lng) {
+  const mapEl = document.getElementById('map-' + orderId);
+  if (!mapEl || mapEl._leaflet_id) return;
+  try {
+    const map = L.map(mapEl).setView([lat, lng], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map);
+    L.circle([lat, lng], { color: '#059669', fillColor: '#059669', fillOpacity: 0.2, radius: 1609 }).addTo(map);
+  } catch(e) { console.log('Map init error:', e); }
+}
+
+window.openPhoto = function(url) {
+  document.getElementById('photo-modal-img').src = url;
+  document.getElementById('photo-modal').classList.add('open');
+};
+window.closePhotoModal = function() {
+  document.getElementById('photo-modal').classList.remove('open');
 };
 
 function escapeHtml(s) {
   if (!s) return '';
-  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, "&#39;");
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;");
 }
 
 function formatTimeAgo(isoDate) {
   if (!isoDate) return '';
-  const now = new Date();
-  const then = new Date(isoDate);
+  const now = new Date(), then = new Date(isoDate);
   const diff = Math.floor((now - then) / 1000);
   if (diff < 60) return 'just now';
   if (diff < 3600) return Math.floor(diff/60) + ' min ago';
@@ -648,13 +769,15 @@ function formatTimeAgo(isoDate) {
   return then.toLocaleDateString();
 }
 
+function formatChatTime(date) {
+  if (!date) return '';
+  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+}
+
 // Auto-refresh every 30 seconds
 setInterval(() => {
-  if (dashboard.style.display === 'block') {
-    loadOrders();
-  }
+  if (dashboard.style.display === 'block') loadOrders();
 }, 30000);
-
 </script>
 
 </body>
