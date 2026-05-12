@@ -2003,7 +2003,7 @@ const ChatModule = {
   },
 
   /* ===== Notification system: sound + browser notifications ===== */
-  audioCtx: null,
+  pingAudio: null,
   soundEnabled: false,
   notifPermission: 'default',
   knownMessageIds: {},   // firestoreId -> Set of message IDs we've already seen
@@ -2013,49 +2013,53 @@ const ChatModule = {
     if (this.notifInitialized) return;
     this.notifInitialized = true;
 
-    // Unlock audio on first user interaction (mobile browsers block autoplay)
-    const unlock = () => {
-      this.soundEnabled = true;
-      document.removeEventListener('click', unlock);
-      document.removeEventListener('touchstart', unlock);
-    };
-    document.addEventListener('click', unlock, { once: true });
-    document.addEventListener('touchstart', unlock, { once: true });
+    // Create an HTML5 audio element with a short embedded "ding" sound.
+    // HTML5 audio is far more reliable across mobile browsers than Web Audio API.
+    // This is a short generated bell-like sound encoded as base64 WAV (~12kb).
+    this.pingAudio = new Audio('data:audio/wav;base64,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');
+    this.pingAudio.preload = 'auto';
+    this.pingAudio.volume = 1.0;
 
-    // Ask for browser-notification permission (only once per browser).
-    // We do it lazily — only after the first user click — to avoid spammy prompts.
-    const askPerm = () => {
-      if (!('Notification' in window)) return;
-      this.notifPermission = Notification.permission;
-      if (Notification.permission === 'default') {
-        Notification.requestPermission().then(p => { this.notifPermission = p; });
+    // Unlock audio + ask for notification permission on first user interaction.
+    const onFirstTouch = () => {
+      this.soundEnabled = true;
+      // Play and immediately pause to "unlock" audio playback on iOS Safari
+      this.pingAudio.play().then(() => {
+        this.pingAudio.pause();
+        this.pingAudio.currentTime = 0;
+        console.log('[Chat] Sound unlocked');
+      }).catch(err => console.log('[Chat] Sound unlock failed:', err));
+
+      // Request browser-notification permission (one-time prompt)
+      if ('Notification' in window) {
+        this.notifPermission = Notification.permission;
+        if (Notification.permission === 'default') {
+          Notification.requestPermission().then(p => {
+            this.notifPermission = p;
+            console.log('[Chat] Notification permission:', p);
+          });
+        }
       }
-      document.removeEventListener('click', askPerm);
+      document.removeEventListener('click', onFirstTouch);
+      document.removeEventListener('touchstart', onFirstTouch);
     };
-    document.addEventListener('click', askPerm, { once: true });
+    document.addEventListener('click', onFirstTouch, { once: true });
+    document.addEventListener('touchstart', onFirstTouch, { once: true });
   },
 
   playPing() {
-    if (!this.soundEnabled) return;
+    console.log('[Chat] playPing called, soundEnabled=', this.soundEnabled);
+    if (!this.pingAudio) {
+      console.log('[Chat] No audio element');
+      return;
+    }
     try {
-      if (!this.audioCtx) {
-        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      this.pingAudio.currentTime = 0;
+      const playPromise = this.pingAudio.play();
+      if (playPromise && playPromise.catch) {
+        playPromise.catch(err => console.log('[Chat] Play failed:', err.message));
       }
-      const now = this.audioCtx.currentTime;
-      // Pleasant two-tone "ding" — C6 then E6
-      [[1046.5, 0], [1318.5, 0.08]].forEach(p => {
-        const osc = this.audioCtx.createOscillator();
-        const gain = this.audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.value = p[0];
-        gain.gain.setValueAtTime(0, now + p[1]);
-        gain.gain.linearRampToValueAtTime(0.2, now + p[1] + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + p[1] + 0.4);
-        osc.connect(gain).connect(this.audioCtx.destination);
-        osc.start(now + p[1]);
-        osc.stop(now + p[1] + 0.45);
-      });
-    } catch(e) { console.log('Sound error:', e); }
+    } catch(e) { console.log('[Chat] Sound error:', e); }
   },
 
   /* Show a browser notification if the tab is hidden (or always, if you prefer). */
@@ -2117,16 +2121,13 @@ const ChatModule = {
       this.unreadCounts[firestoreId] = unread;
       this.updateTotalUnread();
 
-      // Trigger ping + browser notification for new admin messages, but only
-      // when the user isn't already viewing this thread (otherwise it's noisy).
+      // Trigger ping + browser notification for every new admin message.
+      // Sound plays whether tab is visible or not (user wants to hear it).
+      // Browser notification only fires when tab is hidden.
       if (newAdminMessage) {
-        const viewingThisThread =
-          (Nav.current === 'chatwindow' && this.active === firestoreId) ||
-          (Nav.current === 'list' && document.querySelector('#inline-chat-' + firestoreId + '.open'));
-        if (!viewingThisThread || document.visibilityState !== 'visible') {
-          this.playPing();
-          this.showBrowserNotification(itemTitle, newAdminMessage.text || 'New message');
-        }
+        console.log('[Chat] New admin message detected:', newAdminMessage.text);
+        this.playPing();
+        this.showBrowserNotification(itemTitle, newAdminMessage.text || 'New message');
       }
 
       // Refresh visible UI if needed
