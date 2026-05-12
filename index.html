@@ -2002,26 +2002,133 @@ const ChatModule = {
     return items.filter(i => i.firestoreId);
   },
 
+  /* ===== Notification system: sound + browser notifications ===== */
+  audioCtx: null,
+  soundEnabled: false,
+  notifPermission: 'default',
+  knownMessageIds: {},   // firestoreId -> Set of message IDs we've already seen
+  notifInitialized: false,
+
+  initNotifications() {
+    if (this.notifInitialized) return;
+    this.notifInitialized = true;
+
+    // Unlock audio on first user interaction (mobile browsers block autoplay)
+    const unlock = () => {
+      this.soundEnabled = true;
+      document.removeEventListener('click', unlock);
+      document.removeEventListener('touchstart', unlock);
+    };
+    document.addEventListener('click', unlock, { once: true });
+    document.addEventListener('touchstart', unlock, { once: true });
+
+    // Ask for browser-notification permission (only once per browser).
+    // We do it lazily — only after the first user click — to avoid spammy prompts.
+    const askPerm = () => {
+      if (!('Notification' in window)) return;
+      this.notifPermission = Notification.permission;
+      if (Notification.permission === 'default') {
+        Notification.requestPermission().then(p => { this.notifPermission = p; });
+      }
+      document.removeEventListener('click', askPerm);
+    };
+    document.addEventListener('click', askPerm, { once: true });
+  },
+
+  playPing() {
+    if (!this.soundEnabled) return;
+    try {
+      if (!this.audioCtx) {
+        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      const now = this.audioCtx.currentTime;
+      // Pleasant two-tone "ding" — C6 then E6
+      [[1046.5, 0], [1318.5, 0.08]].forEach(p => {
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = p[0];
+        gain.gain.setValueAtTime(0, now + p[1]);
+        gain.gain.linearRampToValueAtTime(0.2, now + p[1] + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + p[1] + 0.4);
+        osc.connect(gain).connect(this.audioCtx.destination);
+        osc.start(now + p[1]);
+        osc.stop(now + p[1] + 0.45);
+      });
+    } catch(e) { console.log('Sound error:', e); }
+  },
+
+  /* Show a browser notification if the tab is hidden (or always, if you prefer). */
+  showBrowserNotification(itemTitle, messageText) {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+    // Only notify when the tab is not actively visible
+    if (document.visibilityState === 'visible') return;
+    try {
+      const n = new Notification('Givy — ' + itemTitle, {
+        body: messageText,
+        icon: '/Givy logo.JPG',
+        tag: 'givy-chat',
+        silent: false
+      });
+      n.onclick = () => {
+        window.focus();
+        n.close();
+      };
+    } catch(e) { console.log('Notification error:', e); }
+  },
+
   /* Start a per-order listener — keeps unread counts and message cache fresh. */
   startListener(firestoreId, itemTitle) {
     if (!window.firebaseDB || !window.firebaseFunctions) return;
     if (this.msgUnsubscribers[firestoreId]) return; // already listening
+    this.initNotifications();
     const { collection, query, orderBy, onSnapshot } = window.firebaseFunctions;
     const q = query(
       collection(window.firebaseDB, 'orders', firestoreId, 'messages'),
       orderBy('createdAt', 'asc')
     );
+    // Track which messages we've already seen so we only ring on *new* arrivals,
+    // not on the initial snapshot when the listener first attaches.
+    let isInitialSnapshot = true;
+    if (!this.knownMessageIds[firestoreId]) {
+      this.knownMessageIds[firestoreId] = new Set();
+    }
+
     this.msgUnsubscribers[firestoreId] = onSnapshot(q, (snap) => {
       const msgs = [];
       let unread = 0;
+      const known = this.knownMessageIds[firestoreId];
+      let newAdminMessage = null;
+
       snap.forEach(d => {
         const m = d.data();
         msgs.push({ id: d.id, ...m });
         if (m.sender === 'admin' && !m.readByClient) unread++;
+        // Detect a brand-new admin message that arrived after we started listening
+        if (!isInitialSnapshot && !known.has(d.id) && m.sender === 'admin') {
+          newAdminMessage = m;
+        }
+        known.add(d.id);
       });
+      isInitialSnapshot = false;
+
       this.messagesCache[firestoreId] = msgs;
       this.unreadCounts[firestoreId] = unread;
       this.updateTotalUnread();
+
+      // Trigger ping + browser notification for new admin messages, but only
+      // when the user isn't already viewing this thread (otherwise it's noisy).
+      if (newAdminMessage) {
+        const viewingThisThread =
+          (Nav.current === 'chatwindow' && this.active === firestoreId) ||
+          (Nav.current === 'list' && document.querySelector('#inline-chat-' + firestoreId + '.open'));
+        if (!viewingThisThread || document.visibilityState !== 'visible') {
+          this.playPing();
+          this.showBrowserNotification(itemTitle, newAdminMessage.text || 'New message');
+        }
+      }
+
       // Refresh visible UI if needed
       if (Nav.current === 'list') {
         this.refreshInlineChat(firestoreId, itemTitle);
