@@ -1684,7 +1684,7 @@ box-shadow: 0 2px 5px rgba(22,163,74,0.4), inset 0 -1px 2px rgba(0,0,0,0.2) !imp
 </div>
 </div></div></div>
 <div id="screen-list" class="screen"><div class="page"><div style="margin-bottom:10px;"><span style="color:white;font-size:32px;font-weight:900;font-family:var(--font-h);">My Requests</span></div><div id="list-user-header" style="margin-bottom:10px;"></div><div id="list-banner-container"></div><div id="list-level-card" class="card"></div><div id="list-items"></div><div style="display:flex;justify-content:flex-start;margin-top:20px;padding:0 4px;"><button onclick="logoutUser()" style="background:transparent;color:#94a3b8;border:2px solid #475569;border-radius:999px;padding:12px 28px;font-size:15px;font-weight:900;font-family:var(--font-b);cursor:pointer;display:flex;align-items:center;gap:8px;" onmouseover="this.style.borderColor='#94a3b8';this.style.color='#cbd5e1';" onmouseout="this.style.borderColor='#475569';this.style.color='#94a3b8';"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>Log out</button></div></div></div>
-<div id="screen-chat" class="screen"><div class="page" style="padding-left:0;padding-right:0;"><div style="padding:0 16px 12px;"><span style="color:white;font-size:22px;font-weight:900;font-family:var(--font-h);">Messages</span></div><div class="card" style="border-radius:20px;padding:0;overflow:hidden;margin:0 16px 14px;"><div id="chat-list-container"></div></div></div></div>
+<div id="screen-chat" class="screen"><div class="page" style="padding-left:0;padding-right:0;"><div style="padding:0 16px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;"><span style="color:white;font-size:22px;font-weight:900;font-family:var(--font-h);">Messages</span><div style="display:flex;gap:6px;"><button onclick="ChatModule.playPing()" style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.3);border-radius:99px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;">🔔 Test ding</button><button onclick="ChatModule.playBell()" style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.3);border-radius:99px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;">🛎 Test bell</button></div></div><div class="card" style="border-radius:20px;padding:0;overflow:hidden;margin:0 16px 14px;"><div id="chat-list-container"></div></div></div></div>
 <div id="screen-chatwindow" class="screen"><div style="background:white;min-height:calc(100vh - 56px);display:flex;flex-direction:column;"><div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:white;position:sticky;top:56px;z-index:10;"><button style="background:none;border:none;font-size:22px;cursor:pointer;" onclick="Nav.go('chat')">←</button><div id="chat-window-avatar" class="chat-avatar" style="width:36px;height:36px;font-size:16px;"></div><div><div id="chat-window-name" style="font-size:15px;font-weight:700;color:var(--text);"></div><div style="font-size:11px;color:var(--sub);">Online</div></div></div><div id="chat-messages" class="chat-messages" style="flex:1;min-height:300px;padding:14px;"></div><div class="chat-input-bar"><input id="chat-msg-input" type="text" placeholder="Type a message..." onkeydown="if(event.key==='Enter')ChatModule.send()"><button class="chat-send-btn" onclick="ChatModule.send()">➤</button></div></div></div>
 <nav class="bottom-nav" id="bottom-nav"><button class="nav-btn active" id="nav-home" onclick="Nav.go('home')"><span class="nav-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M12 3L2 12h3v8h5v-6h4v6h5v-8h3L12 3z"/></svg></span>Home</button><button class="nav-btn" id="nav-post" onclick="handleGiveClick()"><span class="nav-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M20 6h-3V4c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM9 4h6v2H9V4zm3 13l-5-5h3v-2h4v2h3l-5 5z"/></svg></span>Give</button><a class="nav-btn" href="shop.html" style="text-decoration:none;"><span class="nav-icon" style="display:flex;align-items:center;justify-content:center;"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCABQAEIDASIAAhEBAxEB/8QAHAABAAIDAQEBAAAAAAAAAAAAAAUHAQYIBAID/8QAMxAAAQMDAgMFBwMFAAAAAAAAAQACAwQFEQYhBxIxEyJBUdEUFSMyUmHBgZHhFzNCcbH/xAAbAQACAwEBAQAAAAAAAAAAAAAABQMEBgIHAf/EAC0RAAEEAQIEBQIHAAAAAAAAAAEAAgMRBAUhBjFBURJhkaHwscETFCIkgdHh/9oADAMBAAIRAxEAPwCkUREyVJEREIRERCEREQhEREIREWEIWV9RRvllbFGxz5HHla1oySfIBbdb5hpelpPZrdDW3qriExMsXaCnjPygN+ojclWHU3mtg05ba2l097Ze6hjHyRwUpb2Q3y44GWnGw/dRySNjbZKvw4bXglzqI3O1/Cq1qOHms4I6Z8lgqgKl3JGAWk5xnDgD3dvPCgrxarlZ6w0d0opqScb8kjcEjzHmFc1mtmpbfYdRx2yK4H3pBFJSQzv+LHI4kOG56gZ3UJQ6a1bVUtNpzVdA+eCs5vYJzM181M8dSN8lnmEoGqfhvcJXtodjRIq7Fnp7+ykfgHYNBs+nw81VCLatQcPNYWK3z3G5WaaGigOHT8wLcZwD16FaqmsM8U7fFE4OHkbS5zHMNOFIiIplyintG6Zq9SVckdNLFGyEsMhkJ6E42UCrS4IwAUVxqHMceaRrAR9hldxNDnAFMtJxG5eW2J/I3fotq4e2g2ziA/V1d2VTTPjdHDTNPK5oI5W5J6YDVvFq1PBRx3qrltrJsvfJvLgkMzsoMCNoIELwPDfpv6Lx397YNN3WRsTmYpnt3Pi4gD/qjy9Fw8gOdK27Avc9Nx7r0GLSceFpDQd/Pr6rcbJqGh1BBabzHbmU3ZxEuh7TmDsnAyftuvPe71BLrmxRC3wuEcUzjy7gEk+P6LVeGEgZpyna5hJMWG748SvZBUXMa+pY4IyY4mOaMtGxwT+Vj+I9HxcbEjlhbRG3M8qJ6qnkYzIxY9ytt4v1lPceFV7pGUjWPNLzAjwLSD+Fx2uxNTi61ml7nTPh7slJI090fSVx3jG3lsvnBrv28jOxv1H+LHaswNe0jt3tERFskpRXLwbhEelHSGQs7WocenhjCppXxwzgdDou34Yw5Y55z1Peyp8cfrWk4XZ4s0u7A/YLYwS75qnr1znxG/oojW0jm6SrOafPaPibjPUk/wAKYIcMF1OCB1x44O/otd4hvDbBTxCLle+qOR54b/IVmc1GV6EeYX78OZD7hh5psGNndB/34L3CKpk17BUNrQ3nZkhz8HOFE6Kk9noo6eSENdEMuB/yGVMVNFBPeI7jNKaYiP4QAyDvvhZ7iWInTCDzFf190tzS0QF4+lrd3UtXLSSRmvjIcwg/E+y49uERgr6iA9Y5XMP6EhdX2yW2St5H1jg8DccvVcwaygbTasusDTlrauTB8wTn8rLcHktklYfI/VYrWacxjh59KUSiIt0kCwrb0xrnTdLaKOhnM8LoYWscS3bIHqqlRdseWGwmGn6lNgPL4q323V+0mq9OVP8AavETQfqOPD1XxqeWgrYrdL7yppI43PcR2m/MceioRZyfMqX8weoTs8VTObTmD+PhV0uuVrhyTdKYObjGJBuvQNZ6ZpHA3GudUNDeVnYDmP7eCo1ZUOcRmwuhkGxVWbiGaSMxhoFq8f6l6IjIcymubiOh5cflVLrO4Ud21PXXGgjljp6iTna2T5htuohEqwtJx8JxfFdnZJpsqSYU4oiImarr/9k=" alt="Shop" style="width:30px;height:30px;object-fit:contain;"></span><span style="color:#4da6ff;font-size:11px;font-weight:800;">Shop</span></a><button class="nav-btn" id="nav-list" onclick="handleMyItemsClick()"><span class="nav-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm10 8h-8v-2h8v2zm0-4h-8v-2h8v2zm0-4h-8V7h8v2z"/></svg></span>My Items</button><button class="nav-btn" id="nav-chat" onclick="Nav.go('chat')"><span class="nav-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg></span>Messages</button></nav>
 
@@ -2004,33 +2004,62 @@ const ChatModule = {
 
   /* ===== Notification system: sound + browser notifications ===== */
   pingAudio: null,
+  bellAudio: null,
   soundEnabled: false,
   notifPermission: 'default',
   knownMessageIds: {},   // firestoreId -> Set of message IDs we've already seen
+  knownStatuses: {},     // firestoreId -> last known status (for bell on status change)
   notifInitialized: false,
 
   initNotifications() {
     if (this.notifInitialized) return;
     this.notifInitialized = true;
 
-    // Create an HTML5 audio element with a short embedded "ding" sound.
-    // HTML5 audio is far more reliable across mobile browsers than Web Audio API.
-    // This is a short generated bell-like sound encoded as base64 WAV (~12kb).
-    this.pingAudio = new Audio('data:audio/wav;base64,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');
+    // Strategy: try external mp3 files first (best on iOS), but ALWAYS fall back
+    // to Web Audio synthesis so sound works even if mp3s aren't uploaded.
+    this.pingAudio = new Audio('chat-ding.mp3');
     this.pingAudio.preload = 'auto';
     this.pingAudio.volume = 1.0;
+    this.pingAudioReady = false;
+    this.pingAudio.addEventListener('canplaythrough', () => { this.pingAudioReady = true; console.log('[Chat] chat-ding.mp3 loaded'); });
+    this.pingAudio.addEventListener('error', () => { console.log('[Chat] chat-ding.mp3 not available — will use synthesized fallback'); });
+
+    this.bellAudio = new Audio('order-bell.mp3');
+    this.bellAudio.preload = 'auto';
+    this.bellAudio.volume = 1.0;
+    this.bellAudioReady = false;
+    this.bellAudio.addEventListener('canplaythrough', () => { this.bellAudioReady = true; console.log('[Chat] order-bell.mp3 loaded'); });
+    this.bellAudio.addEventListener('error', () => { console.log('[Chat] order-bell.mp3 not available — will use synthesized fallback'); });
 
     // Unlock audio + ask for notification permission on first user interaction.
+    // iOS Safari requires play() / AudioContext.resume() from a user gesture.
     const onFirstTouch = () => {
       this.soundEnabled = true;
-      // Play and immediately pause to "unlock" audio playback on iOS Safari
-      this.pingAudio.play().then(() => {
-        this.pingAudio.pause();
-        this.pingAudio.currentTime = 0;
-        console.log('[Chat] Sound unlocked');
-      }).catch(err => console.log('[Chat] Sound unlock failed:', err));
 
-      // Request browser-notification permission (one-time prompt)
+      // Create / resume the AudioContext (needed for synthesized fallback)
+      try {
+        if (!this.audioCtx) {
+          this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (this.audioCtx.state === 'suspended') {
+          this.audioCtx.resume();
+        }
+      } catch(e) { console.log('[Chat] AudioContext error:', e); }
+
+      // Silent-play both mp3 elements once to unlock them on iOS
+      const unlockOne = (audio) => {
+        const v = audio.volume;
+        audio.volume = 0;
+        const p = audio.play();
+        if (p && p.then) {
+          p.then(() => { audio.pause(); audio.currentTime = 0; audio.volume = v; })
+           .catch(() => { audio.volume = v; });
+        }
+      };
+      unlockOne(this.pingAudio);
+      unlockOne(this.bellAudio);
+      console.log('[Chat] Sound unlocked, audioCtx state:', this.audioCtx && this.audioCtx.state);
+
       if ('Notification' in window) {
         this.notifPermission = Notification.permission;
         if (Notification.permission === 'default') {
@@ -2047,19 +2076,94 @@ const ChatModule = {
     document.addEventListener('touchstart', onFirstTouch, { once: true });
   },
 
-  playPing() {
-    console.log('[Chat] playPing called, soundEnabled=', this.soundEnabled);
-    if (!this.pingAudio) {
-      console.log('[Chat] No audio element');
-      return;
-    }
+  /* Synthesize a two-tone "ding" using Web Audio. Used when mp3 isn't available. */
+  synthPing() {
     try {
-      this.pingAudio.currentTime = 0;
-      const playPromise = this.pingAudio.play();
-      if (playPromise && playPromise.catch) {
-        playPromise.catch(err => console.log('[Chat] Play failed:', err.message));
+      if (!this.audioCtx) {
+        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
-    } catch(e) { console.log('[Chat] Sound error:', e); }
+      if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+      const now = this.audioCtx.currentTime;
+      [[1046.5, 0], [1318.5, 0.08]].forEach(p => {
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = p[0];
+        gain.gain.setValueAtTime(0, now + p[1]);
+        gain.gain.linearRampToValueAtTime(0.25, now + p[1] + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + p[1] + 0.45);
+        osc.connect(gain).connect(this.audioCtx.destination);
+        osc.start(now + p[1]);
+        osc.stop(now + p[1] + 0.5);
+      });
+      console.log('[Chat] synthPing played');
+    } catch(e) { console.log('[Chat] synthPing error:', e); }
+  },
+
+  /* Synthesize a longer bell-like chime — for order confirmation. */
+  synthBell() {
+    try {
+      if (!this.audioCtx) {
+        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+      const now = this.audioCtx.currentTime;
+      // Bell harmonics (fundamental + overtones) for a richer chime
+      const notes = [
+        { f: 880,  t: 0,    g: 0.30, d: 1.6 },  // A5 fundamental
+        { f: 1320, t: 0,    g: 0.15, d: 1.4 },  // E6 third
+        { f: 1760, t: 0,    g: 0.10, d: 1.2 },  // A6 octave
+        { f: 1108, t: 0.18, g: 0.22, d: 1.4 },  // C#6 — second strike
+        { f: 1480, t: 0.18, g: 0.10, d: 1.0 }
+      ];
+      notes.forEach(n => {
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = n.f;
+        gain.gain.setValueAtTime(0, now + n.t);
+        gain.gain.linearRampToValueAtTime(n.g, now + n.t + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + n.t + n.d);
+        osc.connect(gain).connect(this.audioCtx.destination);
+        osc.start(now + n.t);
+        osc.stop(now + n.t + n.d + 0.05);
+      });
+      console.log('[Chat] synthBell played');
+    } catch(e) { console.log('[Chat] synthBell error:', e); }
+  },
+
+  playPing() {
+    console.log('[Chat] playPing — mp3 ready?', this.pingAudioReady, 'soundEnabled?', this.soundEnabled);
+    // Try mp3 first if it loaded successfully
+    if (this.pingAudioReady && this.pingAudio) {
+      try {
+        this.pingAudio.currentTime = 0;
+        const p = this.pingAudio.play();
+        if (p && p.catch) p.catch(err => {
+          console.log('[Chat] mp3 play failed, using synth fallback:', err.message);
+          this.synthPing();
+        });
+        return;
+      } catch(e) {}
+    }
+    // Fallback: synthesize via Web Audio
+    this.synthPing();
+  },
+
+  playBell() {
+    console.log('[Chat] playBell — mp3 ready?', this.bellAudioReady);
+    if (this.bellAudioReady && this.bellAudio) {
+      try {
+        this.bellAudio.currentTime = 0;
+        const p = this.bellAudio.play();
+        if (p && p.catch) p.catch(err => {
+          console.log('[Chat] bell mp3 failed, using synth fallback:', err.message);
+          this.synthBell();
+        });
+        return;
+      } catch(e) {}
+    }
+    this.synthBell();
   },
 
   /* Show a browser notification if the tab is hidden (or always, if you prefer). */
@@ -2390,16 +2494,29 @@ const ChatModule = {
   }
 };
 window.ChatModule = ChatModule;
+// Initialize the sound/notification system right away so it's ready to play
+// on ANY page, not just when chat listeners attach. The first tap on the page
+// unlocks audio playback (iOS Safari requirement).
+try { ChatModule.initNotifications(); } catch(e) { console.log('initNotifications error:', e); }
 const PWA = { dp: null, init() { const iconHref = (document.querySelector('link[rel="icon"]') || {}).href || ''; const m = { name: 'Givy Rewards', short_name: 'GivyRewards', description: 'Give away your stuff and get rewarded', start_url: '/', display: 'standalone', background_color: '#ffffff', theme_color: '#059669', icons: iconHref ? [{ src: iconHref, sizes: '192x192', type: 'image/jpeg', purpose: 'any' },{ src: iconHref, sizes: '512x512', type: 'image/jpeg', purpose: 'any' }] : [] }; const blob = new Blob([JSON.stringify(m)], { type: 'application/json' }); document.getElementById('pwa-manifest').href = URL.createObjectURL(blob); window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); this.dp = e; }); window.addEventListener('appinstalled', () => { this.dp = null; }); const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent); if (isIOS && !window.navigator.standalone) { } } };
 window.PWA = PWA;
 async function uploadToCloudinary(dataUrl) { try { const blob = await (await fetch(dataUrl)).blob(); const fd = new FormData(); fd.append('file', blob); fd.append('upload_preset', 'givy_upload'); fd.append('cloud_name', 'dyxlwkgo7'); const res = await fetch('https://api.cloudinary.com/v1_1/dyxlwkgo7/image/upload', { method: 'POST', body: fd }); const data = await res.json(); return data.secure_url || null; } catch(e) { console.log('Cloudinary error', e); return null; } }
 async function saveOrderToFirestore(item) { try { if (!window.firebaseDB) { await new Promise(r => window.addEventListener('firebase-ready', r, { once: true })); } const { collection, addDoc } = window.firebaseFunctions; const user = Storage.get('user') || { nickname: 'Guest' }; const authUser = window.firebaseAuth && window.firebaseAuth.currentUser; const orderData = { userId: authUser ? authUser.uid : 'guest_' + item.id, title: item.title, desc: item.desc, condition: item.conditionLabel, zip: item.zip || '', location: item.location || null, date: item.date, time: item.time, email: item.email || user.email || '', phone: item.phone || '', photos: item.photoUrls || [], nickname: user.nickname, userEmail: authUser ? authUser.email : (user.email || ''), status: 'pending', createdAt: new Date().toISOString(), localId: item.id }; const docRef = await addDoc(collection(window.firebaseDB, 'orders'), orderData); console.log('Saved to Firestore:', docRef.id); return docRef.id; } catch(e) { console.log('Firestore error:', e); return null; } }
 async function sendToFormspree(item) { try { let photoUrls = []; if (item.photos && item.photos.length > 0) { const uploads = item.photos.map(p => uploadToCloudinary(p)); photoUrls = await Promise.all(uploads); photoUrls = photoUrls.filter(Boolean); } item.photoUrls = photoUrls; const firestoreId = await saveOrderToFirestore(item); if (firestoreId) { const items = Storage.get('items', []); const idx = items.findIndex(i => i.id === item.id); if (idx >= 0) { items[idx].firestoreId = firestoreId; Storage.set('items', items); } } const baseUrl = 'https://edb2026.github.io/Givypro/action.html'; const rejectLink = baseUrl + '?id=' + firestoreId + '&action=reject'; const intentLink = baseUrl + '?id=' + firestoreId + '&action=intent'; const pickupLink = baseUrl + '?id=' + firestoreId + '&action=pickup'; const user = Storage.get('user') || { nickname: 'Guest' }; const loc = item.location || {}; const locationText = loc.lat ? ((loc.city || '') + ', ' + (loc.state || '') + ' ' + (loc.zip || '') + ' (' + (loc.method === 'gps' ? 'GPS' : 'ZIP') + ')') : 'Not provided'; const mapImageUrl = loc.lat ? ('https://staticmap.openstreetmap.de/staticmap.php?center=' + loc.lat + ',' + loc.lng + '&zoom=12&size=600x350&markers=' + loc.lat + ',' + loc.lng + ',lightgreen1') : ''; const googleMapsLink = loc.lat ? ('https://www.google.com/maps?q=' + loc.lat + ',' + loc.lng) : ''; let photosText = ''; if (photoUrls.length > 0) { photosText = '\n\nPHOTOS (' + photoUrls.length + '):\n'; photoUrls.forEach((url, i) => { photosText += '\nPhoto ' + (i + 1) + ': ' + url; }); } else { photosText = '\n\nPHOTOS: None uploaded'; } const fullMessage = 'NEW GIVY ORDER\n====================\n\nCustomer: ' + user.nickname + '\nEmail: ' + (item.email || '-') + '\n\nITEM DETAILS:\nTitle: ' + item.title + '\nDescription: ' + item.desc + '\nCondition: ' + item.conditionLabel + '\n\nPICKUP LOCATION:\n' + locationText + '\n' + (loc.lat ? 'Coordinates: ' + loc.lat + ', ' + loc.lng + '\n' : '') + (googleMapsLink ? 'View on map: ' + googleMapsLink + '\n' : '') + (mapImageUrl ? 'Map image: ' + mapImageUrl + '\n' : '') + '\nPickup Date: ' + item.date + '\nTime Window: ' + item.time + '\n' + photosText + '\n\n====================\nADMIN ACTIONS:\n\nREJECT ORDER:\n' + rejectLink + '\n\nCONFIRM INTENT (ready to pickup):\n' + intentLink + '\n\nCONFIRM PICKUP (items received):\n' + pickupLink + '\n\n====================\nOrder ID: ' + (firestoreId || 'n/a'); const body = { _subject: 'New Givy Order: ' + item.title + ' from ' + user.nickname, _replyto: item.email || 'noreply@givyrewards.com', name: user.nickname, email: item.email || 'noreply@givyrewards.com', message: fullMessage }; const res = await fetch('https://formspree.io/f/xaqaolor', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(body) }); const data = await res.json(); console.log('Formspree response:', data); } catch(e) { console.log('Formspree error', e); } }
 window.sendToFormspree = sendToFormspree;
-onAuthStateChanged(auth, async (user) => { window.currentFirebaseUser = user; window.dispatchEvent(new CustomEvent('auth-state-changed', { detail: user })); if (user) { try { const userRef = doc(db, 'users', user.uid); const userSnap = await getDoc(userRef); let nickname; let joinedAt = new Date().toISOString(); if (userSnap.exists()) { const data = userSnap.data(); nickname = (data.nickname && data.nickname.trim()) ? data.nickname.trim() : user.email.split('@')[0]; joinedAt = data.joinedAt || joinedAt; if (!data.nickname || !data.nickname.trim()) { try { await setDoc(userRef, { nickname: nickname }, { merge: true }); console.log('[v2] Healed nickname for', user.email); } catch(e) { console.log('Heal nickname failed:', e); } } } else { nickname = user.email.split('@')[0]; try { await setDoc(userRef, { email: user.email, nickname: nickname, joinedAt: joinedAt }); console.log('[v2] Created missing user profile for', user.email); } catch(e) { console.log('Could not create profile:', e); } } const userData = { uid: user.uid, email: user.email, nickname, joinedAt }; try { localStorage.setItem('user', JSON.stringify(userData)); } catch(e) {} if (window._ordersUnsub) { try { window._ordersUnsub(); } catch(e) {} } const q = query(collection(db, 'orders'), where('userId', '==', user.uid)); window._ordersUnsub = onSnapshot(q, (snapshot) => { const firestoreItems = []; const statuses = {}; snapshot.forEach(docSnap => { const data = docSnap.data(); const localId = data.localId || (Date.now() + Math.random()); firestoreItems.push({ id: localId, firestoreId: docSnap.id, title: data.title, desc: data.desc, condition: (data.condition || 'new').toLowerCase().replace(' ', '_'), conditionLabel: data.condition, zip: data.zip || '', location: data.location || null, date: data.date, time: data.time, email: data.email, phone: data.phone || '', address: data.address || '', photos: data.photos || [], photoUrls: data.photos || [], createdAt: data.createdAt }); statuses[localId] = data.status || 'pending'; }); let localItems = []; try { localItems = JSON.parse(localStorage.getItem('items') || '[]'); } catch(e) {} const firestoreIds = new Set(firestoreItems.map(i => i.id)); const localOnly = localItems.filter(i => !firestoreIds.has(i.id)); const mergedItems = [...localOnly, ...firestoreItems]; mergedItems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); try { localStorage.setItem('items', JSON.stringify(mergedItems)); } catch(e) {} window.initialStatuses = statuses; if (window.ListModule) { window.ListModule.statuses = statuses; } if (window.Nav) { if (window.Nav.updatePostCard) window.Nav.updatePostCard(); if (window.Nav.current === 'list' && window.ListModule && window.ListModule.render) { window.ListModule.render(); } } if (window.NotificationModule) { setTimeout(() => window.NotificationModule.checkStatusChanges(), 500); } if (window.ChatModule && window.ChatModule.startAllListeners) { window.ChatModule.startAllListeners(); } }, (error) => { console.log('[v2] Orders subscription error:', error); }); } catch(err) { console.log('[v2] Auto-load error:', err); } } else { if (window._ordersUnsub) { try { window._ordersUnsub(); window._ordersUnsub = null; } catch(e) {} } if (window.ChatModule && window.ChatModule.stopAllListeners) { window.ChatModule.stopAllListeners(); } } });
+onAuthStateChanged(auth, async (user) => { window.currentFirebaseUser = user; window.dispatchEvent(new CustomEvent('auth-state-changed', { detail: user })); if (user) { try { const userRef = doc(db, 'users', user.uid); const userSnap = await getDoc(userRef); let nickname; let joinedAt = new Date().toISOString(); if (userSnap.exists()) { const data = userSnap.data(); nickname = (data.nickname && data.nickname.trim()) ? data.nickname.trim() : user.email.split('@')[0]; joinedAt = data.joinedAt || joinedAt; if (!data.nickname || !data.nickname.trim()) { try { await setDoc(userRef, { nickname: nickname }, { merge: true }); console.log('[v2] Healed nickname for', user.email); } catch(e) { console.log('Heal nickname failed:', e); } } } else { nickname = user.email.split('@')[0]; try { await setDoc(userRef, { email: user.email, nickname: nickname, joinedAt: joinedAt }); console.log('[v2] Created missing user profile for', user.email); } catch(e) { console.log('Could not create profile:', e); } } const userData = { uid: user.uid, email: user.email, nickname, joinedAt }; try { localStorage.setItem('user', JSON.stringify(userData)); } catch(e) {} if (window._ordersUnsub) { try { window._ordersUnsub(); } catch(e) {} } const q = query(collection(db, 'orders'), where('userId', '==', user.uid)); window._ordersUnsub = onSnapshot(q, (snapshot) => { const firestoreItems = []; const statuses = {}; const prevStatuses = (window.ChatModule && window.ChatModule.knownStatuses) || {}; let bellEvent = null; snapshot.forEach(docSnap => { const data = docSnap.data(); const localId = data.localId || (Date.now() + Math.random()); firestoreItems.push({ id: localId, firestoreId: docSnap.id, title: data.title, desc: data.desc, condition: (data.condition || 'new').toLowerCase().replace(' ', '_'), conditionLabel: data.condition, zip: data.zip || '', location: data.location || null, date: data.date, time: data.time, email: data.email, phone: data.phone || '', address: data.address || '', photos: data.photos || [], photoUrls: data.photos || [], createdAt: data.createdAt }); const currentStatus = data.status || 'pending'; statuses[localId] = currentStatus; const prev = prevStatuses[docSnap.id]; /* Detect status change to a "good news" state — ring the bell. Trigger on transitions to confirmed, approved, scheduled, or picked_up. */ const goodStates = ['confirmed','approved','scheduled','picked_up','completed']; if (prev && prev !== currentStatus && goodStates.indexOf(currentStatus) !== -1) { bellEvent = { title: data.title, status: currentStatus }; } if (window.ChatModule) { window.ChatModule.knownStatuses[docSnap.id] = currentStatus; } }); let localItems = []; try { localItems = JSON.parse(localStorage.getItem('items') || '[]'); } catch(e) {} const firestoreIds = new Set(firestoreItems.map(i => i.id)); const localOnly = localItems.filter(i => !firestoreIds.has(i.id)); const mergedItems = [...localOnly, ...firestoreItems]; mergedItems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); try { localStorage.setItem('items', JSON.stringify(mergedItems)); } catch(e) {} window.initialStatuses = statuses; if (window.ListModule) { window.ListModule.statuses = statuses; } if (window.Nav) { if (window.Nav.updatePostCard) window.Nav.updatePostCard(); if (window.Nav.current === 'list' && window.ListModule && window.ListModule.render) { window.ListModule.render(); } } if (window.NotificationModule) { setTimeout(() => window.NotificationModule.checkStatusChanges(), 500); } if (window.ChatModule && window.ChatModule.startAllListeners) { window.ChatModule.startAllListeners(); } if (bellEvent && window.ChatModule) { console.log('[Order] Status changed to', bellEvent.status, '— ringing bell'); window.ChatModule.playBell(); window.ChatModule.showBrowserNotification('Givy — ' + bellEvent.title, 'Your order is now ' + bellEvent.status + '!'); } }, (error) => { console.log('[v2] Orders subscription error:', error); }); } catch(err) { console.log('[v2] Auto-load error:', err); } } else { if (window._ordersUnsub) { try { window._ordersUnsub(); window._ordersUnsub = null; } catch(e) {} } if (window.ChatModule && window.ChatModule.stopAllListeners) { window.ChatModule.stopAllListeners(); } } });
 window.dispatchEvent(new Event('firebase-ready'));
 PWA.init();
 Nav.go('home');
+// Initialize sound notifications immediately so the FIRST tap anywhere on the
+// site unlocks audio — not just taps related to chat. This means the bell/ping
+// can play even when the user is on the shop page or any other screen.
+if (window.ChatModule && window.ChatModule.initNotifications) {
+  window.ChatModule.initNotifications();
+}
+// Expose simple test helpers so you can verify in DevTools or via a button.
+window.testChatSound = () => window.ChatModule && window.ChatModule.playPing();
+window.testBellSound = () => window.ChatModule && window.ChatModule.playBell();
 </script>
 
 <div id="registerModal" class="reg-modal"><div class="reg-box"><div style="font-size:40px;margin-bottom:8px;">🎁</div><h2>Create Account</h2><p class="reg-sub">To start earning points for your items</p><div class="reg-input-group"><label for="reg-nick">Nick Name / Account Name *</label><input type="text" id="reg-nick" placeholder="e.g. AlexGiver or John_Couch" oninput="RegModal.check()"></div><div class="reg-input-group"><label for="reg-email">Email *</label><input type="email" id="reg-email" placeholder="your@email.com" oninput="RegModal.check()"></div><div class="reg-input-group"><label for="reg-password">Password * (min 6 characters)</label><input type="password" id="reg-password" placeholder="Create a password" oninput="RegModal.check()"></div><div class="reg-terms"><input type="checkbox" id="reg-terms-check" onchange="RegModal.check()"><label for="reg-terms-check">I agree to the <a href="/terms.html" target="_blank" rel="noopener" style="color:#4CAF50;text-decoration:underline;">Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noopener" style="color:#4CAF50;text-decoration:underline;">Privacy Policy</a></label></div><button id="reg-complete-btn" class="reg-complete-btn" disabled onclick="RegModal.complete()">Create Account</button><p style="margin-top:16px;font-size:13px;color:#777;">Already have an account? <a onclick="RegModal.showLogin()" style="color:#4CAF50;cursor:pointer;font-weight:700;">Log in</a></p></div></div>
