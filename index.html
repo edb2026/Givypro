@@ -2017,19 +2017,19 @@ const ChatModule = {
 
     // Strategy: try external mp3 files first (best on iOS), but ALWAYS fall back
     // to Web Audio synthesis so sound works even if mp3s aren't uploaded.
-    this.pingAudio = new Audio('chat-ding.mp3');
+    this.pingAudio = new Audio('chat-ding.wav');
     this.pingAudio.preload = 'auto';
     this.pingAudio.volume = 1.0;
     this.pingAudioReady = false;
-    this.pingAudio.addEventListener('canplaythrough', () => { this.pingAudioReady = true; console.log('[Chat] chat-ding.mp3 loaded'); });
-    this.pingAudio.addEventListener('error', () => { console.log('[Chat] chat-ding.mp3 not available — will use synthesized fallback'); });
+    this.pingAudio.addEventListener('canplaythrough', () => { this.pingAudioReady = true; console.log('[Chat] chat-ding.wav loaded'); });
+    this.pingAudio.addEventListener('error', (e) => { console.log('[Chat] chat-ding.wav not available — will use synthesized fallback', e); });
 
-    this.bellAudio = new Audio('order-bell.mp3');
+    this.bellAudio = new Audio('order-bell.wav');
     this.bellAudio.preload = 'auto';
     this.bellAudio.volume = 1.0;
     this.bellAudioReady = false;
-    this.bellAudio.addEventListener('canplaythrough', () => { this.bellAudioReady = true; console.log('[Chat] order-bell.mp3 loaded'); });
-    this.bellAudio.addEventListener('error', () => { console.log('[Chat] order-bell.mp3 not available — will use synthesized fallback'); });
+    this.bellAudio.addEventListener('canplaythrough', () => { this.bellAudioReady = true; console.log('[Chat] order-bell.wav loaded'); });
+    this.bellAudio.addEventListener('error', (e) => { console.log('[Chat] order-bell.wav not available — will use synthesized fallback', e); });
 
     // Unlock audio + ask for notification permission on first user interaction.
     // iOS Safari requires play() / AudioContext.resume() from a user gesture.
