@@ -545,9 +545,8 @@ window.openChatModal = async function(orderId) {
   document.getElementById('chat-pickup-time').textContent = '📅 ' + (order.date || '—') + (order.time ? '  ⏰ ' + order.time : '');
   document.getElementById('chat-location').textContent = '📍 ' + locText;
 
-  // Form link — link to the order document in Firebase console or your own page
-  // Change this URL to your own order detail page if you have one
-  const formUrl = `https://console.firebase.google.com/project/givy-rewards-7e086/firestore/data/orders/${orderId}`;
+  // Form link — opens the client's filled order page
+  const formUrl = `https://givyrewards.com/order?id=${orderId}`;
   document.getElementById('chat-form-link').href = formUrl;
 
   // Open modal
