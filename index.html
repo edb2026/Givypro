@@ -2773,8 +2773,7 @@ this.check();
 },
 
 check() {
-// Validation now happens inside complete() with friendly alerts.
-// Button stays clickable so user always gets feedback.
+// Validation happens inside complete() with friendly alerts.
 },
 
 async complete() {
@@ -2795,7 +2794,7 @@ await new Promise(r => window.addEventListener(‘firebase-ready’, r, { once: 
 }
 const { createUserWithEmailAndPassword, sendEmailVerification, signOut } = window.firebaseAuthFunctions;
 const cred = await createUserWithEmailAndPassword(window.firebaseAuth, email, password);
-// Save profile to Firestore (but don’t store user in local Storage until verified)
+// Save profile to Firestore (do not store user in local Storage until verified)
 try {
 const { doc, setDoc } = window.firebaseFunctions;
 await setDoc(doc(window.firebaseDB, ‘users’, cred.user.uid), {
@@ -2805,9 +2804,13 @@ joinedAt: new Date().toISOString(),
 emailVerified: false
 });
 } catch(err) { console.log(‘Could not save profile to Firestore:’, err); }
-// Send verification email
+// Send verification email with redirect back to the current site
 try {
-await sendEmailVerification(cred.user);
+const actionCodeSettings = {
+url: window.location.origin + ‘/?verified=1’,
+handleCodeInApp: false
+};
+await sendEmailVerification(cred.user, actionCodeSettings);
 console.log(‘Verification email sent to’, email);
 } catch(err) {
 console.log(‘Could not send verification email:’, err);
@@ -2861,7 +2864,11 @@ if (cred.user.emailVerified) {
 alert(‘Your email is already verified! You can log in now.’);
 try { await signOut(window.firebaseAuth); } catch(e) {}
 } else {
-await sendEmailVerification(cred.user);
+const actionCodeSettings = {
+url: window.location.origin + ‘/?verified=1’,
+handleCodeInApp: false
+};
+await sendEmailVerification(cred.user, actionCodeSettings);
 try { await signOut(window.firebaseAuth); } catch(e) {}
 alert(’Verification email sent again to ’ + this.pendingEmail + ‘. Check your inbox (and spam folder).’);
 }
@@ -2903,7 +2910,11 @@ if (!cred.user.emailVerified) {
 const resend = confirm(‘Your email is not verified yet.\n\nPlease check your inbox (and spam folder) for the verification link from Givy.\n\nClick OK to resend the verification email, or Cancel to close.’);
 if (resend) {
 try {
-await sendEmailVerification(cred.user);
+const actionCodeSettings = {
+url: window.location.origin + ‘/?verified=1’,
+handleCodeInApp: false
+};
+await sendEmailVerification(cred.user, actionCodeSettings);
 alert(‘Verification email sent to ’ + email + ‘. Check your inbox!’);
 } catch(err) {
 alert(‘Could not resend email: ’ + err.message);
@@ -2912,7 +2923,7 @@ alert(‘Could not resend email: ’ + err.message);
 try { await signOut(window.firebaseAuth); } catch(e) {}
 return;
 }
-// Email is verified — proceed with normal login
+// Email is verified - proceed with normal login
 let savedNickname = null;
 let savedJoinedAt = null;
 try {
