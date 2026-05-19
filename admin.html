@@ -318,6 +318,64 @@ let currentChatOrderId = null;
 let chatUnreadCounts = {};
 // listeners to track unread per order
 let unreadListeners = {};
+// === NOTIFICATIONS SYSTEM ===
+// Track latest seen message id per order to detect NEW arrivals (vs initial load)
+let lastSeenMessageIds = {}; // { orderId: 'msgId' }
+let initialLoadDone = {};    // { orderId: true } — to skip notification on first snapshot
+let ordersInitialLoadDone = false; // skip new-order ding on first load
+let ordersUnsubscribe = null; // realtime listener for orders collection
+const ORIGINAL_TITLE = 'Givy Admin Dashboard';
+
+// Play a short "ding" sound using Web Audio API (no external files needed)
+function playDing() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = 'sine';
+    o.frequency.setValueAtTime(880, ctx.currentTime); // A5 note
+    o.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.15);
+    g.gain.setValueAtTime(0.3, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+    o.start(ctx.currentTime);
+    o.stop(ctx.currentTime + 0.3);
+  } catch(e) { console.log('Sound error:', e); }
+}
+
+// Ask for browser notification permission once
+function requestNotificationPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+// Show browser notification
+function showBrowserNotification(title, body, orderId) {
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+  try {
+    const n = new Notification(title, {
+      body: body,
+      icon: 'https://givyrewards.com/favicon.ico',
+      tag: 'order-' + orderId, // replaces previous notification for same order
+      requireInteraction: false
+    });
+    n.onclick = function() {
+      window.focus();
+      if (orderId) openChatModal(orderId);
+      n.close();
+    };
+    setTimeout(() => n.close(), 8000);
+  } catch(e) { console.log('Notification error:', e); }
+}
+
+// Update tab title with total unread count
+function updateTabTitle() {
+  const total = Object.values(chatUnreadCounts).reduce((a, b) => a + b, 0);
+  document.title = total > 0 ? `(${total}) ${ORIGINAL_TITLE}` : ORIGINAL_TITLE;
+}
 
 // ===================== AUTH =====================
 onAuthStateChanged(auth, (user) => {
@@ -325,6 +383,7 @@ onAuthStateChanged(auth, (user) => {
     loginScreen.style.display = 'none';
     dashboard.style.display = 'block';
     document.getElementById('admin-email-display').textContent = user.email;
+    requestNotificationPermission();
     loadOrders();
   } else {
     loginScreen.style.display = 'flex';
@@ -369,20 +428,49 @@ window.adminLogout = async function() {
 window.loadOrders = async function() {
   const container = document.getElementById('orders-container');
   container.innerHTML = '<div class="loading"><div class="spinner"></div><div style="color:#94a3b8;font-weight:700;">Loading orders...</div></div>';
+
+  // Unsubscribe previous orders listener if exists (e.g., re-login)
+  if (ordersUnsubscribe) { ordersUnsubscribe(); ordersUnsubscribe = null; }
+  ordersInitialLoadDone = false;
+
   try {
     const q = query(collection(db, 'orders'));
-    const snap = await getDocs(q);
-    allOrders = [];
-    snap.forEach(docSnap => {
-      allOrders.push({ id: docSnap.id, ...docSnap.data() });
+    // Realtime subscription — new orders appear instantly
+    ordersUnsubscribe = onSnapshot(q, (snap) => {
+      const previousIds = new Set(allOrders.map(o => o.id));
+      allOrders = [];
+      snap.forEach(docSnap => {
+        allOrders.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      allOrders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+      // Detect brand-new orders (not present in previous snapshot)
+      const newOrders = ordersInitialLoadDone
+        ? allOrders.filter(o => !previousIds.has(o.id))
+        : [];
+
+      // Start unread listeners for all orders (no-op for ones already listening)
+      allOrders.forEach(o => startUnreadListener(o.id));
+
+      // Notify about new orders (after initial load)
+      newOrders.forEach(o => {
+        const clientName = o.nickname || o.email || o.userEmail || 'Customer';
+        const title = o.title || 'New item';
+        playDing();
+        showBrowserNotification(
+          `📦 New order: ${title}`,
+          `From ${clientName}`,
+          o.id
+        );
+      });
+
+      ordersInitialLoadDone = true;
+      updateStats();
+      applyFilters();
+    }, (err) => {
+      console.error('Orders listener error:', err);
+      container.innerHTML = '<div class="empty-state"><div class="emoji">❌</div><div class="title">Error loading orders</div><div class="sub">' + err.message + '</div></div>';
     });
-    allOrders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-    
-    // Start unread listeners for all orders
-    allOrders.forEach(o => startUnreadListener(o.id));
-    
-    updateStats();
-    applyFilters();
   } catch(e) {
     console.error('Error loading orders:', e);
     container.innerHTML = '<div class="empty-state"><div class="emoji">❌</div><div class="title">Error loading orders</div><div class="sub">' + e.message + '</div></div>';
@@ -396,17 +484,54 @@ function startUnreadListener(orderId) {
   const q = query(messagesRef, orderBy('createdAt', 'asc'));
   unreadListeners[orderId] = onSnapshot(q, (snap) => {
     let unread = 0;
+    const allMsgs = [];
     snap.forEach(d => {
-      const msg = d.data();
+      const msg = { id: d.id, ...d.data() };
+      allMsgs.push(msg);
       if (msg.sender === 'client' && !msg.readByAdmin) unread++;
     });
     chatUnreadCounts[orderId] = unread;
+
+    // === DETECT NEW MESSAGE FROM CLIENT ===
+    // Skip notification on the very first snapshot (initial load of existing messages)
+    if (!initialLoadDone[orderId]) {
+      initialLoadDone[orderId] = true;
+      // remember the last message id so we only notify about ones that arrive after
+      if (allMsgs.length > 0) lastSeenMessageIds[orderId] = allMsgs[allMsgs.length - 1].id;
+    } else {
+      // Find new messages from client that came AFTER the last one we saw
+      const lastSeen = lastSeenMessageIds[orderId];
+      let seenIt = !lastSeen; // if no lastSeen, treat all as new
+      const newClientMsgs = [];
+      for (const m of allMsgs) {
+        if (seenIt && m.sender === 'client') newClientMsgs.push(m);
+        if (m.id === lastSeen) seenIt = true;
+      }
+      if (allMsgs.length > 0) lastSeenMessageIds[orderId] = allMsgs[allMsgs.length - 1].id;
+
+      // Notify only if there ARE new client messages AND this chat isn't currently open
+      if (newClientMsgs.length > 0 && currentChatOrderId !== orderId) {
+        const order = allOrders.find(o => o.id === orderId);
+        const clientName = order ? (order.nickname || order.email || order.userEmail || 'Customer') : 'Customer';
+        const orderTitle = order ? (order.title || 'order') : 'order';
+        const lastMsg = newClientMsgs[newClientMsgs.length - 1];
+        playDing();
+        showBrowserNotification(
+          `💬 ${clientName} — ${orderTitle}`,
+          lastMsg.text || 'New message',
+          orderId
+        );
+      }
+    }
+
     // Update badge on the button if rendered
     const badge = document.getElementById('chat-badge-' + orderId);
     if (badge) {
       badge.textContent = unread;
       badge.style.display = unread > 0 ? 'flex' : 'none';
     }
+    // Update tab title with total unread
+    updateTabTitle();
   });
 }
 
@@ -773,10 +898,7 @@ function formatChatTime(date) {
   return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 }
 
-// Auto-refresh every 30 seconds
-setInterval(() => {
-  if (dashboard.style.display === 'block') loadOrders();
-}, 30000);
+// Auto-refresh is no longer needed — onSnapshot keeps everything live
 </script>
 
 </body>
