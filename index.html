@@ -30,6 +30,7 @@ body{font-family:var(--font-b);background:#0f1117;color:#111827;min-height:100vh
 .app-header{background:linear-gradient(135deg,#059669 0%,#047857 100%);padding:env(safe-area-inset-top, 14px) 16px 14px;padding-top:max(env(safe-area-inset-top), 14px);text-align:center;position:relative;}
 .header-logo{font-family:'Playfair Display',serif;font-size:40px;font-weight:900;color:#fff;letter-spacing:6px;line-height:1;font-style:italic;margin-bottom:4px;margin-top:-4px;}
 .header-rewards{font-family:var(--font-h);font-size:26px;font-weight:800;color:#FFD700;letter-spacing:2px;text-shadow:0 2px 8px rgba(0,0,0,0.3);line-height:1.1;}
+.header-brandmark{margin-top:6px;font-family:'Playfair Display',serif;font-style:italic;font-weight:700;font-size:13px;letter-spacing:3px;background:linear-gradient(90deg,#FFD700 0%,#fff8dc 50%,#FFD700 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;text-transform:none;opacity:0.95;line-height:1;}
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#0f1117;border-top:2px solid rgba(255,255,255,0.12);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 20px rgba(0,0,0,0.5);}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 0 8px;background:none;border:none;color:#ffffff;font-size:10px;font-weight:800;font-family:var(--font-b);cursor:pointer;transition:color 0.2s;position:relative;}
 #nav-chat{position:relative;}
@@ -1466,6 +1467,7 @@ box-shadow: 0 2px 5px rgba(22,163,74,0.4), inset 0 -1px 2px rgba(0,0,0,0.2) !imp
 <div id="main-header" class="app-header">
   <div class="header-logo">Givy</div>
   <div class="header-rewards">REWARDS</div>
+  <div class="header-brandmark">GivyRewards</div>
 </div>
 
 <div id="screen-home" class="screen active">
@@ -1745,15 +1747,83 @@ box-shadow: 0 2px 5px rgba(22,163,74,0.4), inset 0 -1px 2px rgba(0,0,0,0.2) !imp
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, addDoc, doc, setDoc, updateDoc, getDoc, getDocs, query, where, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, sendEmailVerification, applyActionCode } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 const firebaseConfig = { apiKey: "AIzaSyAzSh_wSb6hdZtq3HULcNnyZmT8HbA1CRU", authDomain: "givy-rewards-7e086.firebaseapp.com", projectId: "givy-rewards-7e086", storageBucket: "givy-rewards-7e086.firebasestorage.app", messagingSenderId: "279968070839", appId: "1:279968070839:web:8761241835b0ee273da132" };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 window.firebaseDB = db; window.firebaseAuth = auth;
 window.firebaseFunctions = { collection, addDoc, doc, setDoc, updateDoc, getDoc, getDocs, query, where, orderBy, onSnapshot, serverTimestamp };
-window.firebaseAuthFunctions = { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, sendEmailVerification };
+window.firebaseAuthFunctions = { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, sendEmailVerification, applyActionCode };
 window.firebaseReady = true;
+
+// ===== Email verification return handler =====
+// Handles two cases on page load:
+//   1) User arrived back at the site after Firebase auto-applied the code: ?verified=1
+//   2) User arrived directly with the action params: ?mode=verifyEmail&oobCode=...
+//      (fallback in case Firebase did not redirect via continueUrl)
+(async function handleVerifyReturn() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get('mode');
+    const oobCode = params.get('oobCode');
+    const verifiedFlag = params.get('verified');
+
+    function showVerifiedBanner(message) {
+      // Lightweight, dependency-free banner so we don't depend on modal markup.
+      var existing = document.getElementById('verifyBanner');
+      if (existing) existing.remove();
+      var bar = document.createElement('div');
+      bar.id = 'verifyBanner';
+      bar.style.cssText = 'position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:99999;background:linear-gradient(135deg,#059669,#047857);color:#fff;padding:14px 22px;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,0.25);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-weight:600;font-size:15px;max-width:92vw;text-align:center;display:flex;align-items:center;gap:10px;';
+      bar.innerHTML = '<span style="font-size:20px;">✅</span><span>' + message + '</span>';
+      // Wait until body exists.
+      function attach() {
+        if (document.body) {
+          document.body.appendChild(bar);
+          setTimeout(function(){ bar.style.transition = 'opacity 600ms'; bar.style.opacity = '0'; setTimeout(function(){ bar.remove(); }, 700); }, 6000);
+        } else {
+          setTimeout(attach, 50);
+        }
+      }
+      attach();
+    }
+
+    function cleanUrl() {
+      // Remove auth params from address bar so refresh doesn't re-trigger.
+      try {
+        var url = new URL(window.location.href);
+        ['mode','oobCode','apiKey','continueUrl','lang','verified'].forEach(function(k){ url.searchParams.delete(k); });
+        window.history.replaceState({}, document.title, url.pathname + (url.search ? '?' + url.searchParams.toString() : '') + url.hash);
+      } catch(e) {}
+    }
+
+    // Case 1: Firebase already applied the code and redirected back here.
+    if (verifiedFlag === '1') {
+      showVerifiedBanner('Email verified! You can log in now.');
+      cleanUrl();
+      return;
+    }
+
+    // Case 2: We landed here directly with the action params — apply ourselves.
+    if (mode === 'verifyEmail' && oobCode) {
+      try {
+        await applyActionCode(auth, oobCode);
+        showVerifiedBanner('Email verified! You can log in now.');
+      } catch (err) {
+        console.log('applyActionCode failed:', err);
+        var msg = 'This verification link is no longer valid. Please request a new one.';
+        if (err && err.code === 'auth/expired-action-code') msg = 'This verification link has expired. Please request a new one.';
+        else if (err && err.code === 'auth/invalid-action-code') msg = 'This verification link is invalid or already used. Try logging in.';
+        showVerifiedBanner(msg);
+      }
+      cleanUrl();
+    }
+  } catch (e) {
+    console.log('Verify return handler error:', e);
+  }
+})();
+// ===== /Email verification return handler =====
 
 const Storage = { get(k,f=null){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f}catch{return f}}, set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}, remove(k){try{localStorage.removeItem(k)}catch{}} };
 window.Storage = Storage;
